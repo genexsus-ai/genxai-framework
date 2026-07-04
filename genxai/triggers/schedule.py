@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, UTC
-from typing import Any, Dict, Optional
 import logging
+from datetime import UTC, datetime
+from typing import Any
 
 from genxai.triggers.base import BaseTrigger
 
@@ -17,10 +17,10 @@ class ScheduleTrigger(BaseTrigger):
     def __init__(
         self,
         trigger_id: str,
-        cron: Optional[str] = None,
-        interval_seconds: Optional[int] = None,
-        payload: Optional[Dict[str, Any]] = None,
-        name: Optional[str] = None,
+        cron: str | None = None,
+        interval_seconds: int | None = None,
+        payload: dict[str, Any] | None = None,
+        name: str | None = None,
         timezone: str = "UTC",
     ) -> None:
         super().__init__(trigger_id=trigger_id, name=name)

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
 import asyncio
 import logging
+from typing import Any
 
 import httpx
 
@@ -26,7 +26,7 @@ class SlackConnector(Connector):
         self,
         connector_id: str,
         bot_token: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         base_url: str = "https://slack.com/api",
         timeout: float = 10.0,
     ) -> None:
@@ -34,7 +34,7 @@ class SlackConnector(Connector):
         self.bot_token = bot_token
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._lock = asyncio.Lock()
 
     async def _start(self) -> None:
@@ -61,11 +61,11 @@ class SlackConnector(Connector):
         self,
         channel: str,
         text: str,
-        blocks: Optional[List[Dict[str, Any]]] = None,
-        attachments: Optional[List[Dict[str, Any]]] = None,
-    ) -> Dict[str, Any]:
+        blocks: list[dict[str, Any]] | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Send a message to a Slack channel."""
-        payload: Dict[str, Any] = {"channel": channel, "text": text}
+        payload: dict[str, Any] = {"channel": channel, "text": text}
         if blocks:
             payload["blocks"] = blocks
         if attachments:
@@ -77,23 +77,23 @@ class SlackConnector(Connector):
         channel: str,
         user: str,
         text: str,
-        blocks: Optional[List[Dict[str, Any]]] = None,
-    ) -> Dict[str, Any]:
+        blocks: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Send an ephemeral message to a user in a channel."""
-        payload: Dict[str, Any] = {"channel": channel, "user": user, "text": text}
+        payload: dict[str, Any] = {"channel": channel, "user": user, "text": text}
         if blocks:
             payload["blocks"] = blocks
         return await self._post("/chat.postEphemeral", payload)
 
-    async def list_channels(self, types: str = "public_channel,private_channel") -> Dict[str, Any]:
+    async def list_channels(self, types: str = "public_channel,private_channel") -> dict[str, Any]:
         """List available channels."""
         return await self._get("/conversations.list", {"types": types})
 
-    async def handle_event(self, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None) -> None:
+    async def handle_event(self, payload: dict[str, Any], headers: dict[str, str] | None = None) -> None:
         """Handle an inbound Slack event payload and emit it downstream."""
         await self.emit(payload=payload, metadata={"headers": headers or {}})
 
-    async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.get(path, params=params or {})
@@ -103,7 +103,7 @@ class SlackConnector(Connector):
             raise ValueError(f"Slack API error: {data}")
         return data
 
-    async def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.post(path, json=payload)

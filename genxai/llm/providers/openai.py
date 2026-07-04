@@ -1,8 +1,8 @@
 """OpenAI LLM provider implementation."""
 
-from typing import Any, Dict, Optional, AsyncIterator
-import os
 import logging
+from collections.abc import AsyncIterator
+from typing import Any
 
 from genxai.llm.base import LLMProvider, LLMResponse
 
@@ -15,9 +15,9 @@ class OpenAIProvider(LLMProvider):
     def __init__(
         self,
         model: str = "gpt-4",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize OpenAI provider.
@@ -39,8 +39,8 @@ class OpenAIProvider(LLMProvider):
             )
 
         self.api_key = api_key
-        
-        self._client: Optional[Any] = None
+
+        self._client: Any | None = None
         self._initialize_client()
 
     def _initialize_client(self) -> None:
@@ -61,7 +61,7 @@ class OpenAIProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion using OpenAI.
@@ -93,7 +93,7 @@ class OpenAIProvider(LLMProvider):
             "messages": messages,
             "temperature": kwargs.get("temperature", self.temperature),
         }
-        
+
         if self.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.max_tokens)
 
@@ -145,7 +145,7 @@ class OpenAIProvider(LLMProvider):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Generate completion with streaming.
@@ -177,7 +177,7 @@ class OpenAIProvider(LLMProvider):
             "temperature": kwargs.get("temperature", self.temperature),
             "stream": True,
         }
-        
+
         if self.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.max_tokens)
 
@@ -195,7 +195,7 @@ class OpenAIProvider(LLMProvider):
 
     async def generate_chat(
         self,
-        messages: list[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion for chat messages.
@@ -216,7 +216,7 @@ class OpenAIProvider(LLMProvider):
             "messages": messages,
             "temperature": kwargs.get("temperature", self.temperature),
         }
-        
+
         if self.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.max_tokens)
 

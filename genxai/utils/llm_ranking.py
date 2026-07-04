@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 import json
 import logging
 import math
 import re
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
+from typing import Any
 
 from genxai.llm.base import LLMProvider
 
@@ -28,12 +29,12 @@ class RankDecision:
     """Decision payload from the ranking utility."""
 
     selected_id: str
-    ranked_ids: List[str]
-    scores: Dict[str, float]
-    rationales: Dict[str, str]
+    ranked_ids: list[str]
+    scores: dict[str, float]
+    rationales: dict[str, str]
     confidence: float
     method_used: str
-    raw_response: Optional[str] = None
+    raw_response: str | None = None
 
 
 DEFAULT_RANKING_SYSTEM_PROMPT = (
@@ -45,8 +46,8 @@ DEFAULT_RANKING_SYSTEM_PROMPT = (
 def _build_ranking_prompt(
     task: str,
     candidates: Iterable[RankCandidate],
-    criteria: Optional[Iterable[str]] = None,
-    weights: Optional[Mapping[str, float]] = None,
+    criteria: Iterable[str] | None = None,
+    weights: Mapping[str, float] | None = None,
 ) -> str:
     """Build a clear user prompt with explicit JSON schema requirements."""
 
@@ -96,7 +97,7 @@ def _clamp_score(value: float) -> float:
     return max(0.0, min(1.0, float(value)))
 
 
-def _normalize_scores(scores: Dict[str, float]) -> Dict[str, float]:
+def _normalize_scores(scores: dict[str, float]) -> dict[str, float]:
     if not scores:
         return {}
     clamped = {key: _clamp_score(val) for key, val in scores.items()}
@@ -106,14 +107,14 @@ def _normalize_scores(scores: Dict[str, float]) -> Dict[str, float]:
     return {key: val / max_score for key, val in clamped.items()}
 
 
-def _extract_json_block(text: str) -> Optional[str]:
+def _extract_json_block(text: str) -> str | None:
     if not text:
         return None
     match = re.search(r"\{[\s\S]*\}", text)
     return match.group(0) if match else None
 
 
-def _safe_parse_ranking_json(text: str) -> Optional[Dict[str, Any]]:
+def _safe_parse_ranking_json(text: str) -> dict[str, Any] | None:
     if not text:
         return None
     try:
@@ -138,9 +139,9 @@ def _safe_parse_ranking_json(text: str) -> Optional[Dict[str, Any]]:
 
 
 def _validate_and_normalize_decision(
-    payload: Dict[str, Any],
-    candidates: List[RankCandidate],
-) -> Optional[Tuple[List[str], Dict[str, float], Dict[str, str], str, float]]:
+    payload: dict[str, Any],
+    candidates: list[RankCandidate],
+) -> tuple[list[str], dict[str, float], dict[str, str], str, float] | None:
     candidate_ids = {cand.id for cand in candidates}
 
     ranked_ids_raw = payload.get("ranked_ids", [])
@@ -218,9 +219,9 @@ def _phrase_match_score(task: str, content: str) -> float:
 
 def _heuristic_fallback_rank(
     task: str,
-    candidates: List[RankCandidate],
-    weights: Optional[Mapping[str, float]] = None,
-) -> Tuple[List[str], Dict[str, float], Dict[str, str], str, float]:
+    candidates: list[RankCandidate],
+    weights: Mapping[str, float] | None = None,
+) -> tuple[list[str], dict[str, float], dict[str, str], str, float]:
     weights = dict(weights or {})
     length_weight = float(weights.get("length", 0.25))
     overlap_weight = float(weights.get("overlap", 0.55))
@@ -228,8 +229,8 @@ def _heuristic_fallback_rank(
     keyword_weight = float(weights.get("keywords", 0.2))
     phrase_weight = float(weights.get("phrase", 0.15))
 
-    scores: Dict[str, float] = {}
-    rationales: Dict[str, str] = {}
+    scores: dict[str, float] = {}
+    rationales: dict[str, str] = {}
     for cand in candidates:
         overlap = _token_overlap_score(task, cand.content)
         length_score = min(1.0, len(cand.content) / 800) if cand.content else 0.0
@@ -265,8 +266,8 @@ async def rank_candidates_with_llm(
     candidates: Iterable[RankCandidate],
     llm_provider: LLMProvider,
     system_prompt: str = DEFAULT_RANKING_SYSTEM_PROMPT,
-    criteria: Optional[Iterable[str]] = None,
-    weights: Optional[Mapping[str, float]] = None,
+    criteria: Iterable[str] | None = None,
+    weights: Mapping[str, float] | None = None,
 ) -> RankDecision:
     """Rank candidates with the LLM and fallback heuristics if parsing fails."""
 

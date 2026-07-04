@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import asyncio
 import base64
 import logging
+from typing import Any
 
 import httpx
 
@@ -28,7 +28,7 @@ class JiraConnector(Connector):
         email: str,
         api_token: str,
         base_url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         timeout: float = 10.0,
     ) -> None:
         super().__init__(connector_id=connector_id, name=name)
@@ -36,12 +36,12 @@ class JiraConnector(Connector):
         self.api_token = api_token
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._lock = asyncio.Lock()
 
     async def _start(self) -> None:
         if not self._client:
-            token = f"{self.email}:{self.api_token}".encode("utf-8")
+            token = f"{self.email}:{self.api_token}".encode()
             auth_header = base64.b64encode(token).decode("utf-8")
             self._client = httpx.AsyncClient(
                 base_url=self.base_url,
@@ -66,34 +66,34 @@ class JiraConnector(Connector):
         if not self.base_url:
             raise ValueError("Jira base_url must be provided")
 
-    async def get_project(self, project_key: str) -> Dict[str, Any]:
+    async def get_project(self, project_key: str) -> dict[str, Any]:
         """Fetch Jira project metadata."""
         return await self._get(f"/rest/api/3/project/{project_key}")
 
-    async def search_issues(self, jql: str, max_results: int = 50) -> Dict[str, Any]:
+    async def search_issues(self, jql: str, max_results: int = 50) -> dict[str, Any]:
         """Search issues with JQL."""
         payload = {"jql": jql, "maxResults": max_results}
         return await self._post("/rest/api/3/search", payload)
 
-    async def create_issue(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_issue(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Create a Jira issue using the provided payload."""
         return await self._post("/rest/api/3/issue", payload)
 
     async def handle_event(
         self,
-        payload: Dict[str, Any],
-        headers: Optional[Dict[str, str]] = None,
+        payload: dict[str, Any],
+        headers: dict[str, str] | None = None,
     ) -> None:
         await self.emit(payload=payload, metadata={"headers": headers or {}})
 
-    async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.get(path, params=params or {})
         response.raise_for_status()
         return response.json()
 
-    async def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.post(path, json=payload)

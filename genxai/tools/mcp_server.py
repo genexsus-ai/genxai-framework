@@ -6,13 +6,15 @@ applications like Claude Desktop, IDEs, and other AI systems.
 
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool as MCPTool, TextContent, CallToolResult
+from mcp.types import CallToolResult, TextContent
+from mcp.types import Tool as MCPTool
 
+from genxai.tools.base import Tool
 from genxai.tools.registry import ToolRegistry
-from genxai.tools.base import Tool, ToolCategory
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,7 @@ class GenXAIMCPServer:
         """Setup MCP server handlers."""
 
         @self.server.list_tools()
-        async def list_tools() -> List[MCPTool]:
+        async def list_tools() -> list[MCPTool]:
             """List all available GenXAI tools."""
             tools = ToolRegistry.list_all()
             mcp_tools = []
@@ -46,7 +48,7 @@ class GenXAIMCPServer:
             return mcp_tools
 
         @self.server.call_tool()
-        async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
+        async def call_tool(name: str, arguments: dict[str, Any]) -> CallToolResult:
             """Execute a GenXAI tool.
 
             Args:

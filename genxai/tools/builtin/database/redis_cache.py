@@ -1,9 +1,9 @@
 """Redis cache tool for caching operations."""
 
-from typing import Any, Dict, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -69,11 +69,11 @@ class RedisCacheTool(Tool):
         self,
         operation: str,
         key: str,
-        value: Optional[str] = None,
-        ttl: Optional[int] = None,
+        value: str | None = None,
+        ttl: int | None = None,
         host: str = "localhost",
         port: int = 6379,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute Redis cache operation.
 
         Args:
@@ -89,12 +89,12 @@ class RedisCacheTool(Tool):
         """
         try:
             import redis
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "redis package not installed. Install with: pip install redis"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "operation": operation,
             "key": key,
             "success": False,
@@ -115,12 +115,12 @@ class RedisCacheTool(Tool):
             elif operation == "set":
                 if value is None:
                     raise ValueError("value parameter required for set operation")
-                
+
                 if ttl:
                     client.setex(key, ttl, value)
                 else:
                     client.set(key, value)
-                
+
                 result.update({
                     "value": value,
                     "ttl": ttl,

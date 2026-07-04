@@ -18,11 +18,11 @@ This enables the "Option A" CLI split:
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Iterator, Optional
-
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Security / RBAC / policy
@@ -51,7 +51,7 @@ class _NullUser:
     user_id: str = "anonymous"
 
 
-def get_current_user() -> Optional[Any]:
+def get_current_user() -> Any | None:
     return None
 
 
@@ -95,11 +95,11 @@ def clear_log_context() -> None:
 
 
 @contextmanager
-def span(name: str, attributes: Optional[Dict[str, Any]] = None) -> Iterator[None]:  # noqa: ARG001
+def span(name: str, attributes: dict[str, Any] | None = None) -> Iterator[None]:  # noqa: ARG001
     yield
 
 
-def add_event(name: str, attributes: Optional[Dict[str, Any]] = None) -> None:  # noqa: ARG001
+def add_event(name: str, attributes: dict[str, Any] | None = None) -> None:  # noqa: ARG001
     return
 
 
@@ -111,7 +111,7 @@ def record_tool_execution(
     tool_name: str,
     duration: float,
     status: str = "success",
-    error_type: Optional[str] = None,
+    error_type: str | None = None,
 ) -> None:  # noqa: ARG001
     return
 
@@ -120,7 +120,7 @@ def record_agent_execution(
     agent_id: str,
     duration: float,
     status: str = "success",
-    error_type: Optional[str] = None,
+    error_type: str | None = None,
 ) -> None:  # noqa: ARG001
     return
 
@@ -159,32 +159,50 @@ def record_workflow_node_execution(
 
 
 try:  # pragma: no cover
+    from enterprise.genxai.observability.logging import (
+        clear_log_context as _clear_log_context,
+    )
     from enterprise.genxai.observability.logging import (  # type: ignore
         set_log_context as _set_log_context,
-        clear_log_context as _clear_log_context,
+    )
+    from enterprise.genxai.observability.metrics import (
+        record_agent_execution as _record_agent_execution,
+    )
+    from enterprise.genxai.observability.metrics import (
+        record_llm_request as _record_llm_request,
     )
     from enterprise.genxai.observability.metrics import (  # type: ignore
         record_tool_execution as _record_tool_execution,
-        record_agent_execution as _record_agent_execution,
-        record_llm_request as _record_llm_request,
+    )
+    from enterprise.genxai.observability.metrics import (
         record_workflow_execution as _record_workflow_execution,
+    )
+    from enterprise.genxai.observability.metrics import (
         record_workflow_node_execution as _record_workflow_node_execution,
+    )
+    from enterprise.genxai.observability.tracing import (
+        add_event as _add_event,
+    )
+    from enterprise.genxai.observability.tracing import (
+        record_exception as _record_exception,
     )
     from enterprise.genxai.observability.tracing import (  # type: ignore
         span as _span,
-        add_event as _add_event,
-        record_exception as _record_exception,
     )
-    from enterprise.genxai.security.rbac import (  # type: ignore
-        get_current_user as _get_current_user,
-        Permission as _Permission,
+    from enterprise.genxai.security.audit import (
+        AuditEvent as _AuditEvent,
+    )
+    from enterprise.genxai.security.audit import (  # type: ignore
+        get_audit_log as _get_audit_log,
     )
     from enterprise.genxai.security.policy_engine import (  # type: ignore
         get_policy_engine as _get_policy_engine,
     )
-    from enterprise.genxai.security.audit import (  # type: ignore
-        get_audit_log as _get_audit_log,
-        AuditEvent as _AuditEvent,
+    from enterprise.genxai.security.rbac import (
+        Permission as _Permission,
+    )
+    from enterprise.genxai.security.rbac import (  # type: ignore
+        get_current_user as _get_current_user,
     )
 
     # Replace with enterprise implementations.

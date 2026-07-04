@@ -1,9 +1,9 @@
 """Webhook caller tool for triggering webhooks."""
 
-from typing import Any, Dict, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -64,10 +64,10 @@ class WebhookCallerTool(Tool):
         self,
         url: str,
         method: str = "POST",
-        payload: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        payload: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         timeout: int = 30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute webhook call.
 
         Args:
@@ -82,12 +82,12 @@ class WebhookCallerTool(Tool):
         """
         try:
             import httpx
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "httpx package not installed. Install with: pip install httpx"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "url": url,
             "method": method,
             "success": False,
@@ -95,7 +95,7 @@ class WebhookCallerTool(Tool):
 
         try:
             # Prepare request
-            request_kwargs: Dict[str, Any] = {
+            request_kwargs: dict[str, Any] = {
                 "method": method,
                 "url": url,
                 "timeout": timeout,

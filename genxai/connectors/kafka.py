@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Callable
 import asyncio
 import json
 import logging
+from collections.abc import Callable
+from typing import Any
 
 from .base import Connector
 
@@ -20,9 +21,9 @@ class KafkaConnector(Connector):
         connector_id: str,
         topic: str,
         bootstrap_servers: str,
-        group_id: Optional[str] = None,
-        name: Optional[str] = None,
-        value_deserializer: Optional[Callable[[bytes], Any]] = None,
+        group_id: str | None = None,
+        name: str | None = None,
+        value_deserializer: Callable[[bytes], Any] | None = None,
         poll_interval: float = 0.1,
     ) -> None:
         super().__init__(connector_id=connector_id, name=name)
@@ -32,7 +33,7 @@ class KafkaConnector(Connector):
         self.value_deserializer = value_deserializer or self._default_deserializer
         self.poll_interval = poll_interval
         self._consumer: Any = None
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
 
     async def _start(self) -> None:
         from aiokafka import AIOKafkaConsumer
@@ -88,5 +89,5 @@ class KafkaConnector(Connector):
         except Exception:
             return raw
 
-    async def handle_message(self, payload: Dict[str, Any]) -> None:
+    async def handle_message(self, payload: dict[str, Any]) -> None:
         await self.emit(payload=payload)

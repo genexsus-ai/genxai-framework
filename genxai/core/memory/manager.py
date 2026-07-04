@@ -1,22 +1,22 @@
 """Memory system manager coordinating all memory types."""
 
-from typing import Any, Dict, List, Optional, Tuple
-import logging
 import asyncio
+import logging
 from datetime import datetime
-
 from pathlib import Path
-from genxai.core.memory.base import Memory, MemoryType, MemoryConfig
-from genxai.core.memory.short_term import ShortTermMemory
-from genxai.core.memory.long_term import LongTermMemory
-from genxai.core.memory.episodic import EpisodicMemory, Episode
-from genxai.core.memory.semantic import SemanticMemory, Fact
-from genxai.core.memory.procedural import ProceduralMemory, Procedure
-from genxai.core.memory.working import WorkingMemory
-from genxai.core.memory.vector_store import VectorStoreFactory
-from genxai.core.memory.embedding import EmbeddingServiceFactory
-from genxai.core.memory.persistence import MemoryPersistenceConfig
+from typing import Any
+
 from genxai.core.memory.backends import MemoryBackendPlugin, MemoryBackendRegistry
+from genxai.core.memory.base import Memory, MemoryConfig
+from genxai.core.memory.embedding import EmbeddingServiceFactory
+from genxai.core.memory.episodic import Episode, EpisodicMemory
+from genxai.core.memory.long_term import LongTermMemory
+from genxai.core.memory.persistence import MemoryPersistenceConfig
+from genxai.core.memory.procedural import ProceduralMemory, Procedure
+from genxai.core.memory.semantic import Fact, SemanticMemory
+from genxai.core.memory.short_term import ShortTermMemory
+from genxai.core.memory.vector_store import VectorStoreFactory
+from genxai.core.memory.working import WorkingMemory
 from genxai.utils.tokens import truncate_to_token_limit
 
 logger = logging.getLogger(__name__)
@@ -37,15 +37,15 @@ class MemorySystem:
     def __init__(
         self,
         agent_id: str,
-        config: Optional[MemoryConfig] = None,
-        vector_store_backend: Optional[str] = None,
-        embedding_provider: Optional[str] = None,
-        redis_client: Optional[Any] = None,
-        graph_db: Optional[Any] = None,
+        config: MemoryConfig | None = None,
+        vector_store_backend: str | None = None,
+        embedding_provider: str | None = None,
+        redis_client: Any | None = None,
+        graph_db: Any | None = None,
         persistence_enabled: bool = False,
-        persistence_path: Optional[Path] = None,
+        persistence_path: Path | None = None,
         persistence_backend: str = "json",
-        persistence_sqlite_path: Optional[Path] = None,
+        persistence_sqlite_path: Path | None = None,
     ) -> None:
         """Initialize memory system.
 
@@ -63,7 +63,7 @@ class MemorySystem:
             backend=persistence_backend,
             sqlite_path=persistence_sqlite_path,
         )
-        self._backend_plugins: Dict[str, MemoryBackendPlugin] = {}
+        self._backend_plugins: dict[str, MemoryBackendPlugin] = {}
 
         if redis_client is not None:
             try:
@@ -95,7 +95,7 @@ class MemorySystem:
 
         # Rolling-summary state for prompt-memory compression
         self.rolling_summary: str = ""
-        self.summary_updated_at: Optional[datetime] = None
+        self.summary_updated_at: datetime | None = None
         self.summary_version: int = 0
 
         # Initialize short-term memory
@@ -105,10 +105,10 @@ class MemorySystem:
         self.working = WorkingMemory(capacity=self.config.working_capacity)
 
         # Initialize long-term memory with vector store
-        self.long_term: Optional[LongTermMemory] = None
+        self.long_term: LongTermMemory | None = None
         self.vector_store = None
         self.embedding_service = None
-        
+
         if self.config.long_term_enabled:
             try:
                 # Create vector store
@@ -117,14 +117,14 @@ class MemorySystem:
                     self.vector_store = VectorStoreFactory.create(
                         backend=backend,
                     )
-                
+
                 # Create embedding service
                 provider = embedding_provider or "openai"
                 if provider:
                     self.embedding_service = EmbeddingServiceFactory.create(
                         provider=provider,
                     )
-                
+
                 # Initialize long-term memory
                 self.long_term = LongTermMemory(
                     config=self.config,
@@ -147,7 +147,7 @@ class MemorySystem:
                 )
 
         # Initialize episodic memory
-        self.episodic: Optional[EpisodicMemory] = None
+        self.episodic: EpisodicMemory | None = None
         if self.config.episodic_enabled:
             self.episodic = EpisodicMemory(
                 graph_db=graph_db,
@@ -158,7 +158,7 @@ class MemorySystem:
             logger.info("Episodic memory initialized")
 
         # Initialize semantic memory
-        self.semantic: Optional[SemanticMemory] = None
+        self.semantic: SemanticMemory | None = None
         if self.config.semantic_enabled:
             self.semantic = SemanticMemory(
                 graph_db=graph_db,
@@ -169,7 +169,7 @@ class MemorySystem:
             logger.info("Semantic memory initialized")
 
         # Initialize procedural memory
-        self.procedural: Optional[ProceduralMemory] = None
+        self.procedural: ProceduralMemory | None = None
         if self.config.procedural_enabled:
             self.procedural = ProceduralMemory(persistence=self._persistence)
             logger.info("Procedural memory initialized")
@@ -181,7 +181,7 @@ class MemorySystem:
     async def add_to_short_term(
         self,
         content: Any,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Add content to short-term memory.
 
@@ -202,7 +202,7 @@ class MemorySystem:
         """
         return await self.short_term.get_context(max_tokens)
 
-    async def get_recent_window_context(self, window_size: Optional[int] = None) -> str:
+    async def get_recent_window_context(self, window_size: int | None = None) -> str:
         """Get context from the most recent short-term memories.
 
         Args:
@@ -218,7 +218,7 @@ class MemorySystem:
             header="Recent turns:",
         )
 
-    async def get_older_context_for_summary(self, keep_recent: Optional[int] = None) -> str:
+    async def get_older_context_for_summary(self, keep_recent: int | None = None) -> str:
         """Get older short-term memories to be summarized.
 
         Args:
@@ -234,7 +234,7 @@ class MemorySystem:
             header="Older turns:",
         )
 
-    def prune_short_term_to_window(self, keep_recent: Optional[int] = None) -> int:
+    def prune_short_term_to_window(self, keep_recent: int | None = None) -> int:
         """Prune short-term memory to keep only the latest N entries.
 
         Args:
@@ -263,7 +263,7 @@ class MemorySystem:
 
     async def build_prompt_memory_context(
         self,
-        window_size: Optional[int] = None,
+        window_size: int | None = None,
         max_tokens: int = 2000,
     ) -> str:
         """Build prompt-ready memory context from summary + recent turns.
@@ -275,7 +275,7 @@ class MemorySystem:
         Returns:
             Formatted and token-bounded memory context
         """
-        parts: List[str] = []
+        parts: list[str] = []
 
         if self.config.rolling_summary_enabled and self.rolling_summary:
             parts.append(f"Conversation summary:\n{self.rolling_summary}")
@@ -300,7 +300,7 @@ class MemorySystem:
         self,
         key: str,
         value: Any,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Add item to working memory.
 
@@ -311,7 +311,7 @@ class MemorySystem:
         """
         self.working.add(key, value, metadata)
 
-    def get_from_working(self, key: str) -> Optional[Any]:
+    def get_from_working(self, key: str) -> Any | None:
         """Get item from working memory.
 
         Args:
@@ -331,7 +331,7 @@ class MemorySystem:
     async def add_to_long_term(
         self,
         memory: Memory,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> None:
         """Add memory to long-term storage.
 
@@ -359,7 +359,7 @@ class MemorySystem:
         self,
         query: str,
         limit: int = 10,
-    ) -> List[Tuple[Memory, float]]:
+    ) -> list[tuple[Memory, float]]:
         """Search long-term memory by semantic similarity.
 
         Args:
@@ -376,7 +376,7 @@ class MemorySystem:
         try:
             # Generate query embedding
             query_embedding = await self.embedding_service.embed(query)
-            
+
             # Search vector store
             results = await self.vector_store.search(query_embedding, limit=limit)
             return results
@@ -389,12 +389,12 @@ class MemorySystem:
     async def store_episode(
         self,
         task: str,
-        actions: List[Dict[str, Any]],
-        outcome: Dict[str, Any],
+        actions: list[dict[str, Any]],
+        outcome: dict[str, Any],
         duration: float,
         success: bool,
-        metadata: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Episode]:
+        metadata: dict[str, Any] | None = None,
+    ) -> Episode | None:
         """Store an episode.
 
         Args:
@@ -426,7 +426,7 @@ class MemorySystem:
         self,
         task: str,
         limit: int = 5,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Get episodes similar to a task.
 
         Args:
@@ -443,7 +443,7 @@ class MemorySystem:
 
     async def get_success_rate(
         self,
-        task_pattern: Optional[str] = None,
+        task_pattern: str | None = None,
     ) -> float:
         """Get success rate for tasks.
 
@@ -469,8 +469,8 @@ class MemorySystem:
         predicate: str,
         object: str,
         confidence: float = 1.0,
-        source: Optional[str] = None,
-    ) -> Optional[Fact]:
+        source: str | None = None,
+    ) -> Fact | None:
         """Store a fact.
 
         Args:
@@ -497,10 +497,10 @@ class MemorySystem:
 
     async def query_facts(
         self,
-        subject: Optional[str] = None,
-        predicate: Optional[str] = None,
-        object: Optional[str] = None,
-    ) -> List[Fact]:
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
+    ) -> list[Fact]:
         """Query facts.
 
         Args:
@@ -526,10 +526,10 @@ class MemorySystem:
         self,
         name: str,
         description: str,
-        steps: List[Dict[str, Any]],
-        preconditions: Optional[List[str]] = None,
-        postconditions: Optional[List[str]] = None,
-    ) -> Optional[Procedure]:
+        steps: list[dict[str, Any]],
+        preconditions: list[str] | None = None,
+        postconditions: list[str] | None = None,
+    ) -> Procedure | None:
         """Store a procedure.
 
         Args:
@@ -554,7 +554,7 @@ class MemorySystem:
             postconditions=postconditions,
         )
 
-    async def get_procedure(self, name: str) -> Optional[Procedure]:
+    async def get_procedure(self, name: str) -> Procedure | None:
         """Get a procedure by name.
 
         Args:
@@ -598,7 +598,7 @@ class MemorySystem:
     async def consolidate_memories(
         self,
         importance_threshold: float = 0.7,
-    ) -> Dict[str, int]:
+    ) -> dict[str, int]:
         """Consolidate important memories from short-term to long-term.
 
         Args:
@@ -612,7 +612,7 @@ class MemorySystem:
             return {"consolidated": 0}
 
         consolidated = 0
-        
+
         # Get important memories from short-term
         for memory in self.short_term.memories:
             if memory.importance >= importance_threshold:
@@ -621,7 +621,7 @@ class MemorySystem:
                 consolidated += 1
 
         logger.info(f"Consolidated {consolidated} memories to long-term")
-        
+
         return {
             "consolidated": consolidated,
             "threshold": importance_threshold,
@@ -629,7 +629,7 @@ class MemorySystem:
 
     # ==================== Statistics ====================
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get comprehensive memory system statistics.
 
         Returns:
@@ -694,7 +694,7 @@ class MemorySystem:
             enabled.append("semantic")
         if self.procedural:
             enabled.append("procedural")
-        
+
         return f"MemorySystem(agent_id={self.agent_id}, enabled={enabled})"
 
     async def aclose(self) -> None:

@@ -1,10 +1,11 @@
 """Google Gemini LLM provider implementation."""
 
-from typing import Any, Dict, Optional, AsyncIterator
 import importlib
-import os
 import logging
+import os
 import warnings
+from collections.abc import AsyncIterator
+from typing import Any
 
 from genxai.llm.base import LLMProvider, LLMResponse
 
@@ -17,9 +18,9 @@ class GoogleProvider(LLMProvider):
     def __init__(
         self,
         model: str = "gemini-pro",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize Google provider.
@@ -32,13 +33,13 @@ class GoogleProvider(LLMProvider):
             **kwargs: Additional Google-specific parameters
         """
         super().__init__(model, temperature, max_tokens, **kwargs)
-        
+
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
         if not self.api_key:
             logger.warning("Google API key not provided. Set GOOGLE_API_KEY environment variable.")
-        
-        self._client: Optional[Any] = None
-        self._model_instance: Optional[Any] = None
+
+        self._client: Any | None = None
+        self._model_instance: Any | None = None
         self._initialize_client()
 
     def _initialize_client(self) -> None:
@@ -106,7 +107,7 @@ class GoogleProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion using Gemini.
@@ -136,7 +137,7 @@ class GoogleProvider(LLMProvider):
             "temperature": kwargs.get("temperature", self.temperature),
             "max_output_tokens": kwargs.get("max_tokens", self.max_tokens),
         }
-        
+
         # Add additional parameters
         if "top_p" in kwargs:
             generation_config["top_p"] = kwargs["top_p"]
@@ -150,7 +151,7 @@ class GoogleProvider(LLMProvider):
 
         try:
             logger.debug(f"Calling Google Gemini API with model: {self.model}")
-            
+
             response = await self._model_instance.generate_content_async(
                 full_prompt,
                 generation_config=generation_config,
@@ -159,14 +160,14 @@ class GoogleProvider(LLMProvider):
 
             # Extract response
             content = response.text if hasattr(response, 'text') else ""
-            
+
             # Extract usage (Gemini doesn't always provide detailed token counts)
             usage = {
                 "prompt_tokens": 0,  # Gemini API doesn't expose this directly
                 "completion_tokens": 0,  # Gemini API doesn't expose this directly
                 "total_tokens": 0,
             }
-            
+
             # Try to get token count if available
             if hasattr(response, 'usage_metadata'):
                 usage["prompt_tokens"] = getattr(response.usage_metadata, 'prompt_token_count', 0)
@@ -188,7 +189,7 @@ class GoogleProvider(LLMProvider):
                 finish_reason=finish_reason,
                 metadata={
                     "safety_ratings": (
-                        [rating for candidate in response.candidates 
+                        [rating for candidate in response.candidates
                          for rating in candidate.safety_ratings]
                         if hasattr(response, 'candidates') else []
                     ),
@@ -202,7 +203,7 @@ class GoogleProvider(LLMProvider):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Generate completion with streaming.
@@ -236,7 +237,7 @@ class GoogleProvider(LLMProvider):
 
         try:
             logger.debug(f"Streaming from Google Gemini API with model: {self.model}")
-            
+
             response = await self._model_instance.generate_content_async(
                 full_prompt,
                 generation_config=generation_config,
@@ -254,7 +255,7 @@ class GoogleProvider(LLMProvider):
 
     async def generate_chat(
         self,
-        messages: list[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion for chat messages.
@@ -273,11 +274,11 @@ class GoogleProvider(LLMProvider):
         # Gemini uses a simpler format: alternating user/model messages
         chat_history = []
         system_prompt = None
-        
+
         for msg in messages:
             role = msg.get("role", "user")
             content = msg.get("content", "")
-            
+
             if role == "system":
                 system_prompt = content
             elif role == "user":
@@ -290,7 +291,7 @@ class GoogleProvider(LLMProvider):
 
         # Get last user message
         last_message = chat_history[-1]["parts"][0] if chat_history else ""
-        
+
         # Prepend system prompt if provided
         if system_prompt:
             last_message = f"{system_prompt}\n\n{last_message}"
@@ -314,7 +315,7 @@ class GoogleProvider(LLMProvider):
                 "completion_tokens": 0,
                 "total_tokens": 0,
             }
-            
+
             if hasattr(response, 'usage_metadata'):
                 usage["prompt_tokens"] = getattr(response.usage_metadata, 'prompt_token_count', 0)
                 usage["completion_tokens"] = getattr(response.usage_metadata, 'candidates_token_count', 0)

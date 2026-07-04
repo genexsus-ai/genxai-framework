@@ -1,6 +1,6 @@
 """Agent system for GenXAI."""
 
-from genxai.core.agent.base import Agent, AgentConfig, AgentType, AgentFactory
+from genxai.core.agent.base import Agent, AgentConfig, AgentFactory, AgentType
 from genxai.core.agent.config_io import (
     agent_config_from_dict,
     agent_config_to_dict,
@@ -11,8 +11,8 @@ from genxai.core.agent.config_io import (
     import_agent_config_yaml,
     import_agents_yaml,
 )
-from genxai.core.agent.runtime import AgentRuntime
 from genxai.core.agent.registry import AgentRegistry
+from genxai.core.agent.runtime import AgentRuntime
 
 __all__ = [
     "Agent",

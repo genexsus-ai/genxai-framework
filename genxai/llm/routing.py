@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncIterator, Iterable, List, Optional
 import logging
+from collections.abc import AsyncIterator, Iterable
+from typing import Any
 
 from genxai.llm.base import LLMProvider, LLMResponse
 
@@ -16,7 +17,7 @@ class RoutedLLMProvider(LLMProvider):
     def __init__(
         self,
         primary: LLMProvider,
-        fallbacks: Optional[Iterable[LLMProvider]] = None,
+        fallbacks: Iterable[LLMProvider] | None = None,
     ) -> None:
         self._primary = primary
         self._fallbacks = list(fallbacks or [])
@@ -27,7 +28,7 @@ class RoutedLLMProvider(LLMProvider):
         )
 
     @property
-    def providers(self) -> List[LLMProvider]:
+    def providers(self) -> list[LLMProvider]:
         return [self._primary, *self._fallbacks]
 
     async def aclose(self) -> None:
@@ -41,10 +42,10 @@ class RoutedLLMProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
         for provider in self.providers:
             try:
                 response = await provider.generate(
@@ -67,10 +68,10 @@ class RoutedLLMProvider(LLMProvider):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
         for provider in self.providers:
             try:
                 async for chunk in provider.generate_stream(

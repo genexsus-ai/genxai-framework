@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from genxai.core.graph.engine import Graph
 from genxai.core.graph.nodes import AgentNode
@@ -17,8 +18,8 @@ class SelectorFlow(FlowOrchestrator):
 
     def __init__(
         self,
-        agents: List[Any],
-        selector: Callable[[Dict[str, Any], List[str]], str],
+        agents: list[Any],
+        selector: Callable[[dict[str, Any], list[str]], str],
         name: str = "selector_flow",
         llm_provider: Any = None,
         max_hops: int = 1,
@@ -29,7 +30,7 @@ class SelectorFlow(FlowOrchestrator):
 
     def build_graph(self) -> Graph:
         graph = Graph(name=self.name)
-        nodes: List[AgentNode] = self._agent_nodes()
+        nodes: list[AgentNode] = self._agent_nodes()
 
         for node in nodes:
             graph.add_node(node)
@@ -39,9 +40,9 @@ class SelectorFlow(FlowOrchestrator):
     async def run(
         self,
         input_data: Any,
-        state: Optional[Dict[str, Any]] = None,
+        state: dict[str, Any] | None = None,
         max_iterations: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         graph = self.build_graph()
         if state is None:
             state = {}

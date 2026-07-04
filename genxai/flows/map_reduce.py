@@ -1,7 +1,6 @@
 """MapReduce flow orchestrator."""
 
-import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from genxai.core.agent.runtime import AgentRuntime
 from genxai.flows.base import FlowOrchestrator
@@ -12,7 +11,7 @@ class MapReduceFlow(FlowOrchestrator):
 
     def __init__(
         self,
-        agents: List[Any],
+        agents: list[Any],
         name: str = "map_reduce_flow",
         llm_provider: Any = None,
     ) -> None:
@@ -21,9 +20,9 @@ class MapReduceFlow(FlowOrchestrator):
     async def run(
         self,
         input_data: Any,
-        state: Optional[Dict[str, Any]] = None,
+        state: dict[str, Any] | None = None,
         max_iterations: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if state is None:
             state = {}
         state["input"] = input_data

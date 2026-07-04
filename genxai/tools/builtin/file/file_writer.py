@@ -1,10 +1,10 @@
 """File writer tool for writing content to files."""
 
-from typing import Any, Dict
 import logging
 import os
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class FileWriterTool(Tool):
         encoding: str = "utf-8",
         mode: str = "write",
         create_dirs: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute file writing.
 
         Args:
@@ -82,7 +82,7 @@ class FileWriterTool(Tool):
         Returns:
             Dictionary containing write results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "path": path,
             "success": False,
         }
@@ -104,7 +104,7 @@ class FileWriterTool(Tool):
 
             # Get file info
             file_size = os.path.getsize(path)
-            
+
             result.update({
                 "success": True,
                 "bytes_written": len(content.encode(encoding)),

@@ -1,8 +1,10 @@
 """Edge types and implementations for graph connections."""
 
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Edge(BaseModel):
@@ -12,8 +14,8 @@ class Edge(BaseModel):
 
     source: str
     target: str
-    condition: Optional[Callable[[Dict[str, Any]], bool]] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    condition: Callable[[dict[str, Any]], bool] | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     priority: int = 0  # For ordering multiple edges from same source
 
 
@@ -26,7 +28,7 @@ class Edge(BaseModel):
         """Hash function for edge."""
         return hash((self.source, self.target))
 
-    def evaluate_condition(self, state: Dict[str, Any]) -> bool:
+    def evaluate_condition(self, state: dict[str, Any]) -> bool:
         """Evaluate the edge condition with given state."""
         if self.condition is None:
             return True
@@ -56,14 +58,14 @@ class WorkflowEdge(Edge):
         from_node: str,
         to_node: str,
         edge_type: EdgeType = EdgeType.SEQUENTIAL,
-        condition: Optional[Callable[[Dict[str, Any]], bool]] = None,
+        condition: Callable[[dict[str, Any]], bool] | None = None,
         **kwargs: Any,
     ) -> None:
         metadata = dict(kwargs.pop("metadata", {}) or {})
 
         if edge_type == EdgeType.PARALLEL:
             metadata["parallel"] = True
-        
+
         super().__init__(
             source=from_node,
             target=to_node,
@@ -81,7 +83,7 @@ class ConditionalEdge(Edge):
         self,
         source: str,
         target: str,
-        condition: Callable[[Dict[str, Any]], bool],
+        condition: Callable[[dict[str, Any]], bool],
         **kwargs: Any,
     ) -> None:
         """Initialize conditional edge."""

@@ -1,9 +1,9 @@
 """Vector store implementations for long-term memory."""
 
-from typing import Any, Dict, List, Optional, Tuple
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Any
 
 from genxai.core.memory.base import Memory, MemoryType
 
@@ -17,7 +17,7 @@ class VectorStore(ABC):
     async def store(
         self,
         memory: Memory,
-        embedding: List[float],
+        embedding: list[float],
     ) -> None:
         """Store a memory with its embedding.
 
@@ -30,10 +30,10 @@ class VectorStore(ABC):
     @abstractmethod
     async def search(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[Tuple[Memory, float]]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[tuple[Memory, float]]:
         """Search for similar memories.
 
         Args:
@@ -64,7 +64,7 @@ class VectorStore(ABC):
         pass
 
     @abstractmethod
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get vector store statistics."""
         pass
 
@@ -79,7 +79,7 @@ class ChromaVectorStore(VectorStore):
     def __init__(
         self,
         collection_name: str = "genxai_memories",
-        persist_directory: Optional[str] = None,
+        persist_directory: str | None = None,
     ) -> None:
         """Initialize ChromaDB vector store.
 
@@ -121,11 +121,11 @@ class ChromaVectorStore(VectorStore):
             self._initialized = True
             logger.info(f"Initialized ChromaDB collection: {self.collection_name}")
 
-        except ImportError:
+        except ImportError as e:
             logger.error(
                 "ChromaDB not installed. Install with: pip install chromadb"
             )
-            raise RuntimeError("ChromaDB not available")
+            raise RuntimeError("ChromaDB not available") from e
         except Exception as e:
             logger.error(f"Failed to initialize ChromaDB: {e}")
             raise
@@ -133,7 +133,7 @@ class ChromaVectorStore(VectorStore):
     async def store(
         self,
         memory: Memory,
-        embedding: List[float],
+        embedding: list[float],
     ) -> None:
         """Store a memory with its embedding."""
         await self._ensure_initialized()
@@ -165,10 +165,10 @@ class ChromaVectorStore(VectorStore):
 
     async def search(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[Tuple[Memory, float]]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[tuple[Memory, float]]:
         """Search for similar memories."""
         await self._ensure_initialized()
 
@@ -248,7 +248,7 @@ class ChromaVectorStore(VectorStore):
             logger.error(f"Failed to clear ChromaDB: {e}")
             raise
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get vector store statistics."""
         await self._ensure_initialized()
 
@@ -286,8 +286,8 @@ class PineconeVectorStore(VectorStore):
     def __init__(
         self,
         index_name: str = "genxai-memories",
-        api_key: Optional[str] = None,
-        environment: Optional[str] = None,
+        api_key: str | None = None,
+        environment: str | None = None,
         dimension: int = 1536,
     ) -> None:
         """Initialize Pinecone vector store.
@@ -311,8 +311,9 @@ class PineconeVectorStore(VectorStore):
             return
 
         try:
-            import pinecone
             import os
+
+            import pinecone
 
             # Get API key and environment
             api_key = self.api_key or os.getenv("PINECONE_API_KEY")
@@ -341,11 +342,11 @@ class PineconeVectorStore(VectorStore):
             self._initialized = True
             logger.info(f"Initialized Pinecone index: {self.index_name}")
 
-        except ImportError:
+        except ImportError as e:
             logger.error(
                 "Pinecone not installed. Install with: pip install pinecone-client"
             )
-            raise RuntimeError("Pinecone not available")
+            raise RuntimeError("Pinecone not available") from e
         except Exception as e:
             logger.error(f"Failed to initialize Pinecone: {e}")
             raise
@@ -353,7 +354,7 @@ class PineconeVectorStore(VectorStore):
     async def store(
         self,
         memory: Memory,
-        embedding: List[float],
+        embedding: list[float],
     ) -> None:
         """Store a memory with its embedding."""
         await self._ensure_initialized()
@@ -383,10 +384,10 @@ class PineconeVectorStore(VectorStore):
 
     async def search(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[Tuple[Memory, float]]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[tuple[Memory, float]]:
         """Search for similar memories."""
         await self._ensure_initialized()
 
@@ -457,7 +458,7 @@ class PineconeVectorStore(VectorStore):
             logger.error(f"Failed to clear Pinecone: {e}")
             raise
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get vector store statistics."""
         await self._ensure_initialized()
 
@@ -536,6 +537,6 @@ class VectorStoreFactory:
         logger.info(f"Registered vector store: {name}")
 
     @classmethod
-    def list_backends(cls) -> List[str]:
+    def list_backends(cls) -> list[str]:
         """List available vector store backends."""
         return list(cls._stores.keys())

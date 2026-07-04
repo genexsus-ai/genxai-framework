@@ -1,7 +1,7 @@
 """Workflow CLI commands."""
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 import click
 
@@ -38,14 +38,14 @@ def run_workflow(workflow_path: Path, input_payload: str) -> None:
     click.echo(json.dumps(result, indent=2))
 
 
-def _build_nodes_from_workflow(workflow: Dict[str, Any]):
+def _build_nodes_from_workflow(workflow: dict[str, Any]):
     nodes = workflow.get("graph", {}).get("nodes", [])
     if not isinstance(nodes, list):
         raise click.ClickException("workflow.graph.nodes must be a list")
     return nodes
 
 
-def _build_edges_from_workflow(workflow: Dict[str, Any]):
+def _build_edges_from_workflow(workflow: dict[str, Any]):
     edges = workflow.get("graph", {}).get("edges", [])
     if not isinstance(edges, list):
         raise click.ClickException("workflow.graph.edges must be a list")

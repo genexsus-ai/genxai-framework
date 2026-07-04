@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
 import logging
 import sqlite3
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +19,14 @@ class MemoryBackendPlugin(ABC):
         self.backend = backend
 
     @abstractmethod
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Return backend-specific telemetry and utilization stats."""
 
 
 class MemoryBackendRegistry:
     """Registry/factory for memory backend plugins."""
 
-    _factories: Dict[str, Callable[..., MemoryBackendPlugin]] = {}
+    _factories: dict[str, Callable[..., MemoryBackendPlugin]] = {}
 
     @classmethod
     def register(cls, name: str, factory: Callable[..., MemoryBackendPlugin]) -> None:
@@ -41,7 +42,7 @@ class MemoryBackendRegistry:
         return cls._factories[name](**kwargs)
 
     @classmethod
-    def list_backends(cls) -> List[str]:
+    def list_backends(cls) -> list[str]:
         return list(cls._factories.keys())
 
 
@@ -53,8 +54,8 @@ class RedisMemoryBackendPlugin(MemoryBackendPlugin):
         self._redis = redis_client
         self._key_prefix = key_prefix
 
-    def get_stats(self) -> Dict[str, Any]:
-        stats: Dict[str, Any] = {
+    def get_stats(self) -> dict[str, Any]:
+        stats: dict[str, Any] = {
             "backend": self.backend,
             "available": self._redis is not None,
         }
@@ -75,7 +76,7 @@ class RedisMemoryBackendPlugin(MemoryBackendPlugin):
         if max_memory in (0, "0"):
             max_memory = None
 
-        key_count: Optional[int]
+        key_count: int | None
         try:
             key_count = len(self._redis.keys(f"{self._key_prefix}*"))
         except Exception:
@@ -103,8 +104,8 @@ class SqliteMemoryBackendPlugin(MemoryBackendPlugin):
         super().__init__(backend="sqlite")
         self._sqlite_path = Path(sqlite_path)
 
-    def get_stats(self) -> Dict[str, Any]:
-        stats: Dict[str, Any] = {
+    def get_stats(self) -> dict[str, Any]:
+        stats: dict[str, Any] = {
             "backend": self.backend,
             "path": str(self._sqlite_path),
             "available": self._sqlite_path.exists(),
@@ -124,7 +125,7 @@ class SqliteMemoryBackendPlugin(MemoryBackendPlugin):
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
             table_names = [row[0] for row in cursor.fetchall()]
 
-            table_rows: Dict[str, Optional[int]] = {}
+            table_rows: dict[str, int | None] = {}
             for table in table_names:
                 try:
                     cursor.execute(f"SELECT COUNT(*) FROM {table}")
@@ -155,8 +156,8 @@ class Neo4jMemoryBackendPlugin(MemoryBackendPlugin):
         self._graph_db = graph_db
         self._traversal_depth = traversal_depth
 
-    def get_stats(self) -> Dict[str, Any]:
-        stats: Dict[str, Any] = {
+    def get_stats(self) -> dict[str, Any]:
+        stats: dict[str, Any] = {
             "backend": self.backend,
             "available": self._graph_db is not None,
             "traversal_depth": self._traversal_depth,

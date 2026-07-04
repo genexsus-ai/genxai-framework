@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import yaml
 
 from genxai.core.agent.base import Agent
-from genxai.core.agent.registry import AgentRegistry
 from genxai.core.agent.config_io import import_agents_yaml
+from genxai.core.agent.registry import AgentRegistry
 
 
-def load_workflow_yaml(path: Path) -> Dict[str, Any]:
+def load_workflow_yaml(path: Path) -> dict[str, Any]:
     """Load a workflow YAML file.
 
     Supports `agents_ref` to pull reusable agent definitions from another YAML file.
@@ -31,7 +31,7 @@ def load_workflow_yaml(path: Path) -> Dict[str, Any]:
     return workflow
 
 
-def register_workflow_agents(workflow: Dict[str, Any]) -> List[Agent]:
+def register_workflow_agents(workflow: dict[str, Any]) -> list[Agent]:
     """Register agents defined in a workflow dict and return them.
 
     Accepts agent dictionaries with the `agents_ref` already resolved.
@@ -42,7 +42,7 @@ def register_workflow_agents(workflow: Dict[str, Any]) -> List[Agent]:
 
     workflow_memory = workflow.get("memory") if isinstance(workflow.get("memory"), dict) else {}
 
-    agents: List[Agent] = []
+    agents: list[Agent] = []
     for agent_data in agents_payload:
         if not isinstance(agent_data, dict):
             raise ValueError("Invalid agent definition in workflow")
@@ -54,12 +54,12 @@ def register_workflow_agents(workflow: Dict[str, Any]) -> List[Agent]:
 
 
 def _apply_workflow_memory_defaults(
-    agent_data: Dict[str, Any], workflow_memory: Dict[str, Any]
-) -> Dict[str, Any]:
+    agent_data: dict[str, Any], workflow_memory: dict[str, Any]
+) -> dict[str, Any]:
     if not workflow_memory:
         return agent_data
 
-    defaults: Dict[str, Any] = {}
+    defaults: dict[str, Any] = {}
     if "enabled" in workflow_memory:
         defaults["enabled"] = workflow_memory.get("enabled")
     if "type" in workflow_memory:
@@ -81,7 +81,7 @@ def _apply_workflow_memory_defaults(
     return {**agent_data, "memory": {k: v for k, v in defaults.items() if v is not None}}
 
 
-def _merge_agents_ref(workflow: Dict[str, Any], base_path: Path) -> None:
+def _merge_agents_ref(workflow: dict[str, Any], base_path: Path) -> None:
     agents_ref = workflow.get("agents_ref")
     if not agents_ref:
         return
@@ -111,7 +111,7 @@ def _merge_agents_ref(workflow: Dict[str, Any], base_path: Path) -> None:
     workflow["agents"] = list(merged.values())
 
 
-def _validate_workflow_schema(workflow: Dict[str, Any]) -> None:
+def _validate_workflow_schema(workflow: dict[str, Any]) -> None:
     if not workflow.get("name"):
         raise ValueError("workflow.name is required")
 
@@ -154,7 +154,7 @@ def _validate_workflow_schema(workflow: Dict[str, Any]) -> None:
             raise ValueError(f"Agent node '{node['id']}' has no matching agent definition")
 
 
-def _agent_from_workflow_dict(data: Dict[str, Any]) -> Agent:
+def _agent_from_workflow_dict(data: dict[str, Any]) -> Agent:
     config_payload = data.get("config") if isinstance(data.get("config"), dict) else {}
     merged = {
         **config_payload,
@@ -166,7 +166,7 @@ def _agent_from_workflow_dict(data: Dict[str, Any]) -> Agent:
     )
 
 
-def _agent_config_from_workflow_dict(data: Dict[str, Any]):
+def _agent_config_from_workflow_dict(data: dict[str, Any]):
     from genxai.core.agent.base import AgentConfig
 
     # Allow workflow agents to specify either `llm` (legacy) or `llm_model`.

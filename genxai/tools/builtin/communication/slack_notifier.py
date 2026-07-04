@@ -1,9 +1,9 @@
 """Slack notifier tool for sending messages to Slack."""
 
-from typing import Any, Dict, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +60,10 @@ class SlackNotifierTool(Tool):
         self,
         webhook_url: str,
         message: str,
-        username: Optional[str] = None,
-        icon_emoji: Optional[str] = None,
-        channel: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        username: str | None = None,
+        icon_emoji: str | None = None,
+        channel: str | None = None,
+    ) -> dict[str, Any]:
         """Execute Slack notification.
 
         Args:
@@ -78,20 +78,20 @@ class SlackNotifierTool(Tool):
         """
         try:
             import httpx
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "httpx package not installed. Install with: pip install httpx"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "message": message,
             "success": False,
         }
 
         try:
             # Build payload
-            payload: Dict[str, Any] = {"text": message}
-            
+            payload: dict[str, Any] = {"text": message}
+
             if username:
                 payload["username"] = username
             if icon_emoji:

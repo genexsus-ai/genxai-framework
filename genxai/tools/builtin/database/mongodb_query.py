@@ -1,9 +1,9 @@
 """MongoDB query tool for NoSQL database operations."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -76,10 +76,10 @@ class MongoDBQueryTool(Tool):
         connection_string: str,
         database: str,
         collection: str,
-        filter: Optional[Dict[str, Any]] = None,
-        document: Optional[Dict[str, Any]] = None,
+        filter: dict[str, Any] | None = None,
+        document: dict[str, Any] | None = None,
         limit: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute MongoDB operation.
 
         Args:
@@ -97,12 +97,12 @@ class MongoDBQueryTool(Tool):
         try:
             from pymongo import MongoClient
             from pymongo.errors import PyMongoError
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "pymongo package not installed. Install with: pip install pymongo"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "operation": operation,
             "database": database,
             "collection": collection,
@@ -119,12 +119,12 @@ class MongoDBQueryTool(Tool):
                 query_filter = filter or {}
                 cursor = coll.find(query_filter).limit(limit)
                 documents = list(cursor)
-                
+
                 # Convert ObjectId to string
                 for doc in documents:
                     if "_id" in doc:
                         doc["_id"] = str(doc["_id"])
-                
+
                 result.update({
                     "documents": documents,
                     "count": len(documents),
@@ -134,10 +134,10 @@ class MongoDBQueryTool(Tool):
             elif operation == "find_one":
                 query_filter = filter or {}
                 doc = coll.find_one(query_filter)
-                
+
                 if doc and "_id" in doc:
                     doc["_id"] = str(doc["_id"])
-                
+
                 result.update({
                     "document": doc,
                     "found": doc is not None,
@@ -147,7 +147,7 @@ class MongoDBQueryTool(Tool):
             elif operation == "insert":
                 if not document:
                     raise ValueError("document parameter required for insert operation")
-                
+
                 insert_result = coll.insert_one(document)
                 result.update({
                     "inserted_id": str(insert_result.inserted_id),
@@ -159,7 +159,7 @@ class MongoDBQueryTool(Tool):
                     raise ValueError("filter parameter required for update operation")
                 if not document:
                     raise ValueError("document parameter required for update operation")
-                
+
                 update_result = coll.update_many(filter, {"$set": document})
                 result.update({
                     "matched_count": update_result.matched_count,
@@ -170,7 +170,7 @@ class MongoDBQueryTool(Tool):
             elif operation == "delete":
                 if not filter:
                     raise ValueError("filter parameter required for delete operation")
-                
+
                 delete_result = coll.delete_many(filter)
                 result.update({
                     "deleted_count": delete_result.deleted_count,

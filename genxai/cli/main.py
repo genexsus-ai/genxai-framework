@@ -14,7 +14,6 @@ directly from within the enterprise codebase.
 """
 
 import click
-
 from cli.commands import connector, metrics, tool, workflow
 from cli.commands.approval import approval
 from cli.commands.audit import audit

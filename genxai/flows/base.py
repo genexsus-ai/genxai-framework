@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, Iterable, List, Optional
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from typing import Any
 
 from genxai.core.agent.base import Agent
 from genxai.core.agent.registry import AgentRegistry
@@ -53,9 +54,9 @@ class FlowOrchestrator(ABC):
     async def run(
         self,
         input_data: Any,
-        state: Optional[Dict[str, Any]] = None,
+        state: dict[str, Any] | None = None,
         max_iterations: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute the flow graph with the provided input."""
         if state is None:
             state = {}
@@ -77,7 +78,7 @@ class FlowOrchestrator(ABC):
             llm_provider=self.llm_provider,
         )
 
-    def _agent_nodes(self) -> List[AgentNode]:
+    def _agent_nodes(self) -> list[AgentNode]:
         """Create AgentNode instances for each registered agent."""
         return [AgentNode(id=agent.id, agent_id=agent.id) for agent in self.agents]
 
@@ -85,7 +86,7 @@ class FlowOrchestrator(ABC):
         self,
         runtime: Any,
         task: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """Execute a runtime task with retries and timeout."""
         delay = self.backoff_base
@@ -103,7 +104,7 @@ class FlowOrchestrator(ABC):
                 await asyncio.sleep(delay)
                 delay *= self.backoff_multiplier
 
-    async def _gather_tasks(self, coros: List[Any]) -> List[Any]:
+    async def _gather_tasks(self, coros: list[Any]) -> list[Any]:
         """Run tasks concurrently, optionally canceling on first failure."""
         tasks = [asyncio.create_task(coro) for coro in coros]
         if not tasks:
@@ -112,7 +113,7 @@ class FlowOrchestrator(ABC):
         if not self.cancel_on_failure:
             return await asyncio.gather(*tasks, return_exceptions=True)
 
-        results: List[Any] = [None] * len(tasks)
+        results: list[Any] = [None] * len(tasks)
         index_map = {task: idx for idx, task in enumerate(tasks)}
         done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 

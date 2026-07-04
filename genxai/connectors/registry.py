@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
 import logging
 
 from .base import Connector
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 class ConnectorRegistry:
     """Registry for connectors."""
 
-    _connectors: Dict[str, Connector] = {}
+    _connectors: dict[str, Connector] = {}
 
     @classmethod
     def register(cls, connector: Connector) -> None:
@@ -26,11 +25,11 @@ class ConnectorRegistry:
         cls._connectors.pop(connector_id, None)
 
     @classmethod
-    def get(cls, connector_id: str) -> Optional[Connector]:
+    def get(cls, connector_id: str) -> Connector | None:
         return cls._connectors.get(connector_id)
 
     @classmethod
-    def list_all(cls) -> List[Connector]:
+    def list_all(cls) -> list[Connector]:
         return list(cls._connectors.values())
 
     @classmethod

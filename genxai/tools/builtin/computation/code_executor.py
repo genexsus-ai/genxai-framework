@@ -1,13 +1,12 @@
 """Code executor tool for running code in sandboxed environments."""
 
-from typing import Any, Dict, Optional
-import logging
-import subprocess
-import tempfile
-import os
 import asyncio
+import logging
+import os
+import tempfile
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ class CodeExecutorTool(Tool):
         language: str,
         timeout: int = 30,
         capture_output: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute code in sandboxed environment.
 
         Args:
@@ -77,7 +76,7 @@ class CodeExecutorTool(Tool):
         Returns:
             Dictionary containing execution results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "language": language,
             "success": False,
         }
@@ -128,7 +127,7 @@ class CodeExecutorTool(Tool):
                     else:
                         result["error"] = result.get("stderr") or "Execution failed"
 
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     process.kill()
                     await process.wait()
                     result["error"] = f"Execution timed out after {timeout} seconds"

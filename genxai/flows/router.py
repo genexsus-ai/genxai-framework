@@ -1,10 +1,10 @@
 """Rule-based routing flow orchestrator."""
 
-from typing import Callable, List
+from collections.abc import Callable
 
-from genxai.core.graph.engine import Graph
 from genxai.core.graph.edges import Edge
-from genxai.core.graph.nodes import AgentNode, InputNode, OutputNode
+from genxai.core.graph.engine import Graph
+from genxai.core.graph.nodes import InputNode, OutputNode
 from genxai.flows.base import FlowOrchestrator
 
 
@@ -13,7 +13,7 @@ class RouterFlow(FlowOrchestrator):
 
     def __init__(
         self,
-        agents: List,
+        agents: list,
         router: Callable[[dict], str],
         name: str = "router_flow",
         llm_provider=None,

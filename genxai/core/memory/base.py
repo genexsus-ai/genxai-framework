@@ -1,9 +1,10 @@
 """Base memory classes and types."""
 
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MemoryType(str, Enum):
@@ -25,14 +26,14 @@ class Memory(BaseModel):
     id: str
     type: MemoryType
     content: Any
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime
     importance: float = Field(default=0.5, ge=0.0, le=1.0)
     access_count: int = 0
     # Default to "now" so callers don't have to provide it explicitly.
     last_accessed: datetime = Field(default_factory=datetime.now)
-    embedding: Optional[List[float]] = None
-    tags: List[str] = Field(default_factory=list)
+    embedding: list[float] | None = None
+    tags: list[str] = Field(default_factory=list)
 
 
     def __repr__(self) -> str:
@@ -56,9 +57,9 @@ class MemoryConfig(BaseModel):
     procedural_enabled: bool = True
 
     # Storage backends
-    vector_db: Optional[str] = "pinecone"
-    graph_db: Optional[str] = "neo4j"
-    cache_db: Optional[str] = "redis"
+    vector_db: str | None = "pinecone"
+    graph_db: str | None = "neo4j"
+    cache_db: str | None = "redis"
 
     # Consolidation settings
     consolidation_enabled: bool = True

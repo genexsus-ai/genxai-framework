@@ -1,8 +1,9 @@
 """Data transformation tool for testing JSON/data operations."""
 
-from typing import Any
 import json
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from typing import Any
+
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 
 class DataTransformerTool(Tool):
@@ -53,20 +54,20 @@ class DataTransformerTool(Tool):
             # Parse JSON
             data = json.loads(data_str)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON: {str(e)}")
+            raise ValueError(f"Invalid JSON: {str(e)}") from e
 
         if transformation == "keys":
             if isinstance(data, dict):
                 result = list(data.keys())
             else:
                 raise ValueError("Data must be a JSON object for 'keys' transformation")
-        
+
         elif transformation == "values":
             if isinstance(data, dict):
                 result = list(data.values())
             else:
                 raise ValueError("Data must be a JSON object for 'values' transformation")
-        
+
         elif transformation == "count":
             if isinstance(data, dict):
                 result = len(data)
@@ -74,19 +75,19 @@ class DataTransformerTool(Tool):
                 result = len(data)
             else:
                 result = 1
-        
+
         elif transformation == "pretty":
             result = json.dumps(data, indent=2, sort_keys=True)
-        
+
         elif transformation == "minify":
             result = json.dumps(data, separators=(',', ':'))
-        
+
         elif transformation == "reverse_keys":
             if isinstance(data, dict):
                 result = {k: v for k, v in reversed(data.items())}
             else:
                 raise ValueError("Data must be a JSON object for 'reverse_keys' transformation")
-        
+
         else:
             raise ValueError(f"Unknown transformation: {transformation}")
 

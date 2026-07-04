@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
 import json
 import logging
 import sqlite3
+from collections.abc import Iterable
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class MemoryPersistenceConfig:
     base_dir: Path
     enabled: bool = False
     backend: str = "json"  # "json" or "sqlite"
-    sqlite_path: Optional[Path] = None
+    sqlite_path: Path | None = None
 
     def resolve(self, filename: str) -> Path:
         """Resolve a filename within the persistence directory."""
@@ -43,7 +44,7 @@ class JsonMemoryStore:
             return
         self.config.base_dir.mkdir(parents=True, exist_ok=True)
 
-    def load_list(self, filename: str) -> List[Dict[str, Any]]:
+    def load_list(self, filename: str) -> list[dict[str, Any]]:
         """Load a list of dictionaries from disk."""
         if not self.config.enabled:
             return []
@@ -63,7 +64,7 @@ class JsonMemoryStore:
             logger.error("Failed to load %s: %s", path, exc)
             return []
 
-    def save_list(self, filename: str, items: Iterable[Dict[str, Any]]) -> None:
+    def save_list(self, filename: str, items: Iterable[dict[str, Any]]) -> None:
         """Save a list of dictionaries to disk."""
         if not self.config.enabled:
             return
@@ -76,7 +77,7 @@ class JsonMemoryStore:
         except Exception as exc:
             logger.error("Failed to save %s: %s", path, exc)
 
-    def load_mapping(self, filename: str) -> Dict[str, Any]:
+    def load_mapping(self, filename: str) -> dict[str, Any]:
         """Load a mapping from disk."""
         if not self.config.enabled:
             return {}
@@ -96,7 +97,7 @@ class JsonMemoryStore:
             logger.error("Failed to load %s: %s", path, exc)
             return {}
 
-    def save_mapping(self, filename: str, data: Dict[str, Any]) -> None:
+    def save_mapping(self, filename: str, data: dict[str, Any]) -> None:
         """Save a mapping to disk."""
         if not self.config.enabled:
             return
@@ -156,7 +157,7 @@ class SqliteMemoryStore:
         self._ensure_db()
         return sqlite3.connect(self.config.resolve_sqlite_path())
 
-    def load_list(self, filename: str) -> List[Dict[str, Any]]:
+    def load_list(self, filename: str) -> list[dict[str, Any]]:
         if not self.config.enabled:
             return []
 
@@ -176,7 +177,7 @@ class SqliteMemoryStore:
         finally:
             conn.close()
 
-    def save_list(self, filename: str, items: Iterable[Dict[str, Any]]) -> None:
+    def save_list(self, filename: str, items: Iterable[dict[str, Any]]) -> None:
         if not self.config.enabled:
             return
 
@@ -195,7 +196,7 @@ class SqliteMemoryStore:
         finally:
             conn.close()
 
-    def load_mapping(self, filename: str) -> Dict[str, Any]:
+    def load_mapping(self, filename: str) -> dict[str, Any]:
         if not self.config.enabled:
             return {}
 
@@ -215,7 +216,7 @@ class SqliteMemoryStore:
         finally:
             conn.close()
 
-    def save_mapping(self, filename: str, data: Dict[str, Any]) -> None:
+    def save_mapping(self, filename: str, data: dict[str, Any]) -> None:
         if not self.config.enabled:
             return
 
@@ -240,8 +241,8 @@ class SqliteMemoryStore:
         memory_type: str,
         importance: float,
         timestamp: str,
-        tags: List[str],
-        metadata: Dict[str, Any],
+        tags: list[str],
+        metadata: dict[str, Any],
     ) -> None:
         if not self.config.enabled:
             return

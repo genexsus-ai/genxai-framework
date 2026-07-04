@@ -1,11 +1,10 @@
 """Web scraper tool for extracting content from web pages."""
 
-from typing import Any, Dict, List, Optional
 import logging
-import asyncio
+from typing import Any
 from urllib.parse import urljoin, urlparse
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -67,11 +66,11 @@ class WebScraperTool(Tool):
     async def _execute(
         self,
         url: str,
-        selector: Optional[str] = None,
+        selector: str | None = None,
         extract_links: bool = False,
         extract_images: bool = False,
         timeout: int = 30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute web scraping.
 
         Args:
@@ -91,7 +90,7 @@ class WebScraperTool(Tool):
             raise ImportError(
                 f"Required package not installed: {e}. "
                 "Install with: pip install httpx beautifulsoup4"
-            )
+            ) from e
 
         # Validate URL
         parsed = urlparse(url)
@@ -107,7 +106,7 @@ class WebScraperTool(Tool):
         # Parse HTML
         soup = BeautifulSoup(html_content, "html.parser")
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "url": url,
             "title": soup.title.string if soup.title else None,
             "status_code": response.status_code,

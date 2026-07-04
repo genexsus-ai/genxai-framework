@@ -1,12 +1,12 @@
 """Metrics collection for GenXAI with Prometheus support."""
 
+import time
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Any, Dict, Optional
-import time
+from typing import Any
 
 try:
-    from prometheus_client import Counter, Histogram, Gauge, CollectorRegistry, generate_latest
+    from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram, generate_latest
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
@@ -17,13 +17,13 @@ class MetricsCollector:
 
     def __init__(self) -> None:
         """Initialize metrics collector."""
-        self._counters: Dict[str, int] = defaultdict(int)
-        self._gauges: Dict[str, float] = {}
-        self._histograms: Dict[str, list[float]] = defaultdict(list)
-        self._timers: Dict[str, float] = {}
+        self._counters: dict[str, int] = defaultdict(int)
+        self._gauges: dict[str, float] = {}
+        self._histograms: dict[str, list[float]] = defaultdict(list)
+        self._timers: dict[str, float] = {}
 
     @contextmanager
-    def time(self, metric: str, tags: Optional[Dict[str, str]] = None):
+    def time(self, metric: str, tags: dict[str, str] | None = None):
         """Context manager to time a code block.
 
         Args:
@@ -37,7 +37,7 @@ class MetricsCollector:
             duration = time.time() - start
             self.timing(metric, duration, tags)
 
-    def increment(self, metric: str, value: int = 1, tags: Optional[Dict[str, str]] = None) -> None:
+    def increment(self, metric: str, value: int = 1, tags: dict[str, str] | None = None) -> None:
         """Increment a counter metric.
 
         Args:
@@ -48,7 +48,7 @@ class MetricsCollector:
         key = self._make_key(metric, tags)
         self._counters[key] += value
 
-    def gauge(self, metric: str, value: float, tags: Optional[Dict[str, str]] = None) -> None:
+    def gauge(self, metric: str, value: float, tags: dict[str, str] | None = None) -> None:
         """Set a gauge metric.
 
         Args:
@@ -59,7 +59,7 @@ class MetricsCollector:
         key = self._make_key(metric, tags)
         self._gauges[key] = value
 
-    def histogram(self, metric: str, value: float, tags: Optional[Dict[str, str]] = None) -> None:
+    def histogram(self, metric: str, value: float, tags: dict[str, str] | None = None) -> None:
         """Record a histogram value.
 
         Args:
@@ -70,7 +70,7 @@ class MetricsCollector:
         key = self._make_key(metric, tags)
         self._histograms[key].append(value)
 
-    def timing(self, metric: str, duration: float, tags: Optional[Dict[str, str]] = None) -> None:
+    def timing(self, metric: str, duration: float, tags: dict[str, str] | None = None) -> None:
         """Record a timing metric.
 
         Args:
@@ -88,7 +88,7 @@ class MetricsCollector:
         """
         self._timers[metric] = time.time()
 
-    def stop_timer(self, metric: str, tags: Optional[Dict[str, str]] = None) -> float:
+    def stop_timer(self, metric: str, tags: dict[str, str] | None = None) -> float:
         """Stop a timer and record the duration.
 
         Args:
@@ -106,7 +106,7 @@ class MetricsCollector:
         del self._timers[metric]
         return duration
 
-    def get_counter(self, metric: str, tags: Optional[Dict[str, str]] = None) -> int:
+    def get_counter(self, metric: str, tags: dict[str, str] | None = None) -> int:
         """Get counter value.
 
         Args:
@@ -119,7 +119,7 @@ class MetricsCollector:
         key = self._make_key(metric, tags)
         return self._counters.get(key, 0)
 
-    def get_gauge(self, metric: str, tags: Optional[Dict[str, str]] = None) -> Optional[float]:
+    def get_gauge(self, metric: str, tags: dict[str, str] | None = None) -> float | None:
         """Get gauge value.
 
         Args:
@@ -133,8 +133,8 @@ class MetricsCollector:
         return self._gauges.get(key)
 
     def get_histogram_stats(
-        self, metric: str, tags: Optional[Dict[str, str]] = None
-    ) -> Dict[str, float]:
+        self, metric: str, tags: dict[str, str] | None = None
+    ) -> dict[str, float]:
         """Get histogram statistics.
 
         Args:
@@ -158,7 +158,7 @@ class MetricsCollector:
             "max": max(values),
         }
 
-    def get_all_metrics(self) -> Dict[str, Any]:
+    def get_all_metrics(self) -> dict[str, Any]:
         """Get all metrics.
 
         Returns:
@@ -180,7 +180,7 @@ class MetricsCollector:
         self._histograms.clear()
         self._timers.clear()
 
-    def _make_key(self, metric: str, tags: Optional[Dict[str, str]] = None) -> str:
+    def _make_key(self, metric: str, tags: dict[str, str] | None = None) -> str:
         """Create metric key with tags.
 
         Args:
@@ -201,7 +201,7 @@ class MetricsCollector:
 if PROMETHEUS_AVAILABLE:
     # Create registry
     registry = CollectorRegistry()
-    
+
     # Agent execution metrics
     agent_executions_total = Counter(
         'genxai_agent_executions_total',
@@ -209,14 +209,14 @@ if PROMETHEUS_AVAILABLE:
         ['agent_id', 'status'],
         registry=registry
     )
-    
+
     agent_errors_total = Counter(
         'genxai_agent_errors_total',
         'Total number of agent errors',
         ['agent_id', 'error_type'],
         registry=registry
     )
-    
+
     agent_execution_duration_seconds = Histogram(
         'genxai_agent_execution_duration_seconds',
         'Agent execution duration in seconds',
@@ -224,14 +224,14 @@ if PROMETHEUS_AVAILABLE:
         buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0],
         registry=registry
     )
-    
+
     agent_active_executions = Gauge(
         'genxai_agent_active_executions',
         'Number of currently active agent executions',
         ['agent_id'],
         registry=registry
     )
-    
+
     # Tool usage metrics
     tool_calls_total = Counter(
         'genxai_tool_calls_total',
@@ -239,7 +239,7 @@ if PROMETHEUS_AVAILABLE:
         ['tool_name', 'status'],
         registry=registry
     )
-    
+
     tool_execution_duration_seconds = Histogram(
         'genxai_tool_execution_duration_seconds',
         'Tool execution duration in seconds',
@@ -247,14 +247,14 @@ if PROMETHEUS_AVAILABLE:
         buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0],
         registry=registry
     )
-    
+
     tool_errors_total = Counter(
         'genxai_tool_errors_total',
         'Total number of tool errors',
         ['tool_name', 'error_type'],
         registry=registry
     )
-    
+
     # LLM metrics
     llm_requests_total = Counter(
         'genxai_llm_requests_total',
@@ -262,21 +262,21 @@ if PROMETHEUS_AVAILABLE:
         ['provider', 'model', 'status'],
         registry=registry
     )
-    
+
     llm_tokens_total = Counter(
         'genxai_llm_tokens_total',
         'Total number of tokens used',
         ['provider', 'model', 'token_type'],
         registry=registry
     )
-    
+
     llm_cost_total = Counter(
         'genxai_llm_cost_total',
         'Total estimated cost in USD',
         ['provider', 'model'],
         registry=registry
     )
-    
+
     llm_request_duration_seconds = Histogram(
         'genxai_llm_request_duration_seconds',
         'LLM request duration in seconds',
@@ -284,7 +284,7 @@ if PROMETHEUS_AVAILABLE:
         buckets=[0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0],
         registry=registry
     )
-    
+
     # Memory operation metrics
     memory_operations_total = Counter(
         'genxai_memory_operations_total',
@@ -292,7 +292,7 @@ if PROMETHEUS_AVAILABLE:
         ['operation_type', 'memory_type', 'status'],
         registry=registry
     )
-    
+
     memory_operation_duration_seconds = Histogram(
         'genxai_memory_operation_duration_seconds',
         'Memory operation duration in seconds',
@@ -300,14 +300,14 @@ if PROMETHEUS_AVAILABLE:
         buckets=[0.001, 0.01, 0.05, 0.1, 0.5, 1.0],
         registry=registry
     )
-    
+
     memory_size_bytes = Gauge(
         'genxai_memory_size_bytes',
         'Current memory size in bytes',
         ['agent_id', 'memory_type'],
         registry=registry
     )
-    
+
     # Workflow execution metrics
     workflow_executions_total = Counter(
         'genxai_workflow_executions_total',
@@ -315,7 +315,7 @@ if PROMETHEUS_AVAILABLE:
         ['workflow_id', 'status'],
         registry=registry
     )
-    
+
     workflow_execution_duration_seconds = Histogram(
         'genxai_workflow_execution_duration_seconds',
         'Workflow execution duration in seconds',
@@ -323,14 +323,14 @@ if PROMETHEUS_AVAILABLE:
         buckets=[1.0, 5.0, 10.0, 30.0, 60.0, 300.0, 600.0],
         registry=registry
     )
-    
+
     workflow_node_executions_total = Counter(
         'genxai_workflow_node_executions_total',
         'Total number of workflow node executions',
         ['workflow_id', 'node_id', 'status'],
         registry=registry
     )
-    
+
     def get_prometheus_metrics() -> bytes:
         """Get Prometheus metrics in text format.
         
@@ -358,7 +358,7 @@ else:
     workflow_executions_total = None
     workflow_execution_duration_seconds = None
     workflow_node_executions_total = None
-    
+
     def get_prometheus_metrics() -> bytes:
         """Stub function when Prometheus not available."""
         return b"# Prometheus client not installed\n"
@@ -377,7 +377,7 @@ def get_metrics_collector() -> MetricsCollector:
     return _global_metrics
 
 
-def _safe_inc(counter: Any, labels: Optional[Dict[str, str]] = None, value: int = 1) -> None:
+def _safe_inc(counter: Any, labels: dict[str, str] | None = None, value: int = 1) -> None:
     if counter is None:
         return
     if labels:
@@ -386,7 +386,7 @@ def _safe_inc(counter: Any, labels: Optional[Dict[str, str]] = None, value: int 
         counter.inc(value)
 
 
-def _safe_observe(histogram: Any, labels: Optional[Dict[str, str]] = None, value: float = 0.0) -> None:
+def _safe_observe(histogram: Any, labels: dict[str, str] | None = None, value: float = 0.0) -> None:
     if histogram is None:
         return
     if labels:
@@ -395,7 +395,7 @@ def _safe_observe(histogram: Any, labels: Optional[Dict[str, str]] = None, value
         histogram.observe(value)
 
 
-def _safe_set(gauge: Any, labels: Optional[Dict[str, str]] = None, value: float = 0.0) -> None:
+def _safe_set(gauge: Any, labels: dict[str, str] | None = None, value: float = 0.0) -> None:
     if gauge is None:
         return
     if labels:
@@ -408,7 +408,7 @@ def record_agent_execution(
     agent_id: str,
     duration: float,
     status: str = "success",
-    error_type: Optional[str] = None,
+    error_type: str | None = None,
 ) -> None:
     """Record agent execution metrics.
 
@@ -428,7 +428,7 @@ def record_tool_execution(
     tool_name: str,
     duration: float,
     status: str = "success",
-    error_type: Optional[str] = None,
+    error_type: str | None = None,
 ) -> None:
     """Record tool execution metrics."""
     _safe_inc(tool_calls_total, {"tool_name": tool_name, "status": status})

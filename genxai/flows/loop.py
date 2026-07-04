@@ -1,10 +1,9 @@
 """Loop flow orchestrator."""
 
-from typing import List
 
-from genxai.core.graph.engine import Graph
 from genxai.core.graph.edges import Edge
-from genxai.core.graph.nodes import AgentNode, InputNode, LoopNode, OutputNode
+from genxai.core.graph.engine import Graph
+from genxai.core.graph.nodes import InputNode, LoopNode, OutputNode
 from genxai.flows.base import FlowOrchestrator
 
 
@@ -13,7 +12,7 @@ class LoopFlow(FlowOrchestrator):
 
     def __init__(
         self,
-        agents: List,
+        agents: list,
         condition_key: str,
         max_iterations: int = 5,
         name: str = "loop_flow",

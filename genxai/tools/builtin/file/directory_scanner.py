@@ -1,11 +1,11 @@
 """Directory scanner tool for scanning and analyzing directory structures."""
 
-from typing import Any, Dict, List
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class DirectoryScannerTool(Tool):
         include_hidden: bool = False,
         file_pattern: str = None,
         max_depth: int = 10,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute directory scanning.
 
         Args:
@@ -84,7 +84,7 @@ class DirectoryScannerTool(Tool):
         Returns:
             Dictionary containing scan results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "path": path,
             "success": False,
         }

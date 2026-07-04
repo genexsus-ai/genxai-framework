@@ -6,7 +6,7 @@ such as diffs, command execution output, plan summaries, and diagnostics.
 
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Union
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -16,10 +16,10 @@ class DiffArtifactPayload(BaseModel):
     """Structured representation of a file edit or patch result."""
 
     type: Literal["diff"] = "diff"
-    file_path: Optional[str] = None
+    file_path: str | None = None
     before: str = ""
     after: str = ""
-    patch: Optional[str] = None
+    patch: str | None = None
 
 
 class CommandOutputArtifactPayload(BaseModel):
@@ -38,8 +38,8 @@ class PlanSummaryArtifactPayload(BaseModel):
 
     type: Literal["plan_summary"] = "plan_summary"
     steps: list[str] = Field(default_factory=list)
-    objective: Optional[str] = None
-    notes: Optional[str] = None
+    objective: str | None = None
+    notes: str | None = None
 
 
 class DiagnosticsArtifactPayload(BaseModel):
@@ -47,7 +47,7 @@ class DiagnosticsArtifactPayload(BaseModel):
 
     type: Literal["diagnostics"] = "diagnostics"
     level: Literal["info", "warning", "error"] = "info"
-    code: Optional[str] = None
+    code: str | None = None
     message: str
     details: dict[str, Any] = Field(default_factory=dict)
 
@@ -85,7 +85,7 @@ class Artifact(BaseModel):
     kind: ArtifactKind
     title: str
     content: str = ""
-    payload: Optional[ArtifactPayload] = Field(default=None, discriminator="type")
+    payload: ArtifactPayload | None = Field(default=None, discriminator="type")
 
 
 __all__ = [

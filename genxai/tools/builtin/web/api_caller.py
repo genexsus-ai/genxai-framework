@@ -1,10 +1,10 @@
 """API caller tool for making HTTP requests."""
 
-from typing import Any, Dict, Optional
-import logging
 import json
+import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +79,12 @@ class APICallerTool(Tool):
         self,
         url: str,
         method: str,
-        headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None,
-        body: Optional[Dict[str, Any]] = None,
+        headers: dict[str, str] | None = None,
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
         timeout: int = 30,
         follow_redirects: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute API call.
 
         Args:
@@ -101,10 +101,10 @@ class APICallerTool(Tool):
         """
         try:
             import httpx
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "httpx package not installed. Install with: pip install httpx"
-            )
+            ) from e
 
         # Prepare headers
         request_headers = headers or {}
@@ -113,7 +113,7 @@ class APICallerTool(Tool):
 
         # Prepare request
         method = method.upper()
-        request_kwargs: Dict[str, Any] = {
+        request_kwargs: dict[str, Any] = {
             "method": method,
             "url": url,
             "headers": request_headers,
@@ -134,7 +134,7 @@ class APICallerTool(Tool):
             response = await client.request(**request_kwargs)
 
         # Parse response
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "status_code": response.status_code,
             "headers": dict(response.headers),
             "url": str(response.url),

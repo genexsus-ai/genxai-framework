@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List, Set
-
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,13 +14,13 @@ class GenXAISettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="GENXAI_", case_sensitive=False)
 
-    tool_allowlist: List[str] = Field(default_factory=list)
-    tool_denylist: List[str] = Field(default_factory=list)
+    tool_allowlist: list[str] = Field(default_factory=list)
+    tool_denylist: list[str] = Field(default_factory=list)
 
-    def allowlist_set(self) -> Set[str]:
+    def allowlist_set(self) -> set[str]:
         return {name.strip() for name in self.tool_allowlist if name.strip()}
 
-    def denylist_set(self) -> Set[str]:
+    def denylist_set(self) -> set[str]:
         return {name.strip() for name in self.tool_denylist if name.strip()}
 
 

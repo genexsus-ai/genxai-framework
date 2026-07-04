@@ -1,9 +1,9 @@
 """HTTP client tool for advanced HTTP operations."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -88,13 +88,13 @@ class HTTPClientTool(Tool):
         self,
         url: str,
         method: str = "GET",
-        headers: Optional[Dict[str, str]] = None,
-        cookies: Optional[Dict[str, str]] = None,
-        auth: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
+        cookies: dict[str, str] | None = None,
+        auth: dict[str, str] | None = None,
         verify_ssl: bool = True,
         max_redirects: int = 10,
         timeout: int = 30,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute HTTP request with advanced options.
 
         Args:
@@ -112,13 +112,13 @@ class HTTPClientTool(Tool):
         """
         try:
             import httpx
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "httpx package not installed. Install with: pip install httpx"
-            )
+            ) from e
 
         # Prepare client configuration
-        client_kwargs: Dict[str, Any] = {
+        client_kwargs: dict[str, Any] = {
             "timeout": timeout,
             "verify": verify_ssl,
             "follow_redirects": max_redirects > 0,
@@ -139,7 +139,7 @@ class HTTPClientTool(Tool):
             )
 
         # Build result
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "status_code": response.status_code,
             "reason_phrase": response.reason_phrase,
             "http_version": response.http_version,

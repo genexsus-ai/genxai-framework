@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, Optional
+from typing import Any
 
 import click
 from rich.console import Console
@@ -12,22 +12,22 @@ from rich.table import Table
 
 from genxai.connectors import (
     Connector,
-    KafkaConnector,
-    SQSConnector,
-    PostgresCDCConnector,
-    WebhookConnector,
-    SlackConnector,
     GitHubConnector,
-    NotionConnector,
-    JiraConnector,
     GoogleWorkspaceConnector,
+    JiraConnector,
+    KafkaConnector,
+    NotionConnector,
+    PostgresCDCConnector,
+    SlackConnector,
+    SQSConnector,
+    WebhookConnector,
 )
 from genxai.connectors.config_store import ConnectorConfigEntry, ConnectorConfigStore
 
 console = Console()
 
 
-CONNECTOR_CATALOG: Dict[str, Dict[str, Any]] = {
+CONNECTOR_CATALOG: dict[str, dict[str, Any]] = {
     "kafka": {
         "class": KafkaConnector,
         "required": ["topic", "bootstrap_servers"],
@@ -114,8 +114,8 @@ def list_connectors(output_format: str) -> None:
 def validate(
     connector_type: str,
     connector_id: str,
-    config: Optional[str],
-    config_name: Optional[str],
+    config: str | None,
+    config_name: str | None,
 ) -> None:
     """Validate connector configuration without starting it."""
     connector_meta = CONNECTOR_CATALOG.get(connector_type)
@@ -142,7 +142,7 @@ def validate(
 @click.option("--connector-id", default="connector", show_default=True)
 @click.option("--config", help="JSON config payload for the connector")
 @click.option("--config-name", help="Use a saved connector config")
-def start(connector_type: str, connector_id: str, config: Optional[str], config_name: Optional[str]) -> None:
+def start(connector_type: str, connector_id: str, config: str | None, config_name: str | None) -> None:
     """Start a connector instance for quick validation."""
     connector_instance = _build_from_cli(connector_type, connector_id, config, config_name)
     try:
@@ -157,7 +157,7 @@ def start(connector_type: str, connector_id: str, config: Optional[str], config_
 @click.option("--connector-id", default="connector", show_default=True)
 @click.option("--config", help="JSON config payload for the connector")
 @click.option("--config-name", help="Use a saved connector config")
-def stop(connector_type: str, connector_id: str, config: Optional[str], config_name: Optional[str]) -> None:
+def stop(connector_type: str, connector_id: str, config: str | None, config_name: str | None) -> None:
     """Stop a connector instance for quick validation."""
     connector_instance = _build_from_cli(connector_type, connector_id, config, config_name)
     try:
@@ -176,9 +176,9 @@ def stop(connector_type: str, connector_id: str, config: Optional[str], config_n
 def health(
     connector_type: str,
     connector_id: str,
-    config: Optional[str],
+    config: str | None,
     output_format: str,
-    config_name: Optional[str],
+    config_name: str | None,
 ) -> None:
     """Run a connector health check without starting it."""
     connector_instance = _build_from_cli(connector_type, connector_id, config, config_name)
@@ -272,7 +272,7 @@ def keygen() -> None:
     click.echo(key)
 
 
-def _build_connector(connector_id: str, connector_class: type[Connector], config: Dict[str, Any]) -> Connector:
+def _build_connector(connector_id: str, connector_class: type[Connector], config: dict[str, Any]) -> Connector:
     params = {"connector_id": connector_id, **config}
     return connector_class(**params)
 
@@ -280,8 +280,8 @@ def _build_connector(connector_id: str, connector_class: type[Connector], config
 def _build_from_cli(
     connector_type: str,
     connector_id: str,
-    config: Optional[str],
-    config_name: Optional[str],
+    config: str | None,
+    config_name: str | None,
 ) -> Connector:
     connector_meta = CONNECTOR_CATALOG.get(connector_type)
     if not connector_meta:
@@ -295,7 +295,7 @@ def _build_from_cli(
     return _build_connector(connector_id, connector_meta["class"], config_data)
 
 
-def _load_config(config: Optional[str], config_name: Optional[str]) -> Dict[str, Any]:
+def _load_config(config: str | None, config_name: str | None) -> dict[str, Any]:
     if config_name:
         store = ConnectorConfigStore()
         entry = store.get(config_name)

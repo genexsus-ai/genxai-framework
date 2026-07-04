@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import asyncio
 import logging
+from typing import Any
 
 import httpx
 
@@ -25,7 +25,7 @@ class GitHubConnector(Connector):
         self,
         connector_id: str,
         token: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         base_url: str = "https://api.github.com",
         timeout: float = 10.0,
     ) -> None:
@@ -33,7 +33,7 @@ class GitHubConnector(Connector):
         self.token = token
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._lock = asyncio.Lock()
 
     async def _start(self) -> None:
@@ -57,7 +57,7 @@ class GitHubConnector(Connector):
         if not self.token:
             raise ValueError("GitHub token must be provided")
 
-    async def get_repo(self, owner: str, repo: str) -> Dict[str, Any]:
+    async def get_repo(self, owner: str, repo: str) -> dict[str, Any]:
         """Fetch repository metadata."""
         return await self._get(f"/repos/{owner}/{repo}")
 
@@ -79,30 +79,30 @@ class GitHubConnector(Connector):
         owner: str,
         repo: str,
         title: str,
-        body: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        body: str | None = None,
+    ) -> dict[str, Any]:
         """Create a new GitHub issue."""
-        payload: Dict[str, Any] = {"title": title}
+        payload: dict[str, Any] = {"title": title}
         if body:
             payload["body"] = body
         return await self._post(f"/repos/{owner}/{repo}/issues", payload)
 
     async def handle_event(
         self,
-        payload: Dict[str, Any],
-        headers: Optional[Dict[str, str]] = None,
+        payload: dict[str, Any],
+        headers: dict[str, str] | None = None,
     ) -> None:
         """Handle an inbound GitHub webhook event and emit it downstream."""
         await self.emit(payload=payload, metadata={"headers": headers or {}})
 
-    async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    async def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.get(path, params=params or {})
         response.raise_for_status()
         return response.json()
 
-    async def _post(self, path: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.post(path, json=payload)

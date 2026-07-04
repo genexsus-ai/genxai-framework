@@ -1,23 +1,22 @@
 """Long-term memory implementation with Redis backend."""
 
-from typing import Any, Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
 import json
 import logging
+from datetime import datetime, timedelta
+from typing import Any
 
-from genxai.core.memory.base import Memory, MemoryType, MemoryConfig
+from genxai.core.memory.backends import (
+    MemoryBackendPlugin,
+    RedisMemoryBackendPlugin,
+)
+from genxai.core.memory.base import Memory, MemoryConfig, MemoryType
+from genxai.core.memory.embedding import EmbeddingService
 from genxai.core.memory.persistence import (
-    JsonMemoryStore,
     MemoryPersistenceConfig,
     SqliteMemoryStore,
     create_memory_store,
 )
 from genxai.core.memory.vector_store import VectorStore
-from genxai.core.memory.embedding import EmbeddingService
-from genxai.core.memory.backends import (
-    MemoryBackendPlugin,
-    RedisMemoryBackendPlugin,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +30,13 @@ class LongTermMemory:
 
     def __init__(
         self,
-        config: Optional[MemoryConfig] = None,
-        redis_client: Optional[Any] = None,
+        config: MemoryConfig | None = None,
+        redis_client: Any | None = None,
         key_prefix: str = "genxai:memory:long_term:",
-        vector_store: Optional[VectorStore] = None,
-        embedding_service: Optional[EmbeddingService] = None,
-        persistence: Optional[MemoryPersistenceConfig] = None,
-        backend_plugin: Optional[MemoryBackendPlugin] = None,
+        vector_store: VectorStore | None = None,
+        embedding_service: EmbeddingService | None = None,
+        persistence: MemoryPersistenceConfig | None = None,
+        backend_plugin: MemoryBackendPlugin | None = None,
     ) -> None:
         """Initialize long-term memory.
 
@@ -57,11 +56,11 @@ class LongTermMemory:
             self._store = create_memory_store(persistence)
         else:
             self._store = None
-        
+
         # Fallback to in-memory storage if Redis not available
-        self._in_memory_storage: Dict[str, Memory] = {}
+        self._in_memory_storage: dict[str, Memory] = {}
         self._use_redis = redis_client is not None
-        
+
         if self._use_redis:
             logger.info("Initialized long-term memory with Redis backend")
             if self._backend_plugin is None:
@@ -81,7 +80,7 @@ class LongTermMemory:
     def store(
         self,
         memory: Memory,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
     ) -> None:
         """Store a memory with optional TTL.
 
@@ -90,10 +89,10 @@ class LongTermMemory:
             ttl: Time-to-live in seconds (None for no expiration)
         """
         key = self._make_key(memory.id)
-        
+
         # Serialize memory
         data = self._serialize_memory(memory)
-        
+
         if self._use_redis:
             try:
                 # Store in Redis
@@ -101,10 +100,10 @@ class LongTermMemory:
                     self._redis.setex(key, ttl, data)
                 else:
                     self._redis.set(key, data)
-                
+
                 # Store metadata for querying
                 self._store_metadata(memory)
-                
+
                 logger.debug(f"Stored memory {memory.id} in Redis (TTL: {ttl})")
             except Exception as e:
                 logger.error(f"Failed to store memory in Redis: {e}")
@@ -117,7 +116,7 @@ class LongTermMemory:
 
         self._persist()
 
-    def retrieve(self, memory_id: str) -> Optional[Memory]:
+    def retrieve(self, memory_id: str) -> Memory | None:
         """Retrieve a memory by ID.
 
         Args:
@@ -130,22 +129,22 @@ class LongTermMemory:
             try:
                 key = self._make_key(memory_id)
                 data = self._redis.get(key)
-                
+
                 if data:
                     memory = self._deserialize_memory(data)
-                    
+
                     # Update access tracking
                     memory.access_count += 1
                     memory.last_accessed = datetime.now()
-                    
+
                     # Update in storage
                     self.store(memory)
-                    
+
                     logger.debug(f"Retrieved memory {memory_id} from Redis")
                     return memory
             except Exception as e:
                 logger.error(f"Failed to retrieve memory from Redis: {e}")
-        
+
         # Fallback to in-memory
         if memory_id in self._in_memory_storage:
             memory = self._in_memory_storage[memory_id]
@@ -153,14 +152,14 @@ class LongTermMemory:
             memory.last_accessed = datetime.now()
             logger.debug(f"Retrieved memory {memory_id} from in-memory storage")
             return memory
-        
+
         return None
 
     def retrieve_by_importance(
         self,
         threshold: float = 0.7,
         limit: int = 10,
-    ) -> List[Memory]:
+    ) -> list[Memory]:
         """Retrieve memories above an importance threshold.
 
         Args:
@@ -175,7 +174,7 @@ class LongTermMemory:
                 # Query metadata index
                 pattern = f"{self._key_prefix}*"
                 keys = self._redis.keys(pattern)
-                
+
                 memories = []
                 for key in keys:
                     data = self._redis.get(key)
@@ -183,16 +182,16 @@ class LongTermMemory:
                         memory = self._deserialize_memory(data)
                         if memory.importance >= threshold:
                             memories.append(memory)
-                
+
                 # Sort by importance
                 memories.sort(key=lambda m: m.importance, reverse=True)
-                
+
                 result = memories[:limit]
                 logger.debug(f"Retrieved {len(result)} important memories from Redis")
                 return result
             except Exception as e:
                 logger.error(f"Failed to query Redis: {e}")
-        
+
         # Fallback to in-memory
         memories = [
             m for m in self._in_memory_storage.values()
@@ -207,7 +206,7 @@ class LongTermMemory:
         self,
         days: int = 7,
         limit: int = 10,
-    ) -> List[Memory]:
+    ) -> list[Memory]:
         """Retrieve recent memories within a time window.
 
         Args:
@@ -218,12 +217,12 @@ class LongTermMemory:
             List of recent memories
         """
         cutoff = datetime.now() - timedelta(days=days)
-        
+
         if self._use_redis:
             try:
                 pattern = f"{self._key_prefix}*"
                 keys = self._redis.keys(pattern)
-                
+
                 memories = []
                 for key in keys:
                     data = self._redis.get(key)
@@ -231,16 +230,16 @@ class LongTermMemory:
                         memory = self._deserialize_memory(data)
                         if memory.timestamp >= cutoff:
                             memories.append(memory)
-                
+
                 # Sort by timestamp (most recent first)
                 memories.sort(key=lambda m: m.timestamp, reverse=True)
-                
+
                 result = memories[:limit]
                 logger.debug(f"Retrieved {len(result)} recent memories from Redis")
                 return result
             except Exception as e:
                 logger.error(f"Failed to query Redis: {e}")
-        
+
         # Fallback to in-memory
         memories = [
             m for m in self._in_memory_storage.values()
@@ -264,21 +263,21 @@ class LongTermMemory:
             try:
                 key = self._make_key(memory_id)
                 deleted = self._redis.delete(key)
-                
+
                 if deleted:
                     self._delete_metadata(memory_id)
                     logger.debug(f"Deleted memory {memory_id} from Redis")
                     return True
             except Exception as e:
                 logger.error(f"Failed to delete memory from Redis: {e}")
-        
+
         # Fallback to in-memory
         if memory_id in self._in_memory_storage:
             del self._in_memory_storage[memory_id]
             logger.debug(f"Deleted memory {memory_id} from in-memory storage")
             self._persist()
             return True
-        
+
         return False
 
     def clear(self) -> None:
@@ -287,14 +286,14 @@ class LongTermMemory:
             try:
                 pattern = f"{self._key_prefix}*"
                 keys = self._redis.keys(pattern)
-                
+
                 if keys:
                     self._redis.delete(*keys)
-                
+
                 logger.info(f"Cleared {len(keys)} memories from Redis")
             except Exception as e:
                 logger.error(f"Failed to clear Redis: {e}")
-        
+
         # Clear in-memory storage
         count = len(self._in_memory_storage)
         self._in_memory_storage.clear()
@@ -315,17 +314,17 @@ class LongTermMemory:
                 return len(keys)
             except Exception as e:
                 logger.error(f"Failed to get size from Redis: {e}")
-        
+
         return len(self._in_memory_storage)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get memory statistics.
 
         Returns:
             Statistics dictionary
         """
         size = self.get_size()
-        
+
         if size == 0:
             return {
                 "size": 0,
@@ -335,13 +334,13 @@ class LongTermMemory:
                 "persistence": bool(self._persistence and self._persistence.enabled),
                 "backend_telemetry": self._backend_plugin.get_stats() if self._backend_plugin else None,
             }
-        
+
         # Get sample of memories for stats
         if self._use_redis:
             try:
                 pattern = f"{self._key_prefix}*"
                 keys = list(self._redis.keys(pattern))[:100]  # Sample
-                
+
                 memories = []
                 for key in keys:
                     data = self._redis.get(key)
@@ -352,7 +351,7 @@ class LongTermMemory:
                 memories = []
         else:
             memories = list(self._in_memory_storage.values())
-        
+
         if not memories:
             return {
                 "size": size,
@@ -360,7 +359,7 @@ class LongTermMemory:
                 "avg_importance": 0.0,
                 "backend_telemetry": self._backend_plugin.get_stats() if self._backend_plugin else None,
             }
-        
+
         return {
             "size": size,
             "backend": "redis" if self._use_redis else "in-memory",
@@ -372,7 +371,7 @@ class LongTermMemory:
             "backend_telemetry": self._backend_plugin.get_stats() if self._backend_plugin else None,
         }
 
-    async def store_with_embedding(self, memory: Memory, ttl: Optional[int] = None) -> None:
+    async def store_with_embedding(self, memory: Memory, ttl: int | None = None) -> None:
         """Store memory and push embedding to vector store if configured."""
         self.store(memory, ttl)
         if self._vector_store and self._embedding_service:
@@ -386,8 +385,8 @@ class LongTermMemory:
         self,
         query: str,
         limit: int = 10,
-        filters: Optional[Dict[str, Any]] = None,
-    ) -> List[Tuple[Memory, float]]:
+        filters: dict[str, Any] | None = None,
+    ) -> list[tuple[Memory, float]]:
         """Search long-term memory using vector store if available."""
         if not self._vector_store or not self._embedding_service:
             logger.warning("Vector search not available")

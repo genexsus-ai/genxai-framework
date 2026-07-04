@@ -7,7 +7,6 @@ advanced memory systems, and enterprise-grade features.
 
 from importlib.metadata import PackageNotFoundError, version
 
-
 try:
     # Prefer the installed distribution version (matches pyproject.toml).
     __version__ = version("genxai")
@@ -17,6 +16,7 @@ except PackageNotFoundError:  # pragma: no cover
 __author__ = "GenXAI Team"
 __license__ = "MIT"
 
+from genxai.agents import AssistantAgent, UserProxyAgent
 from genxai.core.agent import (
     Agent,
     AgentConfig,
@@ -25,7 +25,6 @@ from genxai.core.agent import (
     AgentRuntime,
     AgentType,
 )
-from genxai.agents import AssistantAgent, UserProxyAgent
 from genxai.core.graph import (
     Edge,
     EnhancedGraph,
@@ -36,23 +35,23 @@ from genxai.core.graph import (
     WorkflowExecutor,
     execute_workflow_sync,
 )
+from genxai.core.memory.manager import MemorySystem
 from genxai.flows import (
+    AuctionFlow,
+    ConditionalFlow,
+    CoordinatorWorkerFlow,
+    CriticReviewFlow,
+    EnsembleVotingFlow,
     FlowOrchestrator,
-    RoundRobinFlow,
-    SelectorFlow,
+    LoopFlow,
+    MapReduceFlow,
     P2PFlow,
     ParallelFlow,
-    ConditionalFlow,
-    LoopFlow,
+    RoundRobinFlow,
     RouterFlow,
-    EnsembleVotingFlow,
-    CriticReviewFlow,
-    CoordinatorWorkerFlow,
-    MapReduceFlow,
+    SelectorFlow,
     SubworkflowFlow,
-    AuctionFlow,
 )
-from genxai.core.memory.manager import MemorySystem
 from genxai.tools import (
     DynamicTool,
     Tool,

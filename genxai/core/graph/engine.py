@@ -1,24 +1,25 @@
 """Graph execution engine for orchestrating agent workflows."""
 
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Set
-from collections import defaultdict, deque
+import copy
 import logging
 import time
-import copy
+from collections import defaultdict, deque
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
-from genxai.core.graph.nodes import Node, NodeConfig, NodeStatus, NodeType
 from genxai.core.agent.registry import AgentRegistry
 from genxai.core.agent.runtime import AgentRuntime
-from genxai.tools.registry import ToolRegistry
-from genxai.core.graph.edges import Edge
-from genxai.core.memory.shared import SharedMemoryBus
 from genxai.core.graph.checkpoints import (
     WorkflowCheckpoint,
     WorkflowCheckpointManager,
     create_checkpoint,
 )
+from genxai.core.graph.edges import Edge
+from genxai.core.graph.nodes import Node, NodeConfig, NodeStatus, NodeType
+from genxai.core.memory.shared import SharedMemoryBus
+from genxai.tools.registry import ToolRegistry
 from genxai.utils.enterprise_compat import (
     record_exception,
     record_workflow_execution,
@@ -45,17 +46,17 @@ class Graph:
             name: Name of the workflow graph
         """
         self.name = name
-        self.nodes: Dict[str, Node] = {}
-        self.edges: List[Edge] = []
-        self._adjacency_list: Dict[str, List[Edge]] = defaultdict(list)
-        self._reverse_adjacency: Dict[str, List[str]] = defaultdict(list)
-        self.shared_memory: Optional[SharedMemoryBus] = None
+        self.nodes: dict[str, Node] = {}
+        self.edges: list[Edge] = []
+        self._adjacency_list: dict[str, list[Edge]] = defaultdict(list)
+        self._reverse_adjacency: dict[str, list[str]] = defaultdict(list)
+        self.shared_memory: SharedMemoryBus | None = None
         # Per-run join bookkeeping (rebuilt at the start of each run()).
         # Edges are keyed by their index in self.edges because Edge.__hash__
         # collides for duplicate (source, target) pairs.
-        self._edge_index: Dict[int, int] = {}
-        self._incoming_edge_indices: Dict[str, List[int]] = {}
-        self._back_edge_keys: Set[int] = set()
+        self._edge_index: dict[int, int] = {}
+        self._incoming_edge_indices: dict[str, list[int]] = {}
+        self._back_edge_keys: set[int] = set()
 
     def add_node(self, node: Node) -> None:
         """Add a node to the graph.
@@ -91,11 +92,11 @@ class Graph:
         self._reverse_adjacency[edge.target].append(edge.source)
         logger.debug(f"Added edge: {edge.source} -> {edge.target}")
 
-    def set_shared_memory(self, shared_memory: Optional[SharedMemoryBus]) -> None:
+    def set_shared_memory(self, shared_memory: SharedMemoryBus | None) -> None:
         """Attach a shared memory bus to the graph for agent execution."""
         self.shared_memory = shared_memory
 
-    def get_node(self, node_id: str) -> Optional[Node]:
+    def get_node(self, node_id: str) -> Node | None:
         """Get a node by ID.
 
         Args:
@@ -106,7 +107,7 @@ class Graph:
         """
         return self.nodes.get(node_id)
 
-    def get_outgoing_edges(self, node_id: str) -> List[Edge]:
+    def get_outgoing_edges(self, node_id: str) -> list[Edge]:
         """Get all outgoing edges from a node.
 
         Args:
@@ -117,7 +118,7 @@ class Graph:
         """
         return self._adjacency_list.get(node_id, [])
 
-    def get_incoming_nodes(self, node_id: str) -> List[str]:
+    def get_incoming_nodes(self, node_id: str) -> list[str]:
         """Get all nodes with edges pointing to this node.
 
         Args:
@@ -157,7 +158,7 @@ class Graph:
         logger.info(f"Graph '{self.name}' validated successfully")
         return True
 
-    def _dfs_visit(self, start_node: str) -> Set[str]:
+    def _dfs_visit(self, start_node: str) -> set[str]:
         """Perform DFS traversal from start node.
 
         Args:
@@ -166,7 +167,7 @@ class Graph:
         Returns:
             Set of visited node IDs
         """
-        visited: Set[str] = set()
+        visited: set[str] = set()
         stack = [start_node]
 
         while stack:
@@ -187,7 +188,7 @@ class Graph:
 
         return visited
 
-    def topological_sort(self) -> List[str]:
+    def topological_sort(self) -> list[str]:
         """Perform topological sort on the graph.
 
         Returns:
@@ -196,13 +197,13 @@ class Graph:
         Raises:
             GraphExecutionError: If graph has cycles
         """
-        in_degree = {node_id: 0 for node_id in self.nodes}
+        in_degree = dict.fromkeys(self.nodes, 0)
 
         for edge in self.edges:
             in_degree[edge.target] += 1
 
         queue: deque[str] = deque([node_id for node_id, degree in in_degree.items() if degree == 0])
-        result: List[str] = []
+        result: list[str] = []
 
         while queue:
             node_id = queue.popleft()
@@ -222,11 +223,11 @@ class Graph:
         self,
         input_data: Any,
         max_iterations: int = 100,
-        state: Optional[Dict[str, Any]] = None,
-        resume_from: Optional[WorkflowCheckpoint] = None,
+        state: dict[str, Any] | None = None,
+        resume_from: WorkflowCheckpoint | None = None,
         llm_provider: Any = None,
-        event_callback: Optional[Callable[[Dict[str, Any]], Any]] = None,
-    ) -> Dict[str, Any]:
+        event_callback: Callable[[dict[str, Any]], Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute the graph workflow.
 
         Args:
@@ -323,12 +324,12 @@ class Graph:
         state["node_events"] = state.get("node_events", [])
         return state
 
-    def create_checkpoint(self, name: str, state: Dict[str, Any]) -> WorkflowCheckpoint:
+    def create_checkpoint(self, name: str, state: dict[str, Any]) -> WorkflowCheckpoint:
         """Create a checkpoint from current workflow state."""
         node_statuses = {node_id: node.status for node_id, node in self.nodes.items()}
         return create_checkpoint(name=name, workflow=self.name, state=state, node_statuses=node_statuses)
 
-    def save_checkpoint(self, name: str, state: Dict[str, Any], path: Path) -> Path:
+    def save_checkpoint(self, name: str, state: dict[str, Any], path: Path) -> Path:
         """Persist a checkpoint to disk."""
         manager = WorkflowCheckpointManager(path)
         checkpoint = self.create_checkpoint(name=name, state=state)
@@ -342,9 +343,9 @@ class Graph:
     async def _execute_node(
         self,
         node_id: str,
-        state: Dict[str, Any],
+        state: dict[str, Any],
         max_iterations: int,
-        event_callback: Optional[Callable[[Dict[str, Any]], Any]] = None,
+        event_callback: Callable[[dict[str, Any]], Any] | None = None,
     ) -> None:
         """Execute a single node and its descendants.
 
@@ -441,7 +442,7 @@ class Graph:
 
             # Parallel edges: resolve upfront, then execute taken ones concurrently
             tasks = []
-            declined_targets: List[str] = []
+            declined_targets: list[str] = []
             for edge in parallel_edges:
                 edge_key = str(self._edge_index.get(id(edge), -1))
                 if edge.evaluate_condition(state):
@@ -496,7 +497,7 @@ class Graph:
             }
             raise GraphExecutionError(f"Node {node_id} failed: {e}") from e
 
-    def _node_ready(self, node_id: str, state: Dict[str, Any]) -> bool:
+    def _node_ready(self, node_id: str, state: dict[str, Any]) -> bool:
         """Check whether all forward incoming edges of a node are resolved.
 
         Back edges (cycles) are excluded so cycle entry nodes don't wait on
@@ -513,9 +514,9 @@ class Graph:
     async def _propagate_decline(
         self,
         node_id: str,
-        state: Dict[str, Any],
+        state: dict[str, Any],
         max_iterations: int,
-        event_callback: Optional[Callable[[Dict[str, Any]], Any]] = None,
+        event_callback: Callable[[dict[str, Any]], Any] | None = None,
     ) -> None:
         """Handle a declined incoming edge for a node.
 
@@ -560,15 +561,15 @@ class Graph:
         for edge in self.get_outgoing_edges(node_id):
             await self._propagate_decline(edge.target, state, max_iterations, event_callback)
 
-    def _compute_back_edges(self) -> Set[int]:
+    def _compute_back_edges(self) -> set[int]:
         """Identify back edges (edges closing a cycle) via iterative DFS.
 
         Returns the set of edge indices whose target is an ancestor on the
         current DFS path. These are excluded from join readiness checks.
         """
-        back_edges: Set[int] = set()
+        back_edges: set[int] = set()
         WHITE, GRAY, BLACK = 0, 1, 2
-        color = {node_id: WHITE for node_id in self.nodes}
+        color = dict.fromkeys(self.nodes, WHITE)
 
         # Prefer entry points as DFS roots so back-edge orientation matches
         # actual execution order; fall back to any unvisited node.
@@ -598,7 +599,7 @@ class Graph:
         return back_edges
 
     async def _execute_node_logic(
-        self, node: Node, state: Dict[str, Any], max_iterations: int
+        self, node: Node, state: dict[str, Any], max_iterations: int
     ) -> Any:
         """Execute the actual logic of a node.
 
@@ -630,7 +631,7 @@ class Graph:
         # Default fallback for unsupported nodes
         return {"node_id": node.id, "type": node.type.value}
 
-    async def _execute_agent_node(self, node: Node, state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_agent_node(self, node: Node, state: dict[str, Any]) -> dict[str, Any]:
         """Execute an AgentNode using AgentRuntime.
 
         Args:
@@ -660,7 +661,7 @@ class Graph:
             shared_memory=self.shared_memory,
         )
         if agent.config.tools:
-            tools: Dict[str, Any] = {}
+            tools: dict[str, Any] = {}
             for tool_name in agent.config.tools:
                 tool = ToolRegistry.get(tool_name)
                 if tool:
@@ -672,7 +673,7 @@ class Graph:
             context["shared_memory"] = self.shared_memory
         return await self._execute_with_config(runtime, task=task, context=context, state=state)
 
-    def _get_execution_config(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    def _get_execution_config(self, state: dict[str, Any]) -> dict[str, Any]:
         config = state.get("execution_config") or {}
         return {
             "timeout_seconds": config.get("timeout_seconds", 120.0),
@@ -686,8 +687,8 @@ class Graph:
         self,
         runtime: AgentRuntime,
         task: str,
-        context: Dict[str, Any],
-        state: Dict[str, Any],
+        context: dict[str, Any],
+        state: dict[str, Any],
     ) -> Any:
         config = self._get_execution_config(state)
         delay = config["backoff_base"]
@@ -706,7 +707,7 @@ class Graph:
                 await asyncio.sleep(delay)
                 delay *= config["backoff_multiplier"]
 
-    async def _gather_with_config(self, coros: List[Any], state: Dict[str, Any]) -> List[Any]:
+    async def _gather_with_config(self, coros: list[Any], state: dict[str, Any]) -> list[Any]:
         config = self._get_execution_config(state)
         tasks = [asyncio.create_task(coro) for coro in coros]
         if not tasks:
@@ -714,7 +715,7 @@ class Graph:
         if not config["cancel_on_failure"]:
             return await asyncio.gather(*tasks, return_exceptions=True)
 
-        results: List[Any] = [None] * len(tasks)
+        results: list[Any] = [None] * len(tasks)
         index_map = {task: idx for idx, task in enumerate(tasks)}
         done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
@@ -735,7 +736,7 @@ class Graph:
 
         return results
 
-    async def _execute_tool_node(self, node: Node, state: Dict[str, Any]) -> Any:
+    async def _execute_tool_node(self, node: Node, state: dict[str, Any]) -> Any:
         """Execute a ToolNode using ToolRegistry.
 
         Args:
@@ -767,7 +768,7 @@ class Graph:
         return result.model_dump() if hasattr(result, "model_dump") else result
 
     async def _execute_subgraph_node(
-        self, node: Node, state: Dict[str, Any], max_iterations: int
+        self, node: Node, state: dict[str, Any], max_iterations: int
     ) -> Any:
         """Execute a nested workflow defined in the state metadata."""
         workflow_id = node.config.data.get("workflow_id")
@@ -813,7 +814,7 @@ class Graph:
         return {"workflow_id": workflow_id, "state": result_state}
 
     async def _execute_loop_node(
-        self, node: Node, state: Dict[str, Any], max_iterations: int
+        self, node: Node, state: dict[str, Any], max_iterations: int
     ) -> Any:
         """Execute a loop node, running its body each iteration.
 
@@ -853,7 +854,7 @@ class Graph:
         return {"iterations": loop_iterations, "results": results}
 
     async def _execute_loop_body(
-        self, node: Node, body: Dict[str, Any], state: Dict[str, Any], max_iterations: int
+        self, node: Node, body: dict[str, Any], state: dict[str, Any], max_iterations: int
     ) -> Any:
         """Execute one iteration of a loop node's body."""
         if not isinstance(body, dict):
@@ -892,7 +893,7 @@ class Graph:
             "(expected 'tool', 'agent', or 'subgraph')"
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert graph to dictionary representation.
 
         Returns:
@@ -965,7 +966,7 @@ class Graph:
         return "\n".join(lines)
 
     def _draw_node_tree(
-        self, node_id: str, lines: List[str], visited: Set[str], prefix: str, is_last: bool
+        self, node_id: str, lines: list[str], visited: set[str], prefix: str, is_last: bool
     ) -> None:
         """Recursively draw node tree structure.
 
@@ -1196,7 +1197,7 @@ class WorkflowEngine(Graph):
     def __init__(self, name: str = "workflow") -> None:
         super().__init__(name=name)
 
-    async def execute(self, start_node: str, llm_provider: Any = None, **kwargs: Any) -> Dict[str, Any]:
+    async def execute(self, start_node: str, llm_provider: Any = None, **kwargs: Any) -> dict[str, Any]:
         """Execute a workflow starting from a given node.
 
         Notes:
@@ -1206,7 +1207,7 @@ class WorkflowEngine(Graph):
               It's accepted here for compatibility.
         """
         # Initialize state with start node as the only entry point.
-        state: Dict[str, Any] = kwargs.pop("state", {}) if "state" in kwargs else {}
+        state: dict[str, Any] = kwargs.pop("state", {}) if "state" in kwargs else {}
         input_data = kwargs.pop("input_data", None)
         if input_data is not None:
             state["input"] = input_data

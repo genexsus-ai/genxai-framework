@@ -1,9 +1,9 @@
 """Notification manager tool for multi-channel notifications."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +55,10 @@ class NotificationManagerTool(Tool):
     async def _execute(
         self,
         message: str,
-        channels: Dict[str, Any],
+        channels: dict[str, Any],
         priority: str = "normal",
-        title: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        title: str | None = None,
+    ) -> dict[str, Any]:
         """Execute multi-channel notification.
 
         Args:
@@ -70,7 +70,7 @@ class NotificationManagerTool(Tool):
         Returns:
             Dictionary containing send results for all channels
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "message": message,
             "priority": priority,
             "channels_attempted": [],
@@ -88,15 +88,15 @@ class NotificationManagerTool(Tool):
                     if channel_type == "email":
                         await self._send_email(message, title, config)
                         result["channels_succeeded"].append(channel_type)
-                    
+
                     elif channel_type == "slack":
                         await self._send_slack(message, title, config)
                         result["channels_succeeded"].append(channel_type)
-                    
+
                     elif channel_type == "webhook":
                         await self._send_webhook(message, title, priority, config)
                         result["channels_succeeded"].append(channel_type)
-                    
+
                     else:
                         result["channels_failed"].append({
                             "channel": channel_type,
@@ -119,17 +119,17 @@ class NotificationManagerTool(Tool):
         )
         return result
 
-    async def _send_email(self, message: str, title: Optional[str], config: Dict[str, Any]) -> None:
+    async def _send_email(self, message: str, title: str | None, config: dict[str, Any]) -> None:
         """Send email notification."""
         # Placeholder - would integrate with EmailSenderTool
         logger.info(f"Email notification sent: {title or 'Notification'}")
 
-    async def _send_slack(self, message: str, title: Optional[str], config: Dict[str, Any]) -> None:
+    async def _send_slack(self, message: str, title: str | None, config: dict[str, Any]) -> None:
         """Send Slack notification."""
         try:
             import httpx
-        except ImportError:
-            raise ImportError("httpx required for Slack notifications")
+        except ImportError as e:
+            raise ImportError("httpx required for Slack notifications") from e
 
         webhook_url = config.get("webhook_url")
         if not webhook_url:
@@ -144,13 +144,13 @@ class NotificationManagerTool(Tool):
             response.raise_for_status()
 
     async def _send_webhook(
-        self, message: str, title: Optional[str], priority: str, config: Dict[str, Any]
+        self, message: str, title: str | None, priority: str, config: dict[str, Any]
     ) -> None:
         """Send webhook notification."""
         try:
             import httpx
-        except ImportError:
-            raise ImportError("httpx required for webhook notifications")
+        except ImportError as e:
+            raise ImportError("httpx required for webhook notifications") from e
 
         url = config.get("url")
         if not url:

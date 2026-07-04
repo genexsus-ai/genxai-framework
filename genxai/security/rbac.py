@@ -1,10 +1,9 @@
 """Role-Based Access Control (RBAC) for GenXAI."""
 
 import sys
-from enum import Enum
-from typing import List, Set, Optional
-from functools import wraps
 from dataclasses import dataclass
+from enum import Enum
+from functools import wraps
 
 
 class Role(Enum):
@@ -23,21 +22,21 @@ class Permission(Enum):
     AGENT_UPDATE = "agent:update"
     AGENT_DELETE = "agent:delete"
     AGENT_EXECUTE = "agent:execute"
-    
+
     # Workflow permissions
     WORKFLOW_CREATE = "workflow:create"
     WORKFLOW_READ = "workflow:read"
     WORKFLOW_UPDATE = "workflow:update"
     WORKFLOW_DELETE = "workflow:delete"
     WORKFLOW_EXECUTE = "workflow:execute"
-    
+
     # Tool permissions
     TOOL_CREATE = "tool:create"
     TOOL_READ = "tool:read"
     TOOL_UPDATE = "tool:update"
     TOOL_DELETE = "tool:delete"
     TOOL_EXECUTE = "tool:execute"
-    
+
     # Memory permissions
     MEMORY_READ = "memory:read"
     MEMORY_WRITE = "memory:write"
@@ -45,9 +44,9 @@ class Permission(Enum):
 
 
 # Role-Permission mapping
-ROLE_PERMISSIONS: dict[Role, Set[Permission]] = {
+ROLE_PERMISSIONS: dict[Role, set[Permission]] = {
     Role.ADMIN: set(Permission),  # All permissions
-    
+
     Role.DEVELOPER: {
         Permission.AGENT_CREATE,
         Permission.AGENT_READ,
@@ -62,7 +61,7 @@ ROLE_PERMISSIONS: dict[Role, Set[Permission]] = {
         Permission.MEMORY_READ,
         Permission.MEMORY_WRITE,
     },
-    
+
     Role.OPERATOR: {
         Permission.AGENT_READ,
         Permission.AGENT_EXECUTE,
@@ -72,7 +71,7 @@ ROLE_PERMISSIONS: dict[Role, Set[Permission]] = {
         Permission.TOOL_EXECUTE,
         Permission.MEMORY_READ,
     },
-    
+
     Role.VIEWER: {
         Permission.AGENT_READ,
         Permission.WORKFLOW_READ,
@@ -87,7 +86,7 @@ class User:
     """User model."""
     user_id: str
     role: Role
-    
+
     def has_permission(self, permission: Permission) -> bool:
         """Check if user has permission.
         
@@ -98,8 +97,8 @@ class User:
             True if user has permission
         """
         return permission in ROLE_PERMISSIONS[self.role]
-    
-    def has_any_permission(self, permissions: List[Permission]) -> bool:
+
+    def has_any_permission(self, permissions: list[Permission]) -> bool:
         """Check if user has any of the permissions.
         
         Args:
@@ -110,8 +109,8 @@ class User:
         """
         user_permissions = ROLE_PERMISSIONS[self.role]
         return any(p in user_permissions for p in permissions)
-    
-    def has_all_permissions(self, permissions: List[Permission]) -> bool:
+
+    def has_all_permissions(self, permissions: list[Permission]) -> bool:
         """Check if user has all permissions.
         
         Args:
@@ -130,7 +129,7 @@ class PermissionDenied(Exception):
 
 
 # Current user context (thread-local in production)
-_current_user: Optional[User] = None
+_current_user: User | None = None
 
 
 def set_current_user(user: User):
@@ -143,7 +142,7 @@ def set_current_user(user: User):
     _current_user = user
 
 
-def get_current_user() -> Optional[User]:
+def get_current_user() -> User | None:
     """Get current user.
     
     Returns:
@@ -169,34 +168,34 @@ def require_permission(permission: Permission):
             user = get_current_user()
             if not user:
                 raise PermissionDenied("No user context")
-            
+
             if not user.has_permission(permission):
                 raise PermissionDenied(
                     f"User {user.user_id} missing permission: {permission.value}"
                 )
-            
+
             return await func(*args, **kwargs)
-        
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             user = get_current_user()
             if not user:
                 raise PermissionDenied("No user context")
-            
+
             if not user.has_permission(permission):
                 raise PermissionDenied(
                     f"User {user.user_id} missing permission: {permission.value}"
                 )
-            
+
             return func(*args, **kwargs)
-        
+
         # Return appropriate wrapper
         import asyncio
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-    
+
     return decorator
 
 
@@ -217,34 +216,34 @@ def require_role(role: Role):
             user = get_current_user()
             if not user:
                 raise PermissionDenied("No user context")
-            
+
             if user.role != role:
                 raise PermissionDenied(
                     f"User {user.user_id} requires role: {role.value}"
                 )
-            
+
             return await func(*args, **kwargs)
-        
+
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
             user = get_current_user()
             if not user:
                 raise PermissionDenied("No user context")
-            
+
             if user.role != role:
                 raise PermissionDenied(
                     f"User {user.user_id} requires role: {role.value}"
                 )
-            
+
             return func(*args, **kwargs)
-        
+
         # Return appropriate wrapper
         import asyncio
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-    
+
     return decorator
 
 

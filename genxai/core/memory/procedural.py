@@ -1,9 +1,9 @@
 """Procedural memory implementation for storing learned skills and procedures."""
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import logging
 import uuid
+from datetime import datetime
+from typing import Any
 
 from genxai.core.memory.persistence import JsonMemoryStore, MemoryPersistenceConfig
 
@@ -18,14 +18,14 @@ class Procedure:
         id: str,
         name: str,
         description: str,
-        steps: List[Dict[str, Any]],
-        preconditions: Optional[List[str]] = None,
-        postconditions: Optional[List[str]] = None,
+        steps: list[dict[str, Any]],
+        preconditions: list[str] | None = None,
+        postconditions: list[str] | None = None,
         success_count: int = 0,
         failure_count: int = 0,
         avg_duration: float = 0.0,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        timestamp: datetime | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Initialize procedure.
 
@@ -92,7 +92,7 @@ class Procedure:
 
         self.last_used = datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -111,7 +111,7 @@ class Procedure:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Procedure":
+    def from_dict(cls, data: dict[str, Any]) -> "Procedure":
         """Create procedure from dictionary."""
         return cls(
             id=data["id"],
@@ -145,7 +145,7 @@ class ProceduralMemory:
     def __init__(
         self,
         max_procedures: int = 100,
-        persistence: Optional[MemoryPersistenceConfig] = None,
+        persistence: MemoryPersistenceConfig | None = None,
     ) -> None:
         """Initialize procedural memory.
 
@@ -153,24 +153,24 @@ class ProceduralMemory:
             max_procedures: Maximum number of procedures to store
         """
         self._max_procedures = max_procedures
-        self._procedures: Dict[str, Procedure] = {}
-        self._name_index: Dict[str, str] = {}  # name -> procedure_id
+        self._procedures: dict[str, Procedure] = {}
+        self._name_index: dict[str, str] = {}  # name -> procedure_id
         self._persistence = persistence
         self._store = JsonMemoryStore(persistence) if persistence else None
 
         if self._store and self._persistence and self._persistence.enabled:
             self._load_from_disk()
-        
+
         logger.info("Initialized procedural memory")
 
     async def store_procedure(
         self,
         name: str,
         description: str,
-        steps: List[Dict[str, Any]],
-        preconditions: Optional[List[str]] = None,
-        postconditions: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        steps: list[dict[str, Any]],
+        preconditions: list[str] | None = None,
+        postconditions: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Procedure:
         """Store a new procedure.
 
@@ -190,7 +190,7 @@ class ProceduralMemory:
             existing_id = self._name_index[name]
             existing = self._procedures[existing_id]
             logger.debug(f"Procedure '{name}' already exists, updating...")
-            
+
             # Update existing procedure
             existing.description = description
             existing.steps = steps
@@ -198,7 +198,7 @@ class ProceduralMemory:
             existing.postconditions = postconditions or []
             existing.metadata = metadata or {}
             existing.timestamp = datetime.now()
-            
+
             return existing
 
         # Create new procedure
@@ -231,9 +231,9 @@ class ProceduralMemory:
 
     async def retrieve_procedure(
         self,
-        procedure_id: Optional[str] = None,
-        name: Optional[str] = None,
-    ) -> Optional[Procedure]:
+        procedure_id: str | None = None,
+        name: str | None = None,
+    ) -> Procedure | None:
         """Retrieve a procedure by ID or name.
 
         Args:
@@ -245,18 +245,18 @@ class ProceduralMemory:
         """
         if procedure_id:
             return self._procedures.get(procedure_id)
-        
+
         if name and name in self._name_index:
             procedure_id = self._name_index[name]
             return self._procedures.get(procedure_id)
-        
+
         return None
 
     async def retrieve_all(
         self,
         min_success_rate: float = 0.0,
         sort_by: str = "success_rate",
-    ) -> List[Procedure]:
+    ) -> list[Procedure]:
         """Retrieve all procedures.
 
         Args:
@@ -289,7 +289,7 @@ class ProceduralMemory:
         self,
         query: str,
         limit: int = 5,
-    ) -> List[Procedure]:
+    ) -> list[Procedure]:
         """Search procedures by name or description.
 
         Args:
@@ -345,7 +345,7 @@ class ProceduralMemory:
         self,
         limit: int = 10,
         min_executions: int = 3,
-    ) -> List[Procedure]:
+    ) -> list[Procedure]:
         """Get best performing procedures.
 
         Args:
@@ -381,11 +381,11 @@ class ProceduralMemory:
             return False
 
         procedure = self._procedures[procedure_id]
-        
+
         # Remove from indexes
         if procedure.name in self._name_index:
             del self._name_index[procedure.name]
-        
+
         # Remove procedure
         del self._procedures[procedure_id]
 
@@ -402,7 +402,7 @@ class ProceduralMemory:
 
         self._persist()
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get procedural memory statistics.
 
         Returns:
@@ -415,7 +415,7 @@ class ProceduralMemory:
             }
 
         procedures = list(self._procedures.values())
-        
+
         total_executions = sum(p.total_executions for p in procedures)
         total_successes = sum(p.success_count for p in procedures)
 

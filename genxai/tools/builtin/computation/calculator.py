@@ -1,11 +1,11 @@
 """Calculator tool for mathematical computations."""
 
-from typing import Any
 import ast
-import operator
 import logging
+import operator
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -59,16 +59,16 @@ class CalculatorTool(Tool):
         try:
             # Parse the expression
             node = ast.parse(expression, mode="eval")
-            
+
             # Evaluate safely
             result = self._eval_node(node.body)
-            
+
             logger.info(f"Calculated: {expression} = {result}")
             return {"expression": expression, "result": result}
 
         except Exception as e:
             logger.error(f"Calculator error: {e}")
-            raise ValueError(f"Invalid expression: {e}")
+            raise ValueError(f"Invalid expression: {e}") from e
 
     def _eval_node(self, node: ast.AST) -> float:
         """Evaluate AST node safely.

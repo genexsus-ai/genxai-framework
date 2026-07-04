@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import asyncio
 import json
 import logging
-
+from typing import Any
 
 from .base import Connector
 
@@ -22,7 +21,7 @@ class PostgresCDCConnector(Connector):
         dsn: str,
         slot_name: str,
         publication: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         poll_interval: float = 1.0,
     ) -> None:
         super().__init__(connector_id=connector_id, name=name)
@@ -30,8 +29,8 @@ class PostgresCDCConnector(Connector):
         self.slot_name = slot_name
         self.publication = publication
         self.poll_interval = poll_interval
-        self._conn: Optional[Any] = None
-        self._task: Optional[asyncio.Task[None]] = None
+        self._conn: Any | None = None
+        self._task: asyncio.Task[None] | None = None
 
     async def _start(self) -> None:
         import asyncpg
@@ -83,7 +82,7 @@ class PostgresCDCConnector(Connector):
                 logger.error("Postgres CDC error: %s", exc)
                 await asyncio.sleep(self.poll_interval)
 
-    def _deserialize(self, raw: Optional[str]) -> Any:
+    def _deserialize(self, raw: str | None) -> Any:
         if raw is None:
             return None
         try:
@@ -91,5 +90,5 @@ class PostgresCDCConnector(Connector):
         except Exception:
             return raw
 
-    async def handle_change(self, payload: Dict[str, Any]) -> None:
+    async def handle_change(self, payload: dict[str, Any]) -> None:
         await self.emit(payload=payload)

@@ -1,9 +1,8 @@
 """Round-robin flow orchestrator."""
 
-from typing import List
 
-from genxai.core.graph.engine import Graph
 from genxai.core.graph.edges import Edge
+from genxai.core.graph.engine import Graph
 from genxai.core.graph.nodes import AgentNode
 from genxai.flows.base import FlowOrchestrator
 
@@ -13,7 +12,7 @@ class RoundRobinFlow(FlowOrchestrator):
 
     def build_graph(self) -> Graph:
         graph = Graph(name=self.name)
-        nodes: List[AgentNode] = self._agent_nodes()
+        nodes: list[AgentNode] = self._agent_nodes()
 
         for node in nodes:
             graph.add_node(node)

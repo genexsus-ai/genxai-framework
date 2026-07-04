@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Dict, Optional
 import logging
+from pathlib import Path
+from typing import Any
 
 from genxai.triggers.base import BaseTrigger
 
@@ -22,7 +22,7 @@ class FileWatcherTrigger(BaseTrigger):
         trigger_id: str,
         watch_path: str | Path,
         recursive: bool = True,
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> None:
         super().__init__(trigger_id=trigger_id, name=name)
         self.watch_path = Path(watch_path)
@@ -31,19 +31,19 @@ class FileWatcherTrigger(BaseTrigger):
 
     async def _start(self) -> None:
         try:
-            from watchdog.observers import Observer
             from watchdog.events import FileSystemEventHandler
+            from watchdog.observers import Observer
         except ImportError as exc:
             raise ImportError(
                 "watchdog is required for FileWatcherTrigger. Install with: pip install watchdog"
             ) from exc
 
         class _Handler(FileSystemEventHandler):
-            def __init__(self, outer: "FileWatcherTrigger") -> None:
+            def __init__(self, outer: FileWatcherTrigger) -> None:
                 self.outer = outer
 
             def on_any_event(self, event):
-                payload: Dict[str, Any] = {
+                payload: dict[str, Any] = {
                     "event_type": event.event_type,
                     "src_path": event.src_path,
                     "is_directory": event.is_directory,

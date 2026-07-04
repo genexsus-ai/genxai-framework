@@ -1,9 +1,9 @@
 """Database inspector tool for examining database schemas."""
 
-from typing import Any, Dict, List
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class DatabaseInspectorTool(Tool):
         connection_string: str,
         operation: str,
         table_name: str = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute database inspection.
 
         Args:
@@ -65,12 +65,12 @@ class DatabaseInspectorTool(Tool):
         try:
             from sqlalchemy import create_engine, inspect
             from sqlalchemy.exc import SQLAlchemyError
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "sqlalchemy package not installed. Install with: pip install sqlalchemy"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "operation": operation,
             "success": False,
         }
@@ -91,7 +91,7 @@ class DatabaseInspectorTool(Tool):
             elif operation == "describe_table":
                 if not table_name:
                     raise ValueError("table_name required for describe_table operation")
-                
+
                 columns = inspector.get_columns(table_name)
                 column_info = [
                     {
@@ -103,7 +103,7 @@ class DatabaseInspectorTool(Tool):
                     }
                     for col in columns
                 ]
-                
+
                 result.update({
                     "table": table_name,
                     "columns": column_info,
@@ -114,7 +114,7 @@ class DatabaseInspectorTool(Tool):
             elif operation == "list_indexes":
                 if not table_name:
                     raise ValueError("table_name required for list_indexes operation")
-                
+
                 indexes = inspector.get_indexes(table_name)
                 index_info = [
                     {
@@ -124,7 +124,7 @@ class DatabaseInspectorTool(Tool):
                     }
                     for idx in indexes
                 ]
-                
+
                 result.update({
                     "table": table_name,
                     "indexes": index_info,
@@ -135,7 +135,7 @@ class DatabaseInspectorTool(Tool):
             elif operation == "database_info":
                 tables = inspector.get_table_names()
                 views = inspector.get_view_names()
-                
+
                 result.update({
                     "tables": tables,
                     "table_count": len(tables),

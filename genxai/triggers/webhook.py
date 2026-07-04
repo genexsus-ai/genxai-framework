@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
-import hmac
 import hashlib
+import hmac
 import logging
+from typing import Any
 
 from enterprise.genxai.triggers.base import BaseTrigger
 
@@ -22,8 +22,8 @@ class WebhookTrigger(BaseTrigger):
     def __init__(
         self,
         trigger_id: str,
-        secret: Optional[str] = None,
-        name: Optional[str] = None,
+        secret: str | None = None,
+        name: str | None = None,
         header_name: str = "X-GenXAI-Signature",
         hash_alg: str = "sha256",
     ) -> None:
@@ -38,7 +38,7 @@ class WebhookTrigger(BaseTrigger):
     async def _stop(self) -> None:
         logger.debug("Webhook trigger %s stopped", self.trigger_id)
 
-    def validate_signature(self, payload: bytes, signature: Optional[str]) -> bool:
+    def validate_signature(self, payload: bytes, signature: str | None) -> bool:
         """Validate the webhook signature when a secret is provided."""
         if not self.secret:
             return True
@@ -51,10 +51,10 @@ class WebhookTrigger(BaseTrigger):
 
     async def handle_request(
         self,
-        payload: Dict[str, Any],
-        raw_body: Optional[bytes] = None,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        payload: dict[str, Any],
+        raw_body: bytes | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """Process an inbound webhook request and emit a trigger event."""
         headers = headers or {}
         signature = headers.get(self.header_name)

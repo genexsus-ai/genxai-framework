@@ -1,10 +1,9 @@
 """PII detection and redaction for GenXAI."""
 
 import re
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-from datetime import datetime, UTC
-
+from datetime import UTC, datetime
+from typing import Any
 
 # PII patterns
 PII_PATTERNS = {
@@ -30,16 +29,16 @@ class PIIMatch:
 
 class PIIDetector:
     """Detect PII in text."""
-    
-    def __init__(self, patterns: Optional[Dict[str, str]] = None):
+
+    def __init__(self, patterns: dict[str, str] | None = None):
         """Initialize PII detector.
         
         Args:
             patterns: Custom PII patterns (default: use built-in patterns)
         """
         self.patterns = patterns or PII_PATTERNS
-    
-    def detect(self, text: str) -> List[PIIMatch]:
+
+    def detect(self, text: str) -> list[PIIMatch]:
         """Detect all PII in text.
         
         Args:
@@ -49,7 +48,7 @@ class PIIDetector:
             List of PII matches
         """
         matches = []
-        
+
         for pii_type, pattern in self.patterns.items():
             for match in re.finditer(pattern, text):
                 matches.append(PIIMatch(
@@ -58,13 +57,13 @@ class PIIDetector:
                     start=match.start(),
                     end=match.end()
                 ))
-        
+
         # Sort by position
         matches.sort(key=lambda x: x.start)
-        
+
         return matches
-    
-    def detect_type(self, text: str, pii_type: str) -> List[PIIMatch]:
+
+    def detect_type(self, text: str, pii_type: str) -> list[PIIMatch]:
         """Detect specific PII type.
         
         Args:
@@ -76,10 +75,10 @@ class PIIDetector:
         """
         if pii_type not in self.patterns:
             return []
-        
+
         pattern = self.patterns[pii_type]
         matches = []
-        
+
         for match in re.finditer(pattern, text):
             matches.append(PIIMatch(
                 pii_type=pii_type,
@@ -87,9 +86,9 @@ class PIIDetector:
                 start=match.start(),
                 end=match.end()
             ))
-        
+
         return matches
-    
+
     def has_pii(self, text: str) -> bool:
         """Check if text contains PII.
         
@@ -102,26 +101,26 @@ class PIIDetector:
         for pattern in self.patterns.values():
             if re.search(pattern, text):
                 return True
-        
+
         return False
 
 
 class PIIRedactor:
     """Redact PII from text."""
-    
-    def __init__(self, detector: Optional[PIIDetector] = None):
+
+    def __init__(self, detector: PIIDetector | None = None):
         """Initialize PII redactor.
         
         Args:
             detector: PII detector (default: create new detector)
         """
         self.detector = detector or PIIDetector()
-    
+
     def redact(
         self,
         text: str,
         replacement: str = "***REDACTED***",
-        pii_types: Optional[List[str]] = None
+        pii_types: list[str] | None = None
     ) -> str:
         """Redact all PII.
         
@@ -134,18 +133,18 @@ class PIIRedactor:
             Redacted text
         """
         matches = self.detector.detect(text)
-        
+
         # Filter by PII types if specified
         if pii_types:
             matches = [m for m in matches if m.pii_type in pii_types]
-        
+
         # Redact from end to start to preserve positions
         for match in reversed(matches):
             text = text[:match.start] + replacement + text[match.end:]
-        
+
         return text
-    
-    def mask(self, text: str, pii_types: Optional[List[str]] = None) -> str:
+
+    def mask(self, text: str, pii_types: list[str] | None = None) -> str:
         """Mask PII (show last 4 characters).
         
         Args:
@@ -156,15 +155,15 @@ class PIIRedactor:
             Masked text
         """
         matches = self.detector.detect(text)
-        
+
         # Filter by PII types if specified
         if pii_types:
             matches = [m for m in matches if m.pii_type in pii_types]
-        
+
         # Mask from end to start to preserve positions
         for match in reversed(matches):
             value = match.value
-            
+
             if match.pii_type == "email":
                 # email@example.com -> e***@example.com
                 parts = value.split('@')
@@ -172,32 +171,32 @@ class PIIRedactor:
                     masked = parts[0][0] + '***@' + parts[1]
                 else:
                     masked = '***'
-            
+
             elif match.pii_type in ["phone", "ssn", "credit_card"]:
                 # Show last 4 digits
                 masked = '***-***-' + value[-4:]
-            
+
             elif match.pii_type == "ip_address":
                 # Show first octet
                 parts = value.split('.')
                 masked = parts[0] + '.***.***.***'
-            
+
             else:
                 # Default: show last 4 characters
                 if len(value) > 4:
                     masked = '***' + value[-4:]
                 else:
                     masked = '***'
-            
+
             text = text[:match.start] + masked + text[match.end:]
-        
+
         return text
-    
+
     def redact_dict(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         replacement: str = "***REDACTED***"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Redact PII from dictionary recursively.
         
         Args:
@@ -208,7 +207,7 @@ class PIIRedactor:
             Redacted dictionary
         """
         result = {}
-        
+
         for key, value in data.items():
             if isinstance(value, str):
                 result[key] = self.redact(value, replacement)
@@ -223,13 +222,13 @@ class PIIRedactor:
                 ]
             else:
                 result[key] = value
-        
+
         return result
 
 
 class PIIAuditLogger:
     """Log PII access for compliance."""
-    
+
     def __init__(self, log_file: str = "pii_audit.log"):
         """Initialize PII audit logger.
         
@@ -237,13 +236,13 @@ class PIIAuditLogger:
             log_file: Path to audit log file
         """
         self.log_file = log_file
-    
+
     def log_access(
         self,
         user_id: str,
         pii_type: str,
         action: str,
-        context: Dict[str, Any]
+        context: dict[str, Any]
     ):
         """Log PII access.
         
@@ -260,18 +259,18 @@ class PIIAuditLogger:
             "action": action,
             "context": context
         }
-        
+
         with open(self.log_file, 'a') as f:
             import json
             f.write(json.dumps(log_entry) + '\n')
-    
+
     def get_logs(
         self,
-        user_id: Optional[str] = None,
-        pii_type: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None
-    ) -> List[Dict[str, Any]]:
+        user_id: str | None = None,
+        pii_type: str | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None
+    ) -> list[dict[str, Any]]:
         """Get audit logs with filters.
         
         Args:
@@ -285,36 +284,36 @@ class PIIAuditLogger:
         """
         import json
         logs = []
-        
+
         try:
-            with open(self.log_file, 'r') as f:
+            with open(self.log_file) as f:
                 for line in f:
                     try:
                         entry = json.loads(line.strip())
-                        
+
                         # Apply filters
                         if user_id and entry.get("user_id") != user_id:
                             continue
-                        
+
                         if pii_type and entry.get("pii_type") != pii_type:
                             continue
-                        
+
                         timestamp = datetime.fromisoformat(entry["timestamp"])
-                        
+
                         if start_time and timestamp < start_time:
                             continue
-                        
+
                         if end_time and timestamp > end_time:
                             continue
-                        
+
                         logs.append(entry)
-                    
+
                     except json.JSONDecodeError:
                         continue
-        
+
         except FileNotFoundError:
             pass
-        
+
         return logs
 
 
@@ -331,10 +330,10 @@ def get_pii_detector() -> PIIDetector:
         PIIDetector instance
     """
     global _pii_detector
-    
+
     if _pii_detector is None:
         _pii_detector = PIIDetector()
-    
+
     return _pii_detector
 
 
@@ -345,10 +344,10 @@ def get_pii_redactor() -> PIIRedactor:
         PIIRedactor instance
     """
     global _pii_redactor
-    
+
     if _pii_redactor is None:
         _pii_redactor = PIIRedactor()
-    
+
     return _pii_redactor
 
 
@@ -359,8 +358,8 @@ def get_pii_audit_logger() -> PIIAuditLogger:
         PIIAuditLogger instance
     """
     global _pii_audit_logger
-    
+
     if _pii_audit_logger is None:
         _pii_audit_logger = PIIAuditLogger()
-    
+
     return _pii_audit_logger

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import asyncio
 import logging
+from typing import Any
 
 import httpx
 
@@ -25,7 +25,7 @@ class GoogleWorkspaceConnector(Connector):
         self,
         connector_id: str,
         access_token: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         base_url: str = "https://www.googleapis.com",
         timeout: float = 10.0,
     ) -> None:
@@ -33,7 +33,7 @@ class GoogleWorkspaceConnector(Connector):
         self.access_token = access_token
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._lock = asyncio.Lock()
 
     async def _start(self) -> None:
@@ -57,7 +57,7 @@ class GoogleWorkspaceConnector(Connector):
         if not self.access_token:
             raise ValueError("Google Workspace access_token must be provided")
 
-    async def get_sheet(self, spreadsheet_id: str) -> Dict[str, Any]:
+    async def get_sheet(self, spreadsheet_id: str) -> dict[str, Any]:
         """Fetch spreadsheet metadata."""
         return await self._get(f"/sheets/v4/spreadsheets/{spreadsheet_id}")
 
@@ -67,7 +67,7 @@ class GoogleWorkspaceConnector(Connector):
         range_: str,
         values: list[list[Any]],
         value_input_option: str = "USER_ENTERED",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Append values to a Google Sheet."""
         params = {"valueInputOption": value_input_option}
         payload = {"values": values}
@@ -77,9 +77,9 @@ class GoogleWorkspaceConnector(Connector):
             params=params,
         )
 
-    async def list_drive_files(self, page_size: int = 10, query: Optional[str] = None) -> Dict[str, Any]:
+    async def list_drive_files(self, page_size: int = 10, query: str | None = None) -> dict[str, Any]:
         """List Drive files."""
-        params: Dict[str, Any] = {"pageSize": page_size}
+        params: dict[str, Any] = {"pageSize": page_size}
         if query:
             params["q"] = query
         return await self._get("/drive/v3/files", params=params)
@@ -88,16 +88,16 @@ class GoogleWorkspaceConnector(Connector):
         self,
         calendar_id: str = "primary",
         max_results: int = 10,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """List calendar events."""
         params = {"maxResults": max_results, "singleEvents": True, "orderBy": "startTime"}
         return await self._get(f"/calendar/v3/calendars/{calendar_id}/events", params=params)
 
-    async def handle_event(self, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None) -> None:
+    async def handle_event(self, payload: dict[str, Any], headers: dict[str, str] | None = None) -> None:
         """Handle an inbound event payload and emit it downstream."""
         await self.emit(payload=payload, metadata={"headers": headers or {}})
 
-    async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.get(path, params=params or {})
@@ -107,9 +107,9 @@ class GoogleWorkspaceConnector(Connector):
     async def _post(
         self,
         path: str,
-        payload: Dict[str, Any],
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        payload: dict[str, Any],
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         await self._ensure_client()
         assert self._client is not None
         response = await self._client.post(path, params=params or {}, json=payload)

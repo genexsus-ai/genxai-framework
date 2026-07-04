@@ -1,8 +1,8 @@
 """Human input tool for interactive workflows."""
 
-from typing import Any, Dict
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 
 class HumanInputTool(Tool):
@@ -27,6 +27,6 @@ class HumanInputTool(Tool):
         if ToolRegistry.get(self.metadata.name) is None:
             ToolRegistry.register(self)
 
-    async def _execute(self, **kwargs: Any) -> Dict[str, Any]:
+    async def _execute(self, **kwargs: Any) -> dict[str, Any]:
         prompt = kwargs.get("prompt", "Your response:")
         return {"response": input(f"{prompt} ")}

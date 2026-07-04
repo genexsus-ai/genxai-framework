@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import asyncio
 import json
 import logging
-
+from typing import Any
 
 from .base import Connector
 
@@ -20,8 +19,8 @@ class SQSConnector(Connector):
         self,
         connector_id: str,
         queue_url: str,
-        region: Optional[str] = None,
-        name: Optional[str] = None,
+        region: str | None = None,
+        name: str | None = None,
         poll_interval: float = 1.0,
         wait_time_seconds: int = 10,
         max_messages: int = 10,
@@ -32,7 +31,7 @@ class SQSConnector(Connector):
         self.poll_interval = poll_interval
         self.wait_time_seconds = wait_time_seconds
         self.max_messages = max_messages
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
         self._session = None
 
     async def _start(self) -> None:
@@ -82,7 +81,7 @@ class SQSConnector(Connector):
                 logger.error("SQS poll error: %s", exc)
                 await asyncio.sleep(self.poll_interval)
 
-    def _deserialize(self, body: Optional[str]) -> Any:
+    def _deserialize(self, body: str | None) -> Any:
         if body is None:
             return None
         try:
@@ -90,5 +89,5 @@ class SQSConnector(Connector):
         except Exception:
             return body
 
-    async def handle_message(self, payload: Dict[str, Any]) -> None:
+    async def handle_message(self, payload: dict[str, Any]) -> None:
         await self.emit(payload=payload)

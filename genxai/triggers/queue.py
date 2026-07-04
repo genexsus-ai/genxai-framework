@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import asyncio
 import logging
+from typing import Any
 
 from genxai.triggers.base import BaseTrigger
 
@@ -21,14 +21,14 @@ class QueueTrigger(BaseTrigger):
     def __init__(
         self,
         trigger_id: str,
-        queue: Optional[asyncio.Queue] = None,
-        name: Optional[str] = None,
+        queue: asyncio.Queue | None = None,
+        name: str | None = None,
         poll_interval: float = 0.1,
     ) -> None:
         super().__init__(trigger_id=trigger_id, name=name)
         self.queue = queue or asyncio.Queue()
         self.poll_interval = poll_interval
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
 
     async def _start(self) -> None:
         self._task = asyncio.create_task(self._listen())
@@ -48,14 +48,14 @@ class QueueTrigger(BaseTrigger):
         while True:
             try:
                 message = await asyncio.wait_for(self.queue.get(), timeout=self.poll_interval)
-                payload: Dict[str, Any]
+                payload: dict[str, Any]
                 if isinstance(message, dict):
                     payload = message
                 else:
                     payload = {"message": message}
                 await self.emit(payload=payload)
                 self.queue.task_done()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except asyncio.CancelledError:
                 break
@@ -63,6 +63,6 @@ class QueueTrigger(BaseTrigger):
                 logger.error("QueueTrigger %s error: %s", self.trigger_id, exc)
                 await asyncio.sleep(self.poll_interval)
 
-    async def enqueue(self, payload: Dict[str, Any]) -> None:
+    async def enqueue(self, payload: dict[str, Any]) -> None:
         """Helper to push payloads into the trigger queue."""
         await self.queue.put(payload)

@@ -1,22 +1,23 @@
 """Base tool classes for GenXAI."""
 
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict
-from enum import Enum
-from abc import ABC, abstractmethod
-import time
 import logging
+import time
+from abc import ABC, abstractmethod
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 from genxai.tools.security.policy import is_tool_allowed
 from genxai.utils.enterprise_compat import (
+    AuditEvent,
+    Permission,
     get_audit_log,
     get_current_user,
     get_policy_engine,
     record_exception,
     record_tool_execution,
     span,
-    AuditEvent,
-    Permission,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,11 +48,11 @@ class ToolParameter(BaseModel):
     type: str  # string, number, boolean, array, object
     description: str
     required: bool = True
-    default: Optional[Any] = None
-    enum: Optional[List[Any]] = None
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
-    pattern: Optional[str] = None  # Regex pattern for strings
+    default: Any | None = None
+    enum: list[Any] | None = None
+    min_value: float | None = None
+    max_value: float | None = None
+    pattern: str | None = None  # Regex pattern for strings
 
 
 
@@ -61,11 +62,11 @@ class ToolMetadata(BaseModel):
     name: str
     description: str
     category: ToolCategory
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     version: str = "1.0.0"
     author: str = "GenXAI"
     license: str = "MIT"
-    documentation_url: Optional[str] = None
+    documentation_url: str | None = None
 
 
 class ToolResult(BaseModel):
@@ -75,8 +76,8 @@ class ToolResult(BaseModel):
 
     success: bool
     data: Any
-    error: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
     execution_time: float = 0.0
 
 
@@ -84,7 +85,7 @@ class ToolResult(BaseModel):
 class Tool(ABC):
     """Base class for all tools."""
 
-    def __init__(self, metadata: ToolMetadata, parameters: List[ToolParameter]):
+    def __init__(self, metadata: ToolMetadata, parameters: list[ToolParameter]):
         """Initialize tool.
 
         Args:
@@ -110,7 +111,7 @@ class Tool(ABC):
         start_time = time.time()
 
         status = "success"
-        error_type: Optional[str] = None
+        error_type: str | None = None
         try:
             with span("genxai.tool.execute", {"tool_name": self.metadata.name}):
                 user = get_current_user()
@@ -153,8 +154,8 @@ class Tool(ABC):
             # - If tool returns a dict containing a boolean "success" field, map that
             #   to ToolResult.success and propagate "error" if present.
             # - Otherwise treat return value as successful data.
-            tool_success: Optional[bool] = None
-            tool_error: Optional[str] = None
+            tool_success: bool | None = None
+            tool_error: str | None = None
             result_data: Any = raw_result
 
             if isinstance(raw_result, ToolResult):
@@ -312,14 +313,14 @@ class Tool(ABC):
 
         return True
 
-    def get_schema(self) -> Dict[str, Any]:
+    def get_schema(self) -> dict[str, Any]:
         """Generate OpenAPI-style schema.
 
         Returns:
             Tool schema dictionary
         """
-        def _build_param_schema(param: ToolParameter) -> Dict[str, Any]:
-            schema: Dict[str, Any] = {
+        def _build_param_schema(param: ToolParameter) -> dict[str, Any]:
+            schema: dict[str, Any] = {
                 "type": param.type,
                 "description": param.description,
             }
@@ -353,7 +354,7 @@ class Tool(ABC):
             },
         }
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get tool execution metrics.
 
         Returns:

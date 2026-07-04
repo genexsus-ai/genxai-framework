@@ -1,12 +1,12 @@
 """Hash generator tool for creating cryptographic hashes."""
 
-from typing import Any, Dict
-import logging
+import base64
 import hashlib
 import hmac
-import base64
+import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class HashGeneratorTool(Tool):
         encoding: str = "utf-8",
         output_format: str = "hex",
         hmac_key: str = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute hash generation.
 
         Args:
@@ -84,7 +84,7 @@ class HashGeneratorTool(Tool):
         Returns:
             Dictionary containing hash results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "algorithm": algorithm,
             "output_format": output_format,
             "success": False,

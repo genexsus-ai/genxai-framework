@@ -1,9 +1,9 @@
 """SMS sender tool for sending text messages."""
 
-from typing import Any, Dict
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class SMSSenderTool(Tool):
         message: str,
         account_sid: str,
         auth_token: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute SMS sending.
 
         Args:
@@ -77,14 +77,14 @@ class SMSSenderTool(Tool):
             Dictionary containing send results
         """
         try:
-            from twilio.rest import Client
             from twilio.base.exceptions import TwilioRestException
-        except ImportError:
+            from twilio.rest import Client
+        except ImportError as e:
             raise ImportError(
                 "twilio package not installed. Install with: pip install twilio"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "to": to_number,
             "from": from_number,
             "success": False,

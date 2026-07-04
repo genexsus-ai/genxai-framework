@@ -1,11 +1,9 @@
 """Working memory implementation for active processing."""
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import logging
 from collections import deque
-
-from genxai.core.memory.base import Memory, MemoryType
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,15 +31,15 @@ class WorkingMemory:
         """
         self._capacity = capacity
         self._items: deque = deque(maxlen=capacity)
-        self._item_map: Dict[str, Any] = {}  # id -> item for fast lookup
-        
+        self._item_map: dict[str, Any] = {}  # id -> item for fast lookup
+
         logger.info(f"Initialized working memory with capacity {capacity}")
 
     def add(
         self,
         key: str,
         value: Any,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Add an item to working memory.
 
@@ -77,7 +75,7 @@ class WorkingMemory:
 
         logger.debug(f"Added to working memory: {key}")
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get an item from working memory.
 
         Args:
@@ -91,7 +89,7 @@ class WorkingMemory:
             return item["value"]
         return None
 
-    def get_all(self) -> List[Dict[str, Any]]:
+    def get_all(self) -> list[dict[str, Any]]:
         """Get all items in working memory.
 
         Returns:
@@ -99,7 +97,7 @@ class WorkingMemory:
         """
         return list(self._items)
 
-    def get_recent(self, n: int = 3) -> List[Dict[str, Any]]:
+    def get_recent(self, n: int = 3) -> list[dict[str, Any]]:
         """Get n most recent items.
 
         Args:
@@ -176,7 +174,7 @@ class WorkingMemory:
         """
         return len(self._items) >= self._capacity
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get working memory statistics.
 
         Returns:

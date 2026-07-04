@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional
 import json
 import os
 import sqlite3
+import sys
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -18,8 +18,8 @@ class AuditEvent:
     actor_id: str
     resource_id: str
     status: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    metadata: dict[str, Any] = field(default_factory=dict)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 @dataclass
@@ -29,7 +29,7 @@ class ApprovalRequest:
     resource_id: str
     actor_id: str
     status: str = "pending"
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class AuditStore:
@@ -82,7 +82,7 @@ class AuditStore:
 
         self._with_connection(_init)
 
-    def load_events(self) -> List[AuditEvent]:
+    def load_events(self) -> list[AuditEvent]:
         def _load(conn: sqlite3.Connection):
             cursor = conn.cursor()
             cursor.execute(
@@ -91,7 +91,7 @@ class AuditStore:
             return cursor.fetchall()
 
         rows = self._with_connection(_load)
-        events: List[AuditEvent] = []
+        events: list[AuditEvent] = []
         for action, actor_id, resource_id, status, metadata, timestamp in rows:
             events.append(
                 AuditEvent(
@@ -134,7 +134,7 @@ class AuditStore:
 
         self._with_connection(_clear)
 
-    def load_requests(self) -> Dict[str, ApprovalRequest]:
+    def load_requests(self) -> dict[str, ApprovalRequest]:
         def _load(conn: sqlite3.Connection):
             cursor = conn.cursor()
             cursor.execute(
@@ -143,7 +143,7 @@ class AuditStore:
             return cursor.fetchall()
 
         rows = self._with_connection(_load)
-        requests: Dict[str, ApprovalRequest] = {}
+        requests: dict[str, ApprovalRequest] = {}
         for request_id, action, resource_id, actor_id, status, created_at in rows:
             requests[request_id] = ApprovalRequest(
                 request_id=request_id,
@@ -197,13 +197,13 @@ class AuditLog:
 
     def __init__(self) -> None:
         self._store = _get_audit_store()
-        self._events: List[AuditEvent] = self._store.load_events()
+        self._events: list[AuditEvent] = self._store.load_events()
 
     def record(self, event: AuditEvent) -> None:
         self._events.append(event)
         self._store.save_event(event)
 
-    def list_events(self) -> List[AuditEvent]:
+    def list_events(self) -> list[AuditEvent]:
         self._events = self._store.load_events()
         return list(self._events)
 
@@ -217,7 +217,7 @@ class ApprovalService:
 
     def __init__(self) -> None:
         self._store = _get_audit_store()
-        self._requests: Dict[str, ApprovalRequest] = self._store.load_requests()
+        self._requests: dict[str, ApprovalRequest] = self._store.load_requests()
         self._counter = self._infer_counter()
 
     def _infer_counter(self) -> int:
@@ -243,21 +243,21 @@ class ApprovalService:
         self._store.save_request(request)
         return request
 
-    def approve(self, request_id: str) -> Optional[ApprovalRequest]:
+    def approve(self, request_id: str) -> ApprovalRequest | None:
         request = self._requests.get(request_id)
         if request:
             request.status = "approved"
             self._store.save_request(request)
         return request
 
-    def reject(self, request_id: str) -> Optional[ApprovalRequest]:
+    def reject(self, request_id: str) -> ApprovalRequest | None:
         request = self._requests.get(request_id)
         if request:
             request.status = "rejected"
             self._store.save_request(request)
         return request
 
-    def get(self, request_id: str) -> Optional[ApprovalRequest]:
+    def get(self, request_id: str) -> ApprovalRequest | None:
         return self._requests.get(request_id)
 
     def clear(self) -> None:
@@ -266,9 +266,9 @@ class ApprovalService:
         self._store.clear_requests()
 
 
-_audit_log: Optional[AuditLog] = None
-_approval_service: Optional[ApprovalService] = None
-_audit_store: Optional[AuditStore] = None
+_audit_log: AuditLog | None = None
+_approval_service: ApprovalService | None = None
+_audit_store: AuditStore | None = None
 
 
 def _get_default_db_path() -> Path:

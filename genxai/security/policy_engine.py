@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, Optional, Set
-from genxai.security.rbac import Permission, User, PermissionDenied
 
 from genxai.security.audit import get_approval_service
+from genxai.security.rbac import Permission, PermissionDenied, User
 
 
 class ResourceType(str, Enum):
@@ -24,17 +23,17 @@ class ResourceType(str, Enum):
 class AccessRule:
     """ACL rule for a resource."""
 
-    permissions: Set[Permission]
-    allowed_users: Optional[Set[str]] = None
+    permissions: set[Permission]
+    allowed_users: set[str] | None = None
     requires_approval: bool = False
-    approval_request_id: Optional[str] = None
+    approval_request_id: str | None = None
 
 
 class PolicyEngine:
     """Simple ACL-based policy engine."""
 
     def __init__(self) -> None:
-        self._rules: Dict[str, AccessRule] = {}
+        self._rules: dict[str, AccessRule] = {}
 
     def add_rule(self, resource_id: str, rule: AccessRule) -> None:
         self._rules[resource_id] = rule
@@ -73,7 +72,7 @@ class PolicyEngine:
             )
 
 
-_policy_engine: Optional[PolicyEngine] = None
+_policy_engine: PolicyEngine | None = None
 
 
 def get_policy_engine() -> PolicyEngine:

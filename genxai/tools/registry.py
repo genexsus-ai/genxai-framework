@@ -1,7 +1,7 @@
 """Tool registry for managing available tools."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any, Optional
 
 from genxai.tools.base import Tool, ToolCategory
 
@@ -13,7 +13,7 @@ class ToolRegistry:
 
     SCHEMA_VERSION = "1.0"
     _instance: Optional["ToolRegistry"] = None
-    _tools: Dict[str, Tool] = {}
+    _tools: dict[str, Tool] = {}
 
     def __new__(cls) -> "ToolRegistry":
         """Singleton pattern for tool registry."""
@@ -64,7 +64,7 @@ class ToolRegistry:
             logger.warning(f"Tool {name} not found in registry")
 
     @classmethod
-    def get(cls, name: str) -> Optional[Tool]:
+    def get(cls, name: str) -> Tool | None:
         """Get tool by name.
 
         Args:
@@ -76,7 +76,7 @@ class ToolRegistry:
         return cls._tools.get(name)
 
     @classmethod
-    def list_all(cls) -> List[Tool]:
+    def list_all(cls) -> list[Tool]:
         """List all registered tools.
 
         Returns:
@@ -86,8 +86,8 @@ class ToolRegistry:
 
     @classmethod
     def search(
-        cls, query: str, category: Optional[ToolCategory] = None
-    ) -> List[Tool]:
+        cls, query: str, category: ToolCategory | None = None
+    ) -> list[Tool]:
         """Search tools by query and category.
 
         Args:
@@ -117,7 +117,7 @@ class ToolRegistry:
         return results
 
     @classmethod
-    def list_categories(cls) -> List[ToolCategory]:
+    def list_categories(cls) -> list[ToolCategory]:
         """List all tool categories in use.
 
         Returns:
@@ -126,7 +126,7 @@ class ToolRegistry:
         return list(set(tool.metadata.category for tool in cls._tools.values()))
 
     @classmethod
-    def get_by_category(cls, category: ToolCategory) -> List[Tool]:
+    def get_by_category(cls, category: ToolCategory) -> list[Tool]:
         """Get all tools in a category.
 
         Args:
@@ -140,7 +140,7 @@ class ToolRegistry:
         ]
 
     @classmethod
-    def get_by_tag(cls, tag: str) -> List[Tool]:
+    def get_by_tag(cls, tag: str) -> list[Tool]:
         """Get all tools with a specific tag.
 
         Args:
@@ -162,7 +162,7 @@ class ToolRegistry:
         logger.info("Cleared all tools from registry")
 
     @classmethod
-    def export_schema_bundle(cls, category: Optional[ToolCategory] = None) -> Dict[str, Any]:
+    def export_schema_bundle(cls, category: ToolCategory | None = None) -> dict[str, Any]:
         """Export a consolidated schema bundle for all registered tools.
 
         Returns:
@@ -191,7 +191,7 @@ class ToolRegistry:
     def export_schema_bundle_to_file(
         cls,
         path: str,
-        category: Optional[ToolCategory] = None,
+        category: ToolCategory | None = None,
     ) -> str:
         """Export tool schemas to a JSON file.
 
@@ -220,7 +220,7 @@ class ToolRegistry:
         return str(output_path.resolve())
 
     @classmethod
-    def get_stats(cls) -> Dict[str, any]:
+    def get_stats(cls) -> dict[str, any]:
         """Get registry statistics.
 
         Returns:

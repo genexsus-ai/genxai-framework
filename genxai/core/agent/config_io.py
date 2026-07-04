@@ -2,29 +2,31 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any
+
 import yaml
 
 from genxai.core.agent.base import Agent, AgentConfig
 
 
-def agent_config_to_dict(config: AgentConfig) -> Dict[str, Any]:
+def agent_config_to_dict(config: AgentConfig) -> dict[str, Any]:
     """Serialize AgentConfig to a dictionary."""
     return config.model_dump(mode="json")
 
 
-def agent_config_from_dict(data: Dict[str, Any]) -> AgentConfig:
+def agent_config_from_dict(data: dict[str, Any]) -> AgentConfig:
     """Load AgentConfig from a dictionary."""
     return AgentConfig(**data)
 
 
-def agent_to_dict(agent: Agent) -> Dict[str, Any]:
+def agent_to_dict(agent: Agent) -> dict[str, Any]:
     """Serialize Agent to a dictionary."""
     return {"id": agent.id, "config": agent_config_to_dict(agent.config)}
 
 
-def agent_from_dict(data: Dict[str, Any]) -> Agent:
+def agent_from_dict(data: dict[str, Any]) -> Agent:
     """Load Agent from a dictionary."""
     if "config" in data and isinstance(data.get("config"), dict):
         config = agent_config_from_dict(data["config"])
@@ -81,7 +83,7 @@ def export_agents_yaml(agents: Iterable[Agent], path: Path) -> None:
     path.write_text(yaml.safe_dump(payload, sort_keys=False))
 
 
-def import_agents_yaml(path: Path) -> List[Agent]:
+def import_agents_yaml(path: Path) -> list[Agent]:
     """Import a list of agents from YAML."""
     data = yaml.safe_load(path.read_text())
     if not isinstance(data, dict) or "agents" not in data:

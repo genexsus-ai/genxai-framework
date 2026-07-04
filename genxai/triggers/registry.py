@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional
 import logging
 
 from genxai.triggers.base import BaseTrigger, TriggerStatus
@@ -13,10 +12,10 @@ logger = logging.getLogger(__name__)
 class TriggerRegistry:
     """Central registry for triggers."""
 
-    _instance: Optional["TriggerRegistry"] = None
-    _triggers: Dict[str, BaseTrigger] = {}
+    _instance: TriggerRegistry | None = None
+    _triggers: dict[str, BaseTrigger] = {}
 
-    def __new__(cls) -> "TriggerRegistry":
+    def __new__(cls) -> TriggerRegistry:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -39,12 +38,12 @@ class TriggerRegistry:
             logger.warning("Trigger %s not found in registry", trigger_id)
 
     @classmethod
-    def get(cls, trigger_id: str) -> Optional[BaseTrigger]:
+    def get(cls, trigger_id: str) -> BaseTrigger | None:
         """Get a trigger by id."""
         return cls._triggers.get(trigger_id)
 
     @classmethod
-    def list_all(cls) -> List[BaseTrigger]:
+    def list_all(cls) -> list[BaseTrigger]:
         """List all registered triggers."""
         return list(cls._triggers.values())
 
@@ -69,9 +68,9 @@ class TriggerRegistry:
                 await trigger.stop()
 
     @classmethod
-    def get_stats(cls) -> Dict[str, int]:
+    def get_stats(cls) -> dict[str, int]:
         """Return registry stats by trigger status."""
-        stats: Dict[str, int] = {}
+        stats: dict[str, int] = {}
         for trigger in cls._triggers.values():
             status = trigger.status.value
             stats[status] = stats.get(status, 0) + 1

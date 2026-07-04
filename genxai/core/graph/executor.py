@@ -2,37 +2,38 @@
 
 import asyncio
 import copy
-from typing import Any, Callable, Dict, List, Optional
 import logging
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
+from genxai.core.agent.base import Agent, AgentFactory
+from genxai.core.agent.registry import AgentRegistry
+from genxai.core.execution import ExecutionStore, WorkerQueueEngine
+from genxai.core.graph.edges import ConditionalEdge, Edge
 from genxai.core.graph.engine import Graph
-from genxai.core.memory.shared import SharedMemoryBus
 from genxai.core.graph.nodes import (
-    InputNode,
-    OutputNode,
     AgentNode,
     ConditionNode,
-    ToolNode,
-    SubgraphNode,
+    InputNode,
     LoopNode,
     Node,
     NodeConfig,
     NodeType,
+    OutputNode,
+    SubgraphNode,
+    ToolNode,
 )
-from genxai.core.graph.edges import Edge, ConditionalEdge
-from genxai.core.agent.base import Agent, AgentFactory
-from genxai.core.agent.registry import AgentRegistry
-from genxai.tools.registry import ToolRegistry
-from genxai.core.execution import WorkerQueueEngine, ExecutionStore
+from genxai.core.memory.shared import SharedMemoryBus
 from genxai.tools.builtin.computation.calculator import CalculatorTool
 from genxai.tools.builtin.file.file_reader import FileReaderTool
+from genxai.tools.registry import ToolRegistry
 from genxai.utils.enterprise_compat import (
+    AuditEvent,
+    Permission,
     get_audit_log,
     get_current_user,
     get_policy_engine,
-    AuditEvent,
-    Permission,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ class EnhancedGraph(Graph):
     """
 
     async def _execute_node_logic(
-        self, node: Any, state: Dict[str, Any], max_iterations: int = 100
+        self, node: Any, state: dict[str, Any], max_iterations: int = 100
     ) -> Any:
         """Execute node logic with actual agent execution.
 
@@ -64,7 +65,7 @@ class EnhancedGraph(Graph):
             # under the input node id (e.g. "start"), creating shared references
             # which Python's `json.dumps` treats as circular.
             return copy.deepcopy(state.get("input"))
-        
+
         elif node.type == NodeType.OUTPUT:
             # IMPORTANT: never return the live `state` dict. The engine stores the
             # node result back into `state[node_id]`, so returning `state` would
@@ -72,31 +73,31 @@ class EnhancedGraph(Graph):
             # be JSON-serialized for persistence.
             # Also deep-copy to avoid shared references (json can't encode those).
             return copy.deepcopy(state)
-        
+
         elif node.type == NodeType.AGENT:
             # Get agent from registry
             agent_id = node.config.data.get("agent_id")
             if not agent_id:
                 raise ValueError(f"Agent node '{node.id}' missing agent_id in config.data")
-            
+
             agent = AgentRegistry.get(agent_id)
             if agent is None:
                 raise ValueError(f"Agent '{agent_id}' not found in registry")
-            
+
             # Prepare task from state
             task = state.get("task", "Process the input data")
-            
+
             # Execute agent with tools if available
             result = await self._execute_agent_with_tools(agent, task, state)
-            
+
             return result
-        
+
         else:
             return await super()._execute_node_logic(node, state, max_iterations)
 
     async def _execute_agent_with_tools(
-        self, agent: Agent, task: str, state: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, agent: Agent, task: str, state: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute agent with tool support using AgentRuntime.
 
         Args:
@@ -108,10 +109,10 @@ class EnhancedGraph(Graph):
             Execution result
         """
         logger.debug(f"Executing agent '{agent.id}' ({agent.config.role})")
-        
+
         # Use AgentRuntime for full integration
         from genxai.core.agent.runtime import AgentRuntime
-        
+
         # Pass both API keys to runtime so it can select the correct one based on model
         runtime = AgentRuntime(
             agent=agent,
@@ -121,7 +122,7 @@ class EnhancedGraph(Graph):
             enable_memory=True,
             shared_memory=getattr(self, "shared_memory", None),
         )
-        
+
         # Load tools from registry
         if agent.config.tools:
             tools = {}
@@ -131,17 +132,17 @@ class EnhancedGraph(Graph):
                     tools[tool_name] = tool
             runtime.set_tools(tools)
             logger.debug(f"Loaded {len(tools)} tools for agent")
-        
+
         # Execute agent with full runtime support
         context = dict(state)
         if getattr(self, "shared_memory", None) is not None:
-            context["shared_memory"] = getattr(self, "shared_memory")
+            context["shared_memory"] = self.shared_memory
         result = await runtime.execute(task, context=context)
-        
+
         return result
 
     async def _execute_tool_for_task(
-        self, tool: Any, tool_name: str, task: str, state: Dict[str, Any]
+        self, tool: Any, tool_name: str, task: str, state: dict[str, Any]
     ) -> Any:
         """Execute a tool based on the task.
 
@@ -166,24 +167,24 @@ class EnhancedGraph(Graph):
                     if result.success:
                         logger.debug(f"Calculator result: {result.data['result']}")
                         return result.data
-            
+
             # File reader tool
             elif tool_name == "file_reader":
                 # Check if task involves file reading
                 if any(word in task.lower() for word in ["read", "file", "load"]):
                     # Get file path from state
                     file_path = state.get("file_path")
-                    
+
                     if file_path:
                         logger.debug(f"Reading file: {file_path}")
                         result = await tool.execute(path=file_path)
                         if result.success:
                             logger.debug(f"Read {result.data['lines']} lines")
                             return result.data
-        
+
         except Exception as e:
             logger.error(f"Tool execution failed: {e}")
-        
+
         return None
 
 
@@ -202,12 +203,12 @@ class WorkflowExecutor:
     """
 
     def __init__(
-        self, 
-        openai_api_key: Optional[str] = None, 
-        anthropic_api_key: Optional[str] = None,
+        self,
+        openai_api_key: str | None = None,
+        anthropic_api_key: str | None = None,
         register_builtin_tools: bool = True,
-        queue_engine: Optional[WorkerQueueEngine] = None,
-        execution_store: Optional[ExecutionStore] = None,
+        queue_engine: WorkerQueueEngine | None = None,
+        execution_store: ExecutionStore | None = None,
     ):
         """Initialize workflow executor.
 
@@ -218,7 +219,7 @@ class WorkflowExecutor:
         """
         self.openai_api_key = openai_api_key
         self.anthropic_api_key = anthropic_api_key
-        
+
         self.queue_engine = queue_engine
         self.execution_store = execution_store or ExecutionStore()
 
@@ -239,7 +240,7 @@ class WorkflowExecutor:
             ToolRegistry.register(file_reader)
             logger.info("Registered file_reader tool")
 
-    def _create_agents_from_nodes(self, nodes: List[Dict[str, Any]]) -> None:
+    def _create_agents_from_nodes(self, nodes: list[dict[str, Any]]) -> None:
         """Create and register agents from workflow nodes.
 
         Args:
@@ -249,7 +250,7 @@ class WorkflowExecutor:
             if node.get("type") == "agent":
                 agent_id = node.get("id")
                 config = node.get("config", {})
-                
+
                 # Extract agent configuration
                 role = config.get("role", "Agent")
                 goal = config.get("goal", "Process tasks")
@@ -273,7 +274,7 @@ class WorkflowExecutor:
                 AgentRegistry.register(agent)
                 logger.info(f"Created and registered agent: {agent_id}")
 
-    def _build_graph(self, nodes: List[Dict[str, Any]], edges: List[Dict[str, Any]]) -> EnhancedGraph:
+    def _build_graph(self, nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> EnhancedGraph:
         """Build GenXAI graph from workflow definition.
 
         Args:
@@ -353,7 +354,7 @@ class WorkflowExecutor:
 
         return graph
 
-    def _evaluate_condition(self, state: Dict[str, Any], condition: str) -> bool:
+    def _evaluate_condition(self, state: dict[str, Any], condition: str) -> bool:
         """Evaluate a condition string.
 
         Args:
@@ -372,18 +373,18 @@ class WorkflowExecutor:
             return False
 
     async def execute(
-        self, 
-        nodes: List[Dict[str, Any]], 
-        edges: List[Dict[str, Any]], 
-        input_data: Dict[str, Any],
-        run_id: Optional[str] = None,
-        checkpoint_dir: Optional[str] = None,
-        resume_from: Optional[str] = None,
-        model_override: Optional[str] = None,
-        event_callback: Optional[Callable[[Dict[str, Any]], Any]] = None,
+        self,
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, Any]],
+        input_data: dict[str, Any],
+        run_id: str | None = None,
+        checkpoint_dir: str | None = None,
+        resume_from: str | None = None,
+        model_override: str | None = None,
+        event_callback: Callable[[dict[str, Any]], Any] | None = None,
         shared_memory: bool = False,
-        llm_provider: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        llm_provider: Any | None = None,
+    ) -> dict[str, Any]:
         """Execute a workflow.
 
         Args:
@@ -483,13 +484,13 @@ class WorkflowExecutor:
 
     async def execute_queued(
         self,
-        nodes: List[Dict[str, Any]],
-        edges: List[Dict[str, Any]],
-        input_data: Dict[str, Any],
-        run_id: Optional[str] = None,
-        checkpoint_dir: Optional[str] = None,
-        resume_from: Optional[str] = None,
-        model_override: Optional[str] = None,
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, Any]],
+        input_data: dict[str, Any],
+        run_id: str | None = None,
+        checkpoint_dir: str | None = None,
+        resume_from: str | None = None,
+        model_override: str | None = None,
     ) -> str:
         """Enqueue workflow execution using a worker queue engine."""
         if not self.queue_engine:
@@ -502,7 +503,7 @@ class WorkflowExecutor:
 
         self.execution_store.create(run_id, workflow="workflow", status="queued")
 
-        async def _handler(payload: Dict[str, Any]) -> None:
+        async def _handler(payload: dict[str, Any]) -> None:
             await self.execute(
                 nodes=payload["nodes"],
                 edges=payload["edges"],
@@ -531,14 +532,14 @@ class WorkflowExecutor:
 
 
 def execute_workflow_sync(
-    nodes: List[Dict[str, Any]],
-    edges: List[Dict[str, Any]],
-    input_data: Dict[str, Any],
-    openai_api_key: Optional[str] = None,
-    anthropic_api_key: Optional[str] = None,
-    model_override: Optional[str] = None,
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    input_data: dict[str, Any],
+    openai_api_key: str | None = None,
+    anthropic_api_key: str | None = None,
+    model_override: str | None = None,
     shared_memory: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Synchronous wrapper for workflow execution.
     
     This is a convenience function for executing workflows in
@@ -558,7 +559,7 @@ def execute_workflow_sync(
         openai_api_key=openai_api_key,
         anthropic_api_key=anthropic_api_key
     )
-    
+
     # Run async execution in sync context
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -578,15 +579,15 @@ def execute_workflow_sync(
 
 
 async def execute_workflow_async(
-    nodes: List[Dict[str, Any]],
-    edges: List[Dict[str, Any]],
-    input_data: Dict[str, Any],
-    openai_api_key: Optional[str] = None,
-    anthropic_api_key: Optional[str] = None,
-    model_override: Optional[str] = None,
-    event_callback: Optional[Callable[[Dict[str, Any]], Any]] = None,
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    input_data: dict[str, Any],
+    openai_api_key: str | None = None,
+    anthropic_api_key: str | None = None,
+    model_override: str | None = None,
+    event_callback: Callable[[dict[str, Any]], Any] | None = None,
     shared_memory: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Async convenience function for workflow execution.
 
     This is the correct entry point when you're *already* inside an asyncio
@@ -614,4 +615,4 @@ async def execute_workflow_async(
         event_callback=event_callback,
         shared_memory=shared_memory,
     )
-    
+

@@ -1,9 +1,9 @@
 """HTML parser tool for extracting structured data from HTML."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -69,12 +69,12 @@ class HTMLParserTool(Tool):
     async def _execute(
         self,
         html: str,
-        selectors: Optional[Dict[str, str]] = None,
-        extract: Optional[str] = None,
+        selectors: dict[str, str] | None = None,
+        extract: str | None = None,
         extract_tables: bool = False,
         extract_forms: bool = False,
         clean_text: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute HTML parsing.
 
         Args:
@@ -105,13 +105,13 @@ class HTMLParserTool(Tool):
                 def __init__(self) -> None:
                     super().__init__()
                     self.links: list[dict[str, str]] = []
-                    self._current_a_href: Optional[str] = None
+                    self._current_a_href: str | None = None
                     self._current_a_text_parts: list[str] = []
                     self.text_parts: list[str] = []
                     self.title_parts: list[str] = []
                     self._in_title = False
 
-                def handle_starttag(self, tag: str, attrs: list[tuple[str, Optional[str]]]) -> None:
+                def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
                     if tag.lower() == "a":
                         href = None
                         for k, v in attrs:
@@ -147,7 +147,7 @@ class HTMLParserTool(Tool):
             parser = _FallbackHTMLParser()
             parser.feed(html)
 
-            result: Dict[str, Any] = {
+            result: dict[str, Any] = {
                 "title": "".join(parser.title_parts).strip() or None,
             }
 
@@ -173,7 +173,7 @@ class HTMLParserTool(Tool):
             return result
 
         # Parse HTML (BeautifulSoup path)
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "title": soup.title.string if soup.title else None,
         }
 
@@ -233,7 +233,7 @@ class HTMLParserTool(Tool):
         if extract_tables:
             tables = []
             for table in soup.find_all("table"):
-                table_data: Dict[str, Any] = {
+                table_data: dict[str, Any] = {
                     "headers": [],
                     "rows": [],
                 }
@@ -265,7 +265,7 @@ class HTMLParserTool(Tool):
         if extract_forms:
             forms = []
             for form in soup.find_all("form"):
-                form_data: Dict[str, Any] = {
+                form_data: dict[str, Any] = {
                     "action": form.get("action"),
                     "method": form.get("method", "get").upper(),
                     "fields": [],
@@ -273,7 +273,7 @@ class HTMLParserTool(Tool):
 
                 # Extract input fields
                 for input_elem in form.find_all(["input", "textarea", "select"]):
-                    field_info: Dict[str, Any] = {
+                    field_info: dict[str, Any] = {
                         "type": input_elem.name,
                         "name": input_elem.get("name"),
                         "id": input_elem.get("id"),

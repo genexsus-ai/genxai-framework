@@ -1,14 +1,14 @@
 """File compressor tool for compressing and decompressing files."""
 
-from typing import Any, Dict, List, Optional
+import gzip
 import logging
 import os
-import zipfile
-import tarfile
-import gzip
 import shutil
+import tarfile
+import zipfile
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +62,9 @@ class FileCompressorTool(Tool):
         self,
         operation: str,
         source_path: str,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         format: str = "zip",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute file compression/decompression.
 
         Args:
@@ -76,7 +76,7 @@ class FileCompressorTool(Tool):
         Returns:
             Dictionary containing operation results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "operation": operation,
             "format": format,
             "success": False,
@@ -121,7 +121,7 @@ class FileCompressorTool(Tool):
         logger.info(f"File {operation} ({format}) completed: success={result['success']}")
         return result
 
-    def _compress_zip(self, source_path: str, output_path: str) -> Dict[str, Any]:
+    def _compress_zip(self, source_path: str, output_path: str) -> dict[str, Any]:
         """Compress to ZIP format."""
         with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             if os.path.isfile(source_path):
@@ -142,10 +142,10 @@ class FileCompressorTool(Tool):
             "compressed_size": os.path.getsize(output_path),
         }
 
-    def _compress_tar(self, source_path: str, output_path: str, format: str) -> Dict[str, Any]:
+    def _compress_tar(self, source_path: str, output_path: str, format: str) -> dict[str, Any]:
         """Compress to TAR format."""
         mode = "w:gz" if format == "tar.gz" else "w"
-        
+
         with tarfile.open(output_path, mode) as tar:
             tar.add(source_path, arcname=os.path.basename(source_path))
 
@@ -154,7 +154,7 @@ class FileCompressorTool(Tool):
             "compressed_size": os.path.getsize(output_path),
         }
 
-    def _compress_gzip(self, source_path: str, output_path: str) -> Dict[str, Any]:
+    def _compress_gzip(self, source_path: str, output_path: str) -> dict[str, Any]:
         """Compress to GZIP format."""
         with open(source_path, "rb") as f_in:
             with gzip.open(output_path, "wb") as f_out:
@@ -169,7 +169,7 @@ class FileCompressorTool(Tool):
             ),
         }
 
-    def _decompress_zip(self, source_path: str, output_path: str) -> Dict[str, Any]:
+    def _decompress_zip(self, source_path: str, output_path: str) -> dict[str, Any]:
         """Decompress ZIP format."""
         with zipfile.ZipFile(source_path, "r") as zipf:
             zipf.extractall(output_path)
@@ -180,7 +180,7 @@ class FileCompressorTool(Tool):
             "file_count": file_count,
         }
 
-    def _decompress_tar(self, source_path: str, output_path: str) -> Dict[str, Any]:
+    def _decompress_tar(self, source_path: str, output_path: str) -> dict[str, Any]:
         """Decompress TAR format."""
         with tarfile.open(source_path, "r:*") as tar:
             tar.extractall(output_path)
@@ -191,7 +191,7 @@ class FileCompressorTool(Tool):
             "file_count": file_count,
         }
 
-    def _decompress_gzip(self, source_path: str, output_path: str) -> Dict[str, Any]:
+    def _decompress_gzip(self, source_path: str, output_path: str) -> dict[str, Any]:
         """Decompress GZIP format."""
         with gzip.open(source_path, "rb") as f_in:
             with open(output_path, "wb") as f_out:
@@ -202,7 +202,7 @@ class FileCompressorTool(Tool):
             "decompressed_size": os.path.getsize(output_path),
         }
 
-    def _list_zip(self, source_path: str) -> Dict[str, Any]:
+    def _list_zip(self, source_path: str) -> dict[str, Any]:
         """List contents of ZIP archive."""
         with zipfile.ZipFile(source_path, "r") as zipf:
             files = [
@@ -219,7 +219,7 @@ class FileCompressorTool(Tool):
             "files": files,
         }
 
-    def _list_tar(self, source_path: str) -> Dict[str, Any]:
+    def _list_tar(self, source_path: str) -> dict[str, Any]:
         """List contents of TAR archive."""
         with tarfile.open(source_path, "r:*") as tar:
             files = [

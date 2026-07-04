@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
-import json
-import uuid
+from typing import Any
 
 
 @dataclass
@@ -18,12 +18,12 @@ class ExecutionRecord:
     workflow: str
     status: str
     started_at: str
-    completed_at: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    error: Optional[str] = None
-    result: Optional[Dict[str, Any]] = None
+    completed_at: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
+    result: dict[str, Any] | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "workflow": self.workflow,
@@ -41,10 +41,10 @@ class ExecutionStore:
 
     def __init__(
         self,
-        persistence_path: Optional[Path] = None,
-        sql_url: Optional[str] = None,
+        persistence_path: Path | None = None,
+        sql_url: str | None = None,
     ) -> None:
-        self._records: Dict[str, ExecutionRecord] = {}
+        self._records: dict[str, ExecutionRecord] = {}
         self._persistence_path = persistence_path
         self._sql_url = sql_url
         self._engine = None
@@ -81,7 +81,7 @@ class ExecutionStore:
         run_id: str,
         workflow: str,
         status: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> ExecutionRecord:
         if run_id in self._records:
             return self._records[run_id]
@@ -100,10 +100,10 @@ class ExecutionStore:
     def update(
         self,
         run_id: str,
-        status: Optional[str] = None,
-        error: Optional[str] = None,
-        result: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        status: str | None = None,
+        error: str | None = None,
+        result: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
         completed: bool = False,
     ) -> ExecutionRecord:
         record = self._records.get(run_id)
@@ -122,7 +122,7 @@ class ExecutionStore:
         self._persist(record)
         return record
 
-    def get(self, run_id: str) -> Optional[ExecutionRecord]:
+    def get(self, run_id: str) -> ExecutionRecord | None:
         record = self._records.get(run_id)
         if record or not self._engine or not self._table:
             return record

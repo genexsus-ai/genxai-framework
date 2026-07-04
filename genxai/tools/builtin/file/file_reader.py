@@ -1,10 +1,10 @@
 """File reader tool for reading file contents."""
 
-from typing import Any
-from pathlib import Path
 import logging
+from pathlib import Path
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class FileReaderTool(Tool):
 
         try:
             # Read file contents
-            with open(file_path, "r", encoding=encoding) as f:
+            with open(file_path, encoding=encoding) as f:
                 content = f.read()
 
             logger.info(f"Read file: {path} ({file_size} bytes)")
@@ -96,7 +96,7 @@ class FileReaderTool(Tool):
 
         except UnicodeDecodeError as e:
             logger.error(f"Encoding error reading {path}: {e}")
-            raise ValueError(f"Failed to decode file with encoding {encoding}: {e}")
+            raise ValueError(f"Failed to decode file with encoding {encoding}: {e}") from e
         except Exception as e:
             logger.error(f"Error reading file {path}: {e}")
             raise

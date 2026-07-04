@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
-import json
+from typing import Any
 
 from genxai.core.graph.nodes import NodeStatus
 
@@ -18,10 +18,10 @@ class WorkflowCheckpoint:
     name: str
     workflow: str
     created_at: str
-    state: Dict[str, Any]
-    node_statuses: Dict[str, str]
+    state: dict[str, Any]
+    node_statuses: dict[str, str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "workflow": self.workflow,
@@ -31,7 +31,7 @@ class WorkflowCheckpoint:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "WorkflowCheckpoint":
+    def from_dict(cls, data: dict[str, Any]) -> WorkflowCheckpoint:
         return cls(
             name=data["name"],
             workflow=data["workflow"],
@@ -64,8 +64,8 @@ class WorkflowCheckpointManager:
 def create_checkpoint(
     name: str,
     workflow: str,
-    state: Dict[str, Any],
-    node_statuses: Dict[str, NodeStatus],
+    state: dict[str, Any],
+    node_statuses: dict[str, NodeStatus],
 ) -> WorkflowCheckpoint:
     """Create a checkpoint object from current workflow state."""
     return WorkflowCheckpoint(

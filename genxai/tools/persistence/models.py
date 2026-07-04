@@ -1,17 +1,18 @@
 """Database models for tools."""
 
-from sqlalchemy import Column, Integer, String, Text, JSON, DateTime
+from datetime import UTC, datetime
+
+from sqlalchemy import JSON, Column, DateTime, Integer, String, Text
 from sqlalchemy.orm import declarative_base
-from datetime import datetime, timezone
 
 Base = declarative_base()
 
 
 class ToolModel(Base):
     """Database model for tools."""
-    
+
     __tablename__ = "tools"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(Text, nullable=False)
@@ -19,26 +20,26 @@ class ToolModel(Base):
     tags = Column(JSON, default=[])
     version = Column(String, default="1.0.0")
     author = Column(String, default="GenXAI User")
-    
+
     # Tool type: "code_based" or "template_based"
     tool_type = Column(String, nullable=False)
-    
+
     # For code-based tools
     code = Column(Text, nullable=True)
     parameters = Column(JSON, default=[])
-    
+
     # For template-based tools
     template_name = Column(String, nullable=True)
     template_config = Column(JSON, nullable=True)
-    
+
     # Timestamps
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     updated_at = Column(
         DateTime,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
     )
-    
+
     def to_dict(self):
         """Convert model to dictionary."""
         return {

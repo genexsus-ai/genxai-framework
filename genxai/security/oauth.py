@@ -1,14 +1,15 @@
 """OAuth 2.0 integration for GenXAI."""
 
-import requests
-from typing import Dict, Any, Optional
 from abc import ABC, abstractmethod
+from typing import Any
 from urllib.parse import urlencode
+
+import requests
 
 
 class OAuthProvider(ABC):
     """Base OAuth 2.0 provider."""
-    
+
     def __init__(self, client_id: str, client_secret: str, redirect_uri: str):
         """Initialize OAuth provider.
         
@@ -20,9 +21,9 @@ class OAuthProvider(ABC):
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
-    
+
     @abstractmethod
-    def get_authorization_url(self, state: Optional[str] = None) -> str:
+    def get_authorization_url(self, state: str | None = None) -> str:
         """Get OAuth authorization URL.
         
         Args:
@@ -32,9 +33,9 @@ class OAuthProvider(ABC):
             Authorization URL
         """
         pass
-    
+
     @abstractmethod
-    def exchange_code(self, code: str) -> Dict[str, Any]:
+    def exchange_code(self, code: str) -> dict[str, Any]:
         """Exchange authorization code for tokens.
         
         Args:
@@ -44,9 +45,9 @@ class OAuthProvider(ABC):
             Token response with access_token, refresh_token, etc.
         """
         pass
-    
+
     @abstractmethod
-    def get_user_info(self, access_token: str) -> Dict[str, Any]:
+    def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user information.
         
         Args:
@@ -60,12 +61,12 @@ class OAuthProvider(ABC):
 
 class GoogleOAuthProvider(OAuthProvider):
     """Google OAuth 2.0 provider."""
-    
+
     AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
     TOKEN_URL = "https://oauth2.googleapis.com/token"
     USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
-    
-    def get_authorization_url(self, state: Optional[str] = None) -> str:
+
+    def get_authorization_url(self, state: str | None = None) -> str:
         """Get Google OAuth authorization URL."""
         params = {
             "client_id": self.client_id,
@@ -74,13 +75,13 @@ class GoogleOAuthProvider(OAuthProvider):
             "scope": "openid email profile",
             "access_type": "offline",
         }
-        
+
         if state:
             params["state"] = state
-        
+
         return f"{self.AUTH_URL}?{urlencode(params)}"
-    
-    def exchange_code(self, code: str) -> Dict[str, Any]:
+
+    def exchange_code(self, code: str) -> dict[str, Any]:
         """Exchange authorization code for tokens."""
         data = {
             "client_id": self.client_id,
@@ -89,42 +90,42 @@ class GoogleOAuthProvider(OAuthProvider):
             "redirect_uri": self.redirect_uri,
             "grant_type": "authorization_code",
         }
-        
+
         response = requests.post(self.TOKEN_URL, data=data)
         response.raise_for_status()
-        
+
         return response.json()
-    
-    def get_user_info(self, access_token: str) -> Dict[str, Any]:
+
+    def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user information from Google."""
         headers = {"Authorization": f"Bearer {access_token}"}
         response = requests.get(self.USER_INFO_URL, headers=headers)
         response.raise_for_status()
-        
+
         return response.json()
 
 
 class GitHubOAuthProvider(OAuthProvider):
     """GitHub OAuth 2.0 provider."""
-    
+
     AUTH_URL = "https://github.com/login/oauth/authorize"
     TOKEN_URL = "https://github.com/login/oauth/access_token"
     USER_INFO_URL = "https://api.github.com/user"
-    
-    def get_authorization_url(self, state: Optional[str] = None) -> str:
+
+    def get_authorization_url(self, state: str | None = None) -> str:
         """Get GitHub OAuth authorization URL."""
         params = {
             "client_id": self.client_id,
             "redirect_uri": self.redirect_uri,
             "scope": "read:user user:email",
         }
-        
+
         if state:
             params["state"] = state
-        
+
         return f"{self.AUTH_URL}?{urlencode(params)}"
-    
-    def exchange_code(self, code: str) -> Dict[str, Any]:
+
+    def exchange_code(self, code: str) -> dict[str, Any]:
         """Exchange authorization code for tokens."""
         data = {
             "client_id": self.client_id,
@@ -132,14 +133,14 @@ class GitHubOAuthProvider(OAuthProvider):
             "code": code,
             "redirect_uri": self.redirect_uri,
         }
-        
+
         headers = {"Accept": "application/json"}
         response = requests.post(self.TOKEN_URL, data=data, headers=headers)
         response.raise_for_status()
-        
+
         return response.json()
-    
-    def get_user_info(self, access_token: str) -> Dict[str, Any]:
+
+    def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user information from GitHub."""
         headers = {
             "Authorization": f"Bearer {access_token}",
@@ -147,18 +148,18 @@ class GitHubOAuthProvider(OAuthProvider):
         }
         response = requests.get(self.USER_INFO_URL, headers=headers)
         response.raise_for_status()
-        
+
         return response.json()
 
 
 class MicrosoftOAuthProvider(OAuthProvider):
     """Microsoft OAuth 2.0 provider."""
-    
+
     AUTH_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
     TOKEN_URL = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
     USER_INFO_URL = "https://graph.microsoft.com/v1.0/me"
-    
-    def get_authorization_url(self, state: Optional[str] = None) -> str:
+
+    def get_authorization_url(self, state: str | None = None) -> str:
         """Get Microsoft OAuth authorization URL."""
         params = {
             "client_id": self.client_id,
@@ -166,13 +167,13 @@ class MicrosoftOAuthProvider(OAuthProvider):
             "response_type": "code",
             "scope": "openid email profile User.Read",
         }
-        
+
         if state:
             params["state"] = state
-        
+
         return f"{self.AUTH_URL}?{urlencode(params)}"
-    
-    def exchange_code(self, code: str) -> Dict[str, Any]:
+
+    def exchange_code(self, code: str) -> dict[str, Any]:
         """Exchange authorization code for tokens."""
         data = {
             "client_id": self.client_id,
@@ -181,18 +182,18 @@ class MicrosoftOAuthProvider(OAuthProvider):
             "redirect_uri": self.redirect_uri,
             "grant_type": "authorization_code",
         }
-        
+
         response = requests.post(self.TOKEN_URL, data=data)
         response.raise_for_status()
-        
+
         return response.json()
-    
-    def get_user_info(self, access_token: str) -> Dict[str, Any]:
+
+    def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user information from Microsoft."""
         headers = {"Authorization": f"Bearer {access_token}"}
         response = requests.get(self.USER_INFO_URL, headers=headers)
         response.raise_for_status()
-        
+
         return response.json()
 
 
@@ -218,9 +219,9 @@ def create_oauth_provider(
         "github": GitHubOAuthProvider,
         "microsoft": MicrosoftOAuthProvider,
     }
-    
+
     provider_class = providers.get(provider.lower())
     if not provider_class:
         raise ValueError(f"Unknown OAuth provider: {provider}")
-    
+
     return provider_class(client_id, client_secret, redirect_uri)

@@ -1,8 +1,9 @@
 """Cohere LLM provider implementation."""
 
-from typing import Any, Dict, Optional, AsyncIterator
-import os
 import logging
+import os
+from collections.abc import AsyncIterator
+from typing import Any
 
 from genxai.llm.base import LLMProvider, LLMResponse
 
@@ -15,9 +16,9 @@ class CohereProvider(LLMProvider):
     def __init__(
         self,
         model: str = "command",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize Cohere provider.
@@ -30,12 +31,12 @@ class CohereProvider(LLMProvider):
             **kwargs: Additional Cohere-specific parameters
         """
         super().__init__(model, temperature, max_tokens, **kwargs)
-        
+
         self.api_key = api_key or os.getenv("COHERE_API_KEY")
         if not self.api_key:
             logger.warning("Cohere API key not provided. Set COHERE_API_KEY environment variable.")
-        
-        self._client: Optional[Any] = None
+
+        self._client: Any | None = None
         self._initialize_client()
 
     def _initialize_client(self) -> None:
@@ -56,7 +57,7 @@ class CohereProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion using Cohere.
@@ -82,12 +83,12 @@ class CohereProvider(LLMProvider):
             full_prompt = f"{system_prompt}\n\n{prompt}"
 
         # Merge parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
             "prompt": full_prompt,
             "temperature": kwargs.get("temperature", self.temperature),
         }
-        
+
         if self.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.max_tokens)
 
@@ -110,7 +111,7 @@ class CohereProvider(LLMProvider):
                 "completion_tokens": 0,
                 "total_tokens": 0,
             }
-            
+
             if hasattr(response, 'meta') and response.meta:
                 billed_units = response.meta.billed_units
                 if billed_units:
@@ -138,7 +139,7 @@ class CohereProvider(LLMProvider):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Generate completion with streaming.
@@ -163,21 +164,21 @@ class CohereProvider(LLMProvider):
             full_prompt = f"{system_prompt}\n\n{prompt}"
 
         # Merge parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
             "prompt": full_prompt,
             "temperature": kwargs.get("temperature", self.temperature),
             "stream": True,
         }
-        
+
         if self.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.max_tokens)
 
         try:
             logger.debug(f"Streaming from Cohere API with model: {self.model}")
-            
+
             response = await self._client.generate(**params)
-            
+
             async for event in response:
                 if event.event_type == "text-generation":
                     yield event.text
@@ -188,7 +189,7 @@ class CohereProvider(LLMProvider):
 
     async def generate_chat(
         self,
-        messages: list[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion for chat messages.
@@ -207,11 +208,11 @@ class CohereProvider(LLMProvider):
         chat_history = []
         system_prompt = None
         last_user_message = ""
-        
+
         for msg in messages:
             role = msg.get("role", "user")
             content = msg.get("content", "")
-            
+
             if role == "system":
                 system_prompt = content
             elif role == "user":
@@ -223,18 +224,18 @@ class CohereProvider(LLMProvider):
                 chat_history.append({"role": "CHATBOT", "message": content})
 
         # Merge parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
             "message": last_user_message,
             "temperature": kwargs.get("temperature", self.temperature),
         }
-        
+
         if chat_history:
             params["chat_history"] = chat_history
-        
+
         if system_prompt:
             params["preamble"] = system_prompt
-        
+
         if self.max_tokens:
             params["max_tokens"] = kwargs.get("max_tokens", self.max_tokens)
 
@@ -249,7 +250,7 @@ class CohereProvider(LLMProvider):
                 "completion_tokens": 0,
                 "total_tokens": 0,
             }
-            
+
             if hasattr(response, 'meta') and response.meta:
                 billed_units = response.meta.billed_units
                 if billed_units:

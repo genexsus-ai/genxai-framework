@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from genxai.core.agent.base import Agent, AgentFactory, AgentType
 
@@ -39,7 +39,7 @@ class UserProxyAgent(Agent):
         id: str,
         goal: str = "Provide user input",
         role: str = "User",
-        tools: Optional[list[str]] = None,
+        tools: list[str] | None = None,
         **kwargs: Any,
     ) -> Agent:
         tool_list = tools or []

@@ -1,9 +1,9 @@
 """PDF parser tool for extracting text and metadata from PDF files."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class PDFParserTool(Tool):
         extract_text: bool = True,
         extract_metadata: bool = True,
         page_range: str = "all",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute PDF parsing.
 
         Args:
@@ -73,12 +73,12 @@ class PDFParserTool(Tool):
         """
         try:
             import PyPDF2
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "PyPDF2 package not installed. Install with: pip install PyPDF2"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "file_path": file_path,
             "success": False,
         }
@@ -86,7 +86,7 @@ class PDFParserTool(Tool):
         try:
             with open(file_path, "rb") as file:
                 pdf_reader = PyPDF2.PdfReader(file)
-                
+
                 # Get page count
                 num_pages = len(pdf_reader.pages)
                 result["page_count"] = num_pages
@@ -128,7 +128,7 @@ class PDFParserTool(Tool):
                             "text": text,
                             "char_count": len(text),
                         })
-                    
+
                     result["pages"] = pages_text
                     result["total_text"] = "\n\n".join([p["text"] for p in pages_text])
                     result["extracted_pages"] = len(pages_text)

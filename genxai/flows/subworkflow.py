@@ -1,6 +1,6 @@
 """Subworkflow flow orchestrator."""
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from genxai.core.graph.engine import Graph
 from genxai.flows.base import FlowOrchestrator
@@ -24,9 +24,9 @@ class SubworkflowFlow(FlowOrchestrator):
     async def run(
         self,
         input_data: Any,
-        state: Optional[Dict[str, Any]] = None,
+        state: dict[str, Any] | None = None,
         max_iterations: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return await self.graph.run(
             input_data=input_data,
             state=state,

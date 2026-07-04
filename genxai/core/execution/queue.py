@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Optional, Protocol
-import uuid
-import logging
 import json
+import logging
+import uuid
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class QueueTask:
 
     task_id: str
     payload: dict[str, Any]
-    handler: Optional[Callable[[dict[str, Any]], Awaitable[Any]]]
+    handler: Callable[[dict[str, Any]], Awaitable[Any]] | None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -56,11 +57,11 @@ class WorkerQueueEngine:
 
     def __init__(
         self,
-        backend: Optional[QueueBackend] = None,
+        backend: QueueBackend | None = None,
         worker_count: int = 2,
         max_retries: int = 3,
         backoff_seconds: float = 0.5,
-        handler_registry: Optional[dict[str, Callable[[dict[str, Any]], Awaitable[Any]]]] = None,
+        handler_registry: dict[str, Callable[[dict[str, Any]], Awaitable[Any]]] | None = None,
     ) -> None:
         self._backend = backend or InMemoryQueueBackend()
         self._worker_count = worker_count
@@ -98,10 +99,10 @@ class WorkerQueueEngine:
     async def enqueue(
         self,
         payload: dict[str, Any],
-        handler: Optional[Callable[[dict[str, Any]], Awaitable[Any]]] = None,
-        metadata: Optional[dict[str, Any]] = None,
-        run_id: Optional[str] = None,
-        handler_name: Optional[str] = None,
+        handler: Callable[[dict[str, Any]], Awaitable[Any]] | None = None,
+        metadata: dict[str, Any] | None = None,
+        run_id: str | None = None,
+        handler_name: str | None = None,
     ) -> str:
         task_id = run_id or str(uuid.uuid4())
         if handler is None and handler_name:

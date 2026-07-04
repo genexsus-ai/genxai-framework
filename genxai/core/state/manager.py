@@ -1,10 +1,10 @@
 """State manager for workflow execution."""
 
 import json
-from typing import Any, Dict, Optional
+import logging
 from datetime import datetime
 from pathlib import Path
-import logging
+from typing import Any
 
 from genxai.core.state.schema import StateSchema
 
@@ -16,9 +16,9 @@ class StateManager:
 
     def __init__(
         self,
-        schema: Optional[StateSchema] = None,
+        schema: StateSchema | None = None,
         enable_persistence: bool = False,
-        persistence_path: Optional[Path] = None,
+        persistence_path: Path | None = None,
     ) -> None:
         """Initialize state manager.
 
@@ -30,8 +30,8 @@ class StateManager:
         self.schema = schema
         self.enable_persistence = enable_persistence
         self.persistence_path = persistence_path or Path(".genxai/state")
-        self._state: Dict[str, Any] = {}
-        self._history: list[Dict[str, Any]] = []
+        self._state: dict[str, Any] = {}
+        self._history: list[dict[str, Any]] = []
         self._version = 0
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -75,7 +75,7 @@ class StateManager:
         if self.enable_persistence:
             self._persist()
 
-    def update(self, updates: Dict[str, Any]) -> None:
+    def update(self, updates: dict[str, Any]) -> None:
         """Update multiple state values.
 
         Args:
@@ -110,7 +110,7 @@ class StateManager:
             if self.enable_persistence:
                 self._persist()
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """Get all state values.
 
         Returns:
@@ -175,7 +175,7 @@ class StateManager:
         if self.enable_persistence:
             self._persist_checkpoint(name, checkpoint)
 
-    def rollback(self, version: Optional[int] = None) -> None:
+    def rollback(self, version: int | None = None) -> None:
         """Rollback state to a previous version.
 
         Args:
@@ -198,7 +198,7 @@ class StateManager:
 
         logger.warning(f"Version {target_version} not found in history")
 
-    def get_history(self, limit: Optional[int] = None) -> list[Dict[str, Any]]:
+    def get_history(self, limit: int | None = None) -> list[dict[str, Any]]:
         """Get state change history.
 
         Args:
@@ -235,7 +235,7 @@ class StateManager:
         except Exception as e:
             logger.error(f"Failed to persist state: {e}")
 
-    def _persist_checkpoint(self, name: str, checkpoint: Dict[str, Any]) -> None:
+    def _persist_checkpoint(self, name: str, checkpoint: dict[str, Any]) -> None:
         """Persist a checkpoint to disk.
 
         Args:
@@ -255,7 +255,7 @@ class StateManager:
         except Exception as e:
             logger.error(f"Failed to persist checkpoint: {e}")
 
-    def load(self, path: Optional[Path] = None) -> None:
+    def load(self, path: Path | None = None) -> None:
         """Load state from disk.
 
         Args:
@@ -268,7 +268,7 @@ class StateManager:
             return
 
         try:
-            with open(load_path, "r") as f:
+            with open(load_path) as f:
                 data = json.load(f)
                 self._state = data.get("state", {})
                 self._version = data.get("version", 0)
@@ -276,7 +276,7 @@ class StateManager:
         except Exception as e:
             logger.error(f"Failed to load state: {e}")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert state manager to dictionary.
 
         Returns:

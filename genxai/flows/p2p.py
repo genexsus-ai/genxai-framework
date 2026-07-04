@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
 from datetime import datetime
+from typing import Any
 
 from genxai.core.agent.runtime import AgentRuntime
 from genxai.flows.base import FlowOrchestrator
@@ -18,7 +18,7 @@ class P2PFlow(FlowOrchestrator):
 
     def __init__(
         self,
-        agents: List[Any],
+        agents: list[Any],
         name: str = "p2p_flow",
         llm_provider: Any = None,
         max_rounds: int = 5,
@@ -38,9 +38,9 @@ class P2PFlow(FlowOrchestrator):
     async def run(
         self,
         input_data: Any,
-        state: Optional[Dict[str, Any]] = None,
+        state: dict[str, Any] | None = None,
         max_iterations: int = 100,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if state is None:
             state = {}
 
@@ -81,7 +81,7 @@ class P2PFlow(FlowOrchestrator):
 
         return state
 
-    def _should_terminate(self, state: Dict[str, Any], iteration: int) -> tuple[bool, Optional[str]]:
+    def _should_terminate(self, state: dict[str, Any], iteration: int) -> tuple[bool, str | None]:
         if iteration >= self.max_rounds:
             return True, f"Max rounds reached ({self.max_rounds})"
 
@@ -103,7 +103,7 @@ class P2PFlow(FlowOrchestrator):
 
         return False, None
 
-    def _consensus_reached(self, state: Dict[str, Any]) -> bool:
+    def _consensus_reached(self, state: dict[str, Any]) -> bool:
         messages = state.get("messages", [])
         if not messages:
             return False
@@ -114,7 +114,7 @@ class P2PFlow(FlowOrchestrator):
                 votes += 1
         return (votes / max(1, len(self.agents))) >= self.consensus_threshold
 
-    def _detect_convergence(self, state: Dict[str, Any]) -> bool:
+    def _detect_convergence(self, state: dict[str, Any]) -> bool:
         messages = state.get("messages", [])
         if len(messages) < self.convergence_window:
             return False
@@ -125,7 +125,7 @@ class P2PFlow(FlowOrchestrator):
         )
         return len(summaries) <= 2
 
-    def _detect_deadlock(self, state: Dict[str, Any]) -> bool:
+    def _detect_deadlock(self, state: dict[str, Any]) -> bool:
         messages = state.get("messages", [])
         if len(messages) < 6:
             return False
@@ -133,7 +133,7 @@ class P2PFlow(FlowOrchestrator):
         senders = [msg.get("agent_id", "") for msg in recent]
         return len(senders) >= 6 and senders[:3] == senders[3:6]
 
-    def _estimate_quality(self, state: Dict[str, Any]) -> float:
+    def _estimate_quality(self, state: dict[str, Any]) -> float:
         messages = state.get("messages", [])
         if not messages:
             return 0.0

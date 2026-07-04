@@ -1,11 +1,13 @@
 """Base LLM provider interface."""
 
-from typing import Any, Dict, List, Optional, AsyncIterator
-from pydantic import BaseModel, Field, ConfigDict
-from abc import ABC, abstractmethod
-import logging
 import asyncio
 import inspect
+import logging
+from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +19,9 @@ class LLMResponse(BaseModel):
 
     content: str = Field(..., description="Generated content")
     model: str = Field(..., description="Model used")
-    usage: Dict[str, int] = Field(default_factory=dict, description="Token usage")
-    finish_reason: Optional[str] = Field(None, description="Reason for completion")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    usage: dict[str, int] = Field(default_factory=dict, description="Token usage")
+    finish_reason: str | None = Field(None, description="Reason for completion")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 
@@ -30,7 +32,7 @@ class LLMProvider(ABC):
         self,
         model: str,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize LLM provider.
@@ -52,7 +54,7 @@ class LLMProvider(ABC):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion for prompt.
@@ -71,7 +73,7 @@ class LLMProvider(ABC):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Generate completion with streaming.
@@ -88,7 +90,7 @@ class LLMProvider(ABC):
 
     async def generate_chat(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion for chat messages.
@@ -118,7 +120,7 @@ class LLMProvider(ABC):
         prompt = "\n".join(prompt_parts)
         return await self.generate(prompt, system_prompt, **kwargs)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get provider statistics.
 
         Returns:
@@ -176,7 +178,7 @@ class LLMProvider(ABC):
             return
         loop.create_task(self.aclose())
 
-    def _update_stats(self, usage: Dict[str, int]) -> None:
+    def _update_stats(self, usage: dict[str, int]) -> None:
         """Update provider statistics.
 
         Args:

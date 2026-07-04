@@ -1,19 +1,16 @@
 """Episodic memory implementation for storing agent experiences."""
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
 import json
 import logging
 import uuid
+from datetime import datetime
+from typing import Any
 
-from genxai.core.memory.base import Memory, MemoryType
+from genxai.core.memory.backends import MemoryBackendPlugin
 from genxai.core.memory.persistence import (
-    JsonMemoryStore,
     MemoryPersistenceConfig,
-    SqliteMemoryStore,
     create_memory_store,
 )
-from genxai.core.memory.backends import MemoryBackendPlugin
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +23,12 @@ class Episode:
         id: str,
         agent_id: str,
         task: str,
-        actions: List[Dict[str, Any]],
-        outcome: Dict[str, Any],
+        actions: list[dict[str, Any]],
+        outcome: dict[str, Any],
         timestamp: datetime,
         duration: float,
         success: bool,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Initialize episode.
 
@@ -56,7 +53,7 @@ class Episode:
         self.success = success
         self.metadata = metadata or {}
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert episode to dictionary."""
         return {
             "id": self.id,
@@ -71,7 +68,7 @@ class Episode:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Episode":
+    def from_dict(cls, data: dict[str, Any]) -> "Episode":
         """Create episode from dictionary."""
         return cls(
             id=data["id"],
@@ -98,10 +95,10 @@ class EpisodicMemory:
 
     def __init__(
         self,
-        graph_db: Optional[Any] = None,
+        graph_db: Any | None = None,
         max_episodes: int = 1000,
-        persistence: Optional[MemoryPersistenceConfig] = None,
-        backend_plugin: Optional[MemoryBackendPlugin] = None,
+        persistence: MemoryPersistenceConfig | None = None,
+        backend_plugin: MemoryBackendPlugin | None = None,
     ) -> None:
         """Initialize episodic memory.
 
@@ -118,10 +115,10 @@ class EpisodicMemory:
             self._store = create_memory_store(persistence)
         else:
             self._store = None
-        
+
         # Fallback to in-memory storage
-        self._episodes: Dict[str, Episode] = {}
-        
+        self._episodes: dict[str, Episode] = {}
+
         if self._use_graph:
             logger.info("Initialized episodic memory with graph database")
         else:
@@ -137,11 +134,11 @@ class EpisodicMemory:
         self,
         agent_id: str,
         task: str,
-        actions: List[Dict[str, Any]],
-        outcome: Dict[str, Any],
+        actions: list[dict[str, Any]],
+        outcome: dict[str, Any],
         duration: float,
         success: bool,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Episode:
         """Store a new episode.
 
@@ -174,7 +171,7 @@ class EpisodicMemory:
         else:
             # In-memory storage
             self._episodes[episode.id] = episode
-            
+
             # Enforce max episodes limit
             if len(self._episodes) > self._max_episodes:
                 # Remove oldest episode
@@ -189,7 +186,7 @@ class EpisodicMemory:
         logger.debug(f"Stored episode {episode.id} for agent {agent_id}")
         return episode
 
-    async def retrieve_episode(self, episode_id: str) -> Optional[Episode]:
+    async def retrieve_episode(self, episode_id: str) -> Episode | None:
         """Retrieve an episode by ID.
 
         Args:
@@ -200,7 +197,7 @@ class EpisodicMemory:
         """
         if self._use_graph:
             return await self._retrieve_from_graph(episode_id)
-        
+
         return self._episodes.get(episode_id)
 
     async def retrieve_by_agent(
@@ -208,7 +205,7 @@ class EpisodicMemory:
         agent_id: str,
         limit: int = 10,
         success_only: bool = False,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Retrieve episodes for a specific agent.
 
         Args:
@@ -242,7 +239,7 @@ class EpisodicMemory:
         self,
         task: str,
         limit: int = 5,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Retrieve episodes with similar tasks.
 
         Args:
@@ -273,8 +270,8 @@ class EpisodicMemory:
 
     async def get_success_rate(
         self,
-        agent_id: Optional[str] = None,
-        task_pattern: Optional[str] = None,
+        agent_id: str | None = None,
+        task_pattern: str | None = None,
     ) -> float:
         """Calculate success rate for episodes.
 
@@ -334,9 +331,9 @@ class EpisodicMemory:
 
     async def get_patterns(
         self,
-        agent_id: Optional[str] = None,
+        agent_id: str | None = None,
         min_occurrences: int = 3,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Extract patterns from episodes.
 
         Args:
@@ -352,7 +349,7 @@ class EpisodicMemory:
             episodes = [ep for ep in episodes if ep.agent_id == agent_id]
 
         # Group by task
-        task_groups: Dict[str, List[Episode]] = {}
+        task_groups: dict[str, list[Episode]] = {}
         for episode in episodes:
             task_key = episode.task.lower()
             if task_key not in task_groups:
@@ -377,7 +374,7 @@ class EpisodicMemory:
 
         return patterns
 
-    async def clear(self, agent_id: Optional[str] = None) -> None:
+    async def clear(self, agent_id: str | None = None) -> None:
         """Clear episodes.
 
         Args:
@@ -397,7 +394,7 @@ class EpisodicMemory:
 
         self._persist()
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get episodic memory statistics.
 
         Returns:
@@ -451,7 +448,7 @@ class EpisodicMemory:
                 return fallback
         return value
 
-    def _episode_from_graph_payload(self, payload: Dict[str, Any]) -> Episode:
+    def _episode_from_graph_payload(self, payload: dict[str, Any]) -> Episode:
         return Episode(
             id=str(payload.get("id", "")),
             agent_id=str(payload.get("agent_id", "")),
@@ -464,8 +461,8 @@ class EpisodicMemory:
             metadata=self._decode_episode_value(payload.get("metadata_json"), {}),
         )
 
-    def _records_to_episodes(self, records: Any) -> List[Episode]:
-        episodes: List[Episode] = []
+    def _records_to_episodes(self, records: Any) -> list[Episode]:
+        episodes: list[Episode] = []
         for record in records:
             if isinstance(record, dict):
                 node = record.get("e") or record
@@ -518,7 +515,7 @@ class EpisodicMemory:
 
         self._episodes[episode.id] = episode
 
-    async def _retrieve_from_graph(self, episode_id: str) -> Optional[Episode]:
+    async def _retrieve_from_graph(self, episode_id: str) -> Episode | None:
         """Retrieve episode from graph database."""
         try:
             query = "MATCH (e:Episode {id: $episode_id}) RETURN e LIMIT 1"
@@ -536,7 +533,7 @@ class EpisodicMemory:
         agent_id: str,
         limit: int,
         success_only: bool,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Retrieve episodes from graph database."""
         try:
             query = """
@@ -569,7 +566,7 @@ class EpisodicMemory:
         self,
         task: str,
         limit: int,
-    ) -> List[Episode]:
+    ) -> list[Episode]:
         """Retrieve similar episodes from graph database."""
         keywords = [word.lower() for word in task.split() if word.strip()]
         if not keywords:

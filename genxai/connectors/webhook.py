@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
-import hmac
 import hashlib
+import hmac
 import logging
+from typing import Any
 
 from .base import Connector
 
@@ -21,8 +21,8 @@ class WebhookConnector(Connector):
     def __init__(
         self,
         connector_id: str,
-        secret: Optional[str] = None,
-        name: Optional[str] = None,
+        secret: str | None = None,
+        name: str | None = None,
         header_name: str = "X-GenXAI-Signature",
         hash_alg: str = "sha256",
     ) -> None:
@@ -45,7 +45,7 @@ class WebhookConnector(Connector):
         if not hasattr(hashlib, self.hash_alg):
             raise ValueError(f"Unsupported hash algorithm: {self.hash_alg}")
 
-    def validate_signature(self, payload: bytes, signature: Optional[str]) -> bool:
+    def validate_signature(self, payload: bytes, signature: str | None) -> bool:
         if not self.secret:
             return True
         if not signature:
@@ -57,10 +57,10 @@ class WebhookConnector(Connector):
 
     async def handle_request(
         self,
-        payload: Dict[str, Any],
-        raw_body: Optional[bytes] = None,
-        headers: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, Any]:
+        payload: dict[str, Any],
+        raw_body: bytes | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         headers = headers or {}
         signature = headers.get(self.header_name)
 

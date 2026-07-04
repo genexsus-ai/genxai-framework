@@ -1,9 +1,10 @@
 """Dynamic tool creation from Python code."""
 
-from typing import Any, Dict
 import logging
+from typing import Any
+
 from genxai.tools.base import Tool, ToolMetadata, ToolParameter
-from genxai.tools.security import SafeExecutor, ExecutionTimeout
+from genxai.tools.security import ExecutionTimeout, SafeExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +13,8 @@ class DynamicTool(Tool):
     """Tool created dynamically from Python code with security sandboxing."""
 
     def __init__(
-        self, 
-        metadata: ToolMetadata, 
+        self,
+        metadata: ToolMetadata,
         parameters: list[ToolParameter],
         code: str,
         timeout: int = 30
@@ -38,13 +39,13 @@ class DynamicTool(Tool):
         try:
             # Use SafeExecutor for secure compilation
             self._compiled_code = self._safe_executor.compile_code(
-                self.code, 
+                self.code,
                 f'<dynamic:{self.metadata.name}>'
             )
             logger.info(f"Securely compiled code for tool: {self.metadata.name}")
         except (SyntaxError, ValueError) as e:
             logger.error(f"Failed to compile code for {self.metadata.name}: {e}")
-            raise ValueError(f"Invalid Python code: {e}")
+            raise ValueError(f"Invalid Python code: {e}") from e
 
     async def _execute(self, **kwargs: Any) -> Any:
         """Execute the dynamic tool code in a sandboxed environment.
@@ -62,19 +63,19 @@ class DynamicTool(Tool):
                 kwargs,
                 enable_timeout=True
             )
-            
+
             logger.info(f"Dynamic tool {self.metadata.name} executed successfully")
             return result
 
         except ExecutionTimeout as e:
             logger.error(f"Dynamic tool {self.metadata.name} timed out: {e}")
-            raise RuntimeError(f"Tool execution timed out after {self.timeout} seconds")
+            raise RuntimeError(f"Tool execution timed out after {self.timeout} seconds") from e
         except ValueError as e:
             logger.error(f"Dynamic tool {self.metadata.name} validation failed: {e}")
-            raise RuntimeError(f"Tool execution failed: {e}")
+            raise RuntimeError(f"Tool execution failed: {e}") from e
         except Exception as e:
             logger.error(f"Dynamic tool {self.metadata.name} execution failed: {e}")
-            raise RuntimeError(f"Tool execution failed: {e}")
+            raise RuntimeError(f"Tool execution failed: {e}") from e
 
     def get_code(self) -> str:
         """Get the tool's source code.
@@ -93,7 +94,7 @@ class DynamicTool(Tool):
         self.code = new_code
         self._compile_code()
         logger.info(f"Updated code for tool: {self.metadata.name}")
-    
+
     def set_timeout(self, timeout: int) -> None:
         """Update the execution timeout.
 

@@ -1,8 +1,9 @@
 """Node types and implementations for graph-based orchestration."""
 
 from enum import Enum
-from typing import Any, Dict, Optional, Protocol
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Any, Protocol
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class NodeType(str, Enum):
@@ -24,8 +25,8 @@ class NodeConfig(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     type: NodeType
-    data: Dict[str, Any] = Field(default_factory=dict)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    data: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class NodeStatus(str, Enum):
@@ -47,8 +48,8 @@ class Node(BaseModel):
     type: NodeType
     config: NodeConfig
     status: NodeStatus = NodeStatus.PENDING
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    result: Any | None = None
+    error: str | None = None
 
 
     def __repr__(self) -> str:
@@ -63,7 +64,7 @@ class Node(BaseModel):
 class NodeExecutor(Protocol):
     """Protocol for node execution."""
 
-    async def execute(self, node: Node, context: Dict[str, Any]) -> Any:
+    async def execute(self, node: Node, context: dict[str, Any]) -> Any:
         """Execute the node with given context."""
         ...
 
@@ -74,9 +75,9 @@ class AgentNode(Node):
     def __init__(
         self,
         id: str,
-        agent_id: Optional[str] = None,
-        agent: Optional[Any] = None,
-        task: Optional[str] = None,
+        agent_id: str | None = None,
+        agent: Any | None = None,
+        task: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize agent node.
@@ -104,7 +105,7 @@ class AgentNode(Node):
         if not resolved_agent_id:
             raise TypeError("AgentNode requires either agent_id or agent")
 
-        data: Dict[str, Any] = {"agent_id": resolved_agent_id}
+        data: dict[str, Any] = {"agent_id": resolved_agent_id}
         if task is not None:
             data["task"] = task
 

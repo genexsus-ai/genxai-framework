@@ -1,9 +1,9 @@
 """Email sender tool for sending emails via SMTP."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +90,10 @@ class EmailSenderTool(Tool):
         from_email: str,
         smtp_host: str,
         smtp_port: int = 587,
-        username: Optional[str] = None,
-        password: Optional[str] = None,
+        username: str | None = None,
+        password: str | None = None,
         html: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute email sending.
 
         Args:
@@ -111,15 +111,16 @@ class EmailSenderTool(Tool):
             Dictionary containing send results
         """
         try:
-            import aiosmtplib
-            from email.mime.text import MIMEText
             from email.mime.multipart import MIMEMultipart
-        except ImportError:
+            from email.mime.text import MIMEText
+
+            import aiosmtplib
+        except ImportError as e:
             raise ImportError(
                 "aiosmtplib package not installed. Install with: pip install aiosmtplib"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "to": to,
             "subject": subject,
             "success": False,

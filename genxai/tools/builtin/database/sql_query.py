@@ -1,9 +1,9 @@
 """SQL query tool for executing database queries."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class SQLQueryTool(Tool):
         connection_string: str,
         read_only: bool = True,
         max_rows: int = 1000,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute SQL query.
 
         Args:
@@ -76,12 +76,12 @@ class SQLQueryTool(Tool):
         try:
             from sqlalchemy import create_engine, text
             from sqlalchemy.exc import SQLAlchemyError
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "sqlalchemy package not installed. Install with: pip install sqlalchemy"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "query": query,
             "read_only": read_only,
             "success": False,
@@ -99,7 +99,7 @@ class SQLQueryTool(Tool):
                 dangerous_keywords = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "CREATE"]
                 if any(keyword in query_upper for keyword in dangerous_keywords):
                     raise ValueError(
-                        f"Query contains forbidden keywords in read-only mode"
+                        "Query contains forbidden keywords in read-only mode"
                     )
 
             # Create engine
@@ -108,15 +108,15 @@ class SQLQueryTool(Tool):
             # Execute query
             with engine.connect() as connection:
                 query_result = connection.execute(text(query))
-                
+
                 # Fetch results for SELECT queries
                 if query_upper.startswith("SELECT"):
                     rows = query_result.fetchmany(max_rows)
                     columns = list(query_result.keys())
-                    
+
                     # Convert to list of dictionaries
                     data = [dict(zip(columns, row)) for row in rows]
-                    
+
                     result.update({
                         "data": data,
                         "columns": columns,
@@ -128,7 +128,7 @@ class SQLQueryTool(Tool):
                     result.update({
                         "rows_affected": query_result.rowcount,
                     })
-                
+
                 result["success"] = True
 
         except SQLAlchemyError as e:

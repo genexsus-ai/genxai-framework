@@ -1,11 +1,10 @@
 """Rate limiting for GenXAI using token bucket algorithm."""
 
-import time
 import asyncio
-from typing import Optional, Dict
-from functools import wraps
-from dataclasses import dataclass
 import os
+import time
+from dataclasses import dataclass
+from functools import wraps
 
 
 @dataclass
@@ -38,7 +37,7 @@ RATE_LIMITS = {
 
 class TokenBucket:
     """Token bucket for rate limiting."""
-    
+
     def __init__(self, rate: float, capacity: int):
         """Initialize token bucket.
         
@@ -51,7 +50,7 @@ class TokenBucket:
         self.tokens = capacity
         self.last_update = time.time()
         self.lock = asyncio.Lock()
-    
+
     async def consume(self, tokens: int = 1) -> bool:
         """Consume tokens from bucket.
         
@@ -64,21 +63,21 @@ class TokenBucket:
         async with self.lock:
             now = time.time()
             elapsed = now - self.last_update
-            
+
             # Add tokens based on elapsed time
             self.tokens = min(
                 self.capacity,
                 self.tokens + elapsed * self.rate
             )
             self.last_update = now
-            
+
             # Check if enough tokens
             if self.tokens >= tokens:
                 self.tokens -= tokens
                 return True
-            
+
             return False
-    
+
     async def get_remaining(self) -> int:
         """Get remaining tokens.
         
@@ -88,18 +87,18 @@ class TokenBucket:
         async with self.lock:
             now = time.time()
             elapsed = now - self.last_update
-            
+
             tokens = min(
                 self.capacity,
                 self.tokens + elapsed * self.rate
             )
-            
+
             return int(tokens)
 
 
 class RateLimiter:
     """Rate limiter using token bucket algorithm."""
-    
+
     def __init__(self, storage: str = "memory"):
         """Initialize rate limiter.
         
@@ -107,8 +106,8 @@ class RateLimiter:
             storage: Storage backend (memory or redis)
         """
         self.storage = storage
-        self.buckets: Dict[str, Dict[str, TokenBucket]] = {}
-        
+        self.buckets: dict[str, dict[str, TokenBucket]] = {}
+
         # Try to import Redis if using redis storage
         if storage == "redis":
             try:
@@ -118,7 +117,7 @@ class RateLimiter:
             except ImportError:
                 print("Redis not available, falling back to memory storage")
                 self.storage = "memory"
-    
+
     async def check_rate_limit(
         self,
         key: str,
@@ -136,7 +135,7 @@ class RateLimiter:
             True if within limit, False if rate limited
         """
         config = RATE_LIMITS.get(tier, RATE_LIMITS["free"])
-        
+
         # Check minute limit
         minute_key = f"{key}:minute"
         if not await self._check_bucket(
@@ -146,7 +145,7 @@ class RateLimiter:
             cost=cost
         ):
             return False
-        
+
         # Check hour limit
         hour_key = f"{key}:hour"
         if not await self._check_bucket(
@@ -156,7 +155,7 @@ class RateLimiter:
             cost=cost
         ):
             return False
-        
+
         # Check day limit
         day_key = f"{key}:day"
         if not await self._check_bucket(
@@ -166,9 +165,9 @@ class RateLimiter:
             cost=cost
         ):
             return False
-        
+
         return True
-    
+
     async def _check_bucket(
         self,
         key: str,
@@ -191,20 +190,20 @@ class RateLimiter:
             # Get or create bucket
             if key not in self.buckets:
                 self.buckets[key] = {}
-            
+
             if "bucket" not in self.buckets[key]:
                 self.buckets[key]["bucket"] = TokenBucket(rate, capacity)
-            
+
             bucket = self.buckets[key]["bucket"]
             return await bucket.consume(cost)
-        
+
         elif self.storage == "redis":
             # Redis-based rate limiting using Lua script
             # This is a simplified version
             return await self._check_redis_bucket(key, rate, capacity, cost)
-        
+
         return True
-    
+
     async def _check_redis_bucket(
         self,
         key: str,
@@ -230,18 +229,18 @@ class RateLimiter:
             if current is None:
                 self.redis_client.setex(key, 60, capacity - cost)
                 return True
-            
+
             current = int(current)
             if current >= cost:
                 self.redis_client.decrby(key, cost)
                 return True
-            
+
             return False
         except Exception:
             # Fallback to allowing request if Redis fails
             return True
-    
-    async def get_remaining(self, key: str, tier: str = "free") -> Dict[str, int]:
+
+    async def get_remaining(self, key: str, tier: str = "free") -> dict[str, int]:
         """Get remaining requests.
         
         Args:
@@ -254,13 +253,13 @@ class RateLimiter:
         minute_key = f"{key}:minute"
         hour_key = f"{key}:hour"
         day_key = f"{key}:day"
-        
+
         return {
             "minute": await self._get_bucket_remaining(minute_key),
             "hour": await self._get_bucket_remaining(hour_key),
             "day": await self._get_bucket_remaining(day_key),
         }
-    
+
     async def _get_bucket_remaining(self, key: str) -> int:
         """Get remaining tokens in bucket.
         
@@ -274,14 +273,14 @@ class RateLimiter:
             if key in self.buckets and "bucket" in self.buckets[key]:
                 return await self.buckets[key]["bucket"].get_remaining()
             return 0
-        
+
         elif self.storage == "redis":
             try:
                 current = self.redis_client.get(key)
                 return int(current) if current else 0
             except Exception:
                 return 0
-        
+
         return 0
 
 
@@ -301,11 +300,11 @@ def get_rate_limiter() -> RateLimiter:
         RateLimiter instance
     """
     global _rate_limiter
-    
+
     if _rate_limiter is None:
         storage = os.getenv("RATE_LIMIT_STORAGE", "memory")
         _rate_limiter = RateLimiter(storage)
-    
+
     return _rate_limiter
 
 
@@ -326,14 +325,14 @@ def rate_limit(tier: str = "free", cost: int = 1):
         async def wrapper(*args, **kwargs):
             # Get user key from kwargs or context
             user_id = kwargs.get("user_id", "anonymous")
-            
+
             # Check rate limit
             limiter = get_rate_limiter()
             if not await limiter.check_rate_limit(user_id, tier, cost):
                 raise RateLimitExceeded(f"Rate limit exceeded for tier: {tier}")
-            
+
             return await func(*args, **kwargs)
-        
+
         return wrapper
-    
+
     return decorator

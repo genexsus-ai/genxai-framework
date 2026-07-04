@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict, Optional
 import json
 import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 
 @dataclass
 class ConnectorConfigEntry:
     name: str
     connector_type: str
-    config: Dict[str, Any]
+    config: dict[str, Any]
 
 
 class ConnectorConfigStore:
@@ -23,11 +23,11 @@ class ConnectorConfigStore:
     `GENXAI_CONNECTOR_CONFIG_KEY` environment variable or `encryption_key`.
     """
 
-    def __init__(self, path: Optional[Path] = None, encryption_key: Optional[str] = None) -> None:
+    def __init__(self, path: Path | None = None, encryption_key: str | None = None) -> None:
         self.path = path or Path(".genxai/connectors.json")
         self.encryption_key = encryption_key or os.getenv("GENXAI_CONNECTOR_CONFIG_KEY")
 
-    def list(self) -> Dict[str, ConnectorConfigEntry]:
+    def list(self) -> dict[str, ConnectorConfigEntry]:
         data = self._read_raw()
         return {
             name: ConnectorConfigEntry(
@@ -38,7 +38,7 @@ class ConnectorConfigStore:
             for name, payload in data.items()
         }
 
-    def get(self, name: str) -> Optional[ConnectorConfigEntry]:
+    def get(self, name: str) -> ConnectorConfigEntry | None:
         data = self._read_raw()
         payload = data.get(name)
         if not payload:
@@ -65,7 +65,7 @@ class ConnectorConfigStore:
         self._write_raw(data)
         return True
 
-    def _read_raw(self) -> Dict[str, Any]:
+    def _read_raw(self) -> dict[str, Any]:
         if not self.path.exists():
             return {}
         raw = json.loads(self.path.read_text())
@@ -76,7 +76,7 @@ class ConnectorConfigStore:
             return json.loads(self._decrypt(payload))
         return raw
 
-    def _write_raw(self, data: Dict[str, Any]) -> None:
+    def _write_raw(self, data: dict[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if self.encryption_key:
             encrypted = self._encrypt(json.dumps(data))

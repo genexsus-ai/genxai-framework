@@ -1,13 +1,12 @@
 """Token counting and context window management utilities."""
 
-from typing import Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 # Model token limits (context window sizes)
-MODEL_TOKEN_LIMITS: Dict[str, int] = {
+MODEL_TOKEN_LIMITS: dict[str, int] = {
     # OpenAI models
     "gpt-4": 8192,
     "gpt-4-32k": 32768,
@@ -50,12 +49,12 @@ def get_model_token_limit(model: str) -> int:
     # Try exact match first
     if model in MODEL_TOKEN_LIMITS:
         return MODEL_TOKEN_LIMITS[model]
-    
+
     # Try partial match (e.g., "gpt-4-0125-preview" matches "gpt-4")
     for model_prefix, limit in MODEL_TOKEN_LIMITS.items():
         if model.startswith(model_prefix):
             return limit
-    
+
     # Default to conservative 4K limit
     logger.warning(f"Unknown model '{model}', using default 4096 token limit")
     return 4096
@@ -94,21 +93,21 @@ def truncate_to_token_limit(
         Truncated text
     """
     estimated_tokens = estimate_tokens(text)
-    
+
     if estimated_tokens <= max_tokens:
         return text
-    
+
     # Calculate how many characters to keep
     # Using 4 chars per token estimation
     max_chars = max_tokens * 4
-    
+
     if preserve_start:
         truncated = text[:max_chars]
         logger.debug(f"Truncated text from {len(text)} to {len(truncated)} chars (start preserved)")
     else:
         truncated = text[-max_chars:]
         logger.debug(f"Truncated text from {len(text)} to {len(truncated)} chars (end preserved)")
-    
+
     return truncated
 
 
@@ -133,29 +132,29 @@ def manage_context_window(
     """
     model_limit = get_model_token_limit(model)
     available_tokens = model_limit - reserve_tokens
-    
+
     # Estimate current token usage
     system_tokens = estimate_tokens(system_prompt)
     user_tokens = estimate_tokens(user_prompt)
     memory_tokens = estimate_tokens(memory_context)
     total_tokens = system_tokens + user_tokens + memory_tokens
-    
+
     logger.debug(
         f"Context window: {total_tokens}/{model_limit} tokens "
         f"(system: {system_tokens}, user: {user_tokens}, memory: {memory_tokens})"
     )
-    
+
     # If within limit, return as-is
     if total_tokens <= available_tokens:
         return system_prompt, user_prompt, memory_context
-    
+
     # Need to truncate - prioritize user prompt, then system, then memory
     tokens_to_remove = total_tokens - available_tokens
-    
+
     logger.warning(
         f"Context window exceeded by {tokens_to_remove} tokens, truncating..."
     )
-    
+
     # First, try truncating memory context
     if memory_tokens > 0 and tokens_to_remove > 0:
         memory_reduction = min(memory_tokens, tokens_to_remove)
@@ -167,7 +166,7 @@ def manage_context_window(
         )
         tokens_to_remove -= memory_reduction
         logger.debug(f"Truncated memory context by {memory_reduction} tokens")
-    
+
     # If still over limit, truncate system prompt
     if tokens_to_remove > 0 and system_tokens > 500:  # Keep at least 500 tokens
         system_reduction = min(system_tokens - 500, tokens_to_remove)
@@ -179,7 +178,7 @@ def manage_context_window(
         )
         tokens_to_remove -= system_reduction
         logger.debug(f"Truncated system prompt by {system_reduction} tokens")
-    
+
     # If still over limit, truncate user prompt (last resort)
     if tokens_to_remove > 0 and user_tokens > 0:
         new_user_tokens = max(100, user_tokens - tokens_to_remove)  # Keep at least 100 tokens
@@ -189,7 +188,7 @@ def manage_context_window(
             preserve_start=True  # Keep task description
         )
         logger.warning(f"Had to truncate user prompt by {tokens_to_remove} tokens")
-    
+
     return system_prompt, user_prompt, memory_context
 
 
@@ -197,7 +196,7 @@ def split_text_by_tokens(
     text: str,
     max_tokens_per_chunk: int,
     overlap_tokens: int = 100,
-) -> List[str]:
+) -> list[str]:
     """Split text into chunks by token count.
 
     Args:
@@ -209,26 +208,26 @@ def split_text_by_tokens(
         List of text chunks
     """
     estimated_total_tokens = estimate_tokens(text)
-    
+
     if estimated_total_tokens <= max_tokens_per_chunk:
         return [text]
-    
+
     chunks = []
     chars_per_chunk = max_tokens_per_chunk * 4  # 4 chars per token
     overlap_chars = overlap_tokens * 4
-    
+
     start = 0
     while start < len(text):
         end = start + chars_per_chunk
         chunk = text[start:end]
         chunks.append(chunk)
-        
+
         # Move start forward, accounting for overlap
         start = end - overlap_chars
-        
+
         if start >= len(text):
             break
-    
+
     logger.debug(f"Split text into {len(chunks)} chunks")
     return chunks
 
@@ -244,7 +243,7 @@ class TokenCounter:
         """
         self.model = model
         self.token_limit = get_model_token_limit(model)
-        self._cache: Dict[str, int] = {}
+        self._cache: dict[str, int] = {}
 
     def count(self, text: str, use_cache: bool = True) -> int:
         """Count tokens in text.
@@ -258,12 +257,12 @@ class TokenCounter:
         """
         if use_cache and text in self._cache:
             return self._cache[text]
-        
+
         count = estimate_tokens(text)
-        
+
         if use_cache:
             self._cache[text] = count
-        
+
         return count
 
     def fits_in_context(
@@ -288,7 +287,7 @@ class TokenCounter:
         """Clear token count cache."""
         self._cache.clear()
 
-    def get_stats(self) -> Dict[str, any]:
+    def get_stats(self) -> dict[str, any]:
         """Get counter statistics.
 
         Returns:

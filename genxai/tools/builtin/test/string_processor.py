@@ -1,7 +1,8 @@
 """String processing tool for testing string operations."""
 
 from typing import Any
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 
 class StringProcessorTool(Tool):

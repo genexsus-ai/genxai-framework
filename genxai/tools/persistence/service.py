@@ -1,16 +1,16 @@
 """Service for tool persistence and management."""
 
-import os
 import logging
-from typing import List, Optional, Dict, Any
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
 from pathlib import Path
+from typing import Any
 
-from genxai.tools.persistence.models import Base, ToolModel
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
-from genxai.tools.registry import ToolRegistry
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 from genxai.tools.dynamic import DynamicTool
+from genxai.tools.persistence.models import Base, ToolModel
+from genxai.tools.registry import ToolRegistry
 from genxai.tools.templates import create_tool_from_template
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ Base.metadata.create_all(bind=engine)
 
 class ToolService:
     """Service for managing tool persistence."""
-    
+
     @staticmethod
     def get_db() -> Session:
         """Get database session."""
@@ -38,20 +38,20 @@ class ToolService:
             return db
         finally:
             pass
-    
+
     @staticmethod
     def save_tool(
         name: str,
         description: str,
         category: str,
-        tags: List[str],
+        tags: list[str],
         version: str,
         author: str,
         tool_type: str,
-        code: Optional[str] = None,
-        parameters: Optional[List[Dict[str, Any]]] = None,
-        template_name: Optional[str] = None,
-        template_config: Optional[Dict[str, Any]] = None,
+        code: str | None = None,
+        parameters: list[dict[str, Any]] | None = None,
+        template_name: str | None = None,
+        template_config: dict[str, Any] | None = None,
     ) -> ToolModel:
         """Save tool to database.
         
@@ -86,16 +86,16 @@ class ToolService:
                 template_name=template_name,
                 template_config=template_config,
             )
-            
+
             db.add(tool_model)
             db.commit()
             db.refresh(tool_model)
-            
+
             logger.info(f"Saved tool to database: {name}")
-            
+
             # Optionally export to file
             # ToolService._export_to_file(tool_model)
-            
+
             return tool_model
         except Exception as e:
             db.rollback()
@@ -103,9 +103,9 @@ class ToolService:
             raise
         finally:
             db.close()
-    
+
     @staticmethod
-    def get_tool(name: str) -> Optional[ToolModel]:
+    def get_tool(name: str) -> ToolModel | None:
         """Get tool from database by name.
         
         Args:
@@ -119,9 +119,9 @@ class ToolService:
             return db.query(ToolModel).filter(ToolModel.name == name).first()
         finally:
             db.close()
-    
+
     @staticmethod
-    def list_tools() -> List[ToolModel]:
+    def list_tools() -> list[ToolModel]:
         """List all tools from database.
         
         Returns:
@@ -132,7 +132,7 @@ class ToolService:
             return db.query(ToolModel).all()
         finally:
             db.close()
-    
+
     @staticmethod
     def update_tool_code(name: str, code: str) -> bool:
         """Update tool code in database.
@@ -151,10 +151,10 @@ class ToolService:
                 tool.code = code
                 db.commit()
                 logger.info(f"Updated tool code in database: {name}")
-                
+
                 # Update file if exists
                 # ToolService._export_to_file(tool)
-                
+
                 return True
             return False
         except Exception as e:
@@ -163,7 +163,7 @@ class ToolService:
             raise
         finally:
             db.close()
-    
+
     @staticmethod
     def delete_tool(name: str) -> bool:
         """Delete tool from database.
@@ -181,10 +181,10 @@ class ToolService:
                 db.delete(tool)
                 db.commit()
                 logger.info(f"Deleted tool from database: {name}")
-                
+
                 # Delete file if exists
                 # ToolService._delete_file(name)
-                
+
                 return True
             return False
         except Exception as e:
@@ -193,7 +193,7 @@ class ToolService:
             raise
         finally:
             db.close()
-    
+
     @staticmethod
     def load_tool_to_registry(tool_model: ToolModel) -> Tool:
         """Load tool from database model to registry.
@@ -206,7 +206,7 @@ class ToolService:
         """
         try:
             category = ToolCategory(tool_model.category)
-            
+
             if tool_model.tool_type == "code_based":
                 # Create code-based tool
                 metadata = ToolMetadata(
@@ -217,7 +217,7 @@ class ToolService:
                     version=tool_model.version,
                     author=tool_model.author,
                 )
-                
+
                 parameters = [
                     ToolParameter(
                         name=p["name"],
@@ -232,9 +232,9 @@ class ToolService:
                     )
                     for p in tool_model.parameters
                 ]
-                
+
                 tool = DynamicTool(metadata, parameters, tool_model.code)
-                
+
             elif tool_model.tool_type == "template_based":
                 # Create template-based tool
                 tool = create_tool_from_template(
@@ -247,32 +247,32 @@ class ToolService:
                 )
             else:
                 raise ValueError(f"Unknown tool type: {tool_model.tool_type}")
-            
+
             # Register in registry
             ToolRegistry.register(tool)
             logger.info(f"Loaded tool to registry: {tool_model.name}")
-            
+
             return tool
-            
+
         except Exception as e:
             logger.error(f"Failed to load tool {tool_model.name}: {e}")
             raise
-    
+
     @staticmethod
     def load_all_tools():
         """Load all tools from database to registry."""
         tools = ToolService.list_tools()
         loaded_count = 0
-        
+
         for tool_model in tools:
             try:
                 ToolService.load_tool_to_registry(tool_model)
                 loaded_count += 1
             except Exception as e:
                 logger.error(f"Failed to load tool {tool_model.name}: {e}")
-        
+
         logger.info(f"Loaded {loaded_count}/{len(tools)} tools from database")
-    
+
     @staticmethod
     def _export_to_file(tool_model: ToolModel):
         """Export tool to file system (optional backup).
@@ -283,9 +283,9 @@ class ToolService:
         try:
             custom_dir = Path(__file__).parent.parent / "custom"
             custom_dir.mkdir(parents=True, exist_ok=True)
-            
+
             file_path = custom_dir / f"{tool_model.name}.py"
-            
+
             if tool_model.tool_type == "code_based":
                 content = f'''"""
 Auto-generated tool: {tool_model.name}
@@ -299,10 +299,10 @@ Created: {tool_model.created_at}
 '''
                 file_path.write_text(content)
                 logger.info(f"Exported tool to file: {file_path}")
-                
+
         except Exception as e:
             logger.warning(f"Failed to export tool to file: {e}")
-    
+
     @staticmethod
     def _delete_file(name: str):
         """Delete tool file if exists.
@@ -313,10 +313,10 @@ Created: {tool_model.created_at}
         try:
             custom_dir = Path(__file__).parent.parent / "custom"
             file_path = custom_dir / f"{name}.py"
-            
+
             if file_path.exists():
                 file_path.unlink()
                 logger.info(f"Deleted tool file: {file_path}")
-                
+
         except Exception as e:
             logger.warning(f"Failed to delete tool file: {e}")

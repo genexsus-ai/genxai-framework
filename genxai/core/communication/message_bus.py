@@ -1,11 +1,13 @@
 """Message bus for agent-to-agent communication."""
 
-from typing import Any, Dict, List, Optional, Callable
-from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
-from collections import defaultdict
 import asyncio
 import logging
+from collections import defaultdict
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +19,12 @@ class Message(BaseModel):
 
     id: str
     sender: str
-    recipient: Optional[str] = None  # None for broadcast
+    recipient: str | None = None  # None for broadcast
     content: Any
     message_type: str = "default"
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=datetime.now)
-    reply_to: Optional[str] = None
+    reply_to: str | None = None
 
 
 
@@ -31,8 +33,8 @@ class MessageBus:
 
     def __init__(self) -> None:
         """Initialize message bus."""
-        self._subscribers: Dict[str, List[Callable]] = defaultdict(list)
-        self._message_history: List[Message] = []
+        self._subscribers: dict[str, list[Callable]] = defaultdict(list)
+        self._message_history: list[Message] = []
         self._message_count = 0
 
     async def send(self, message: Message) -> None:
@@ -55,7 +57,7 @@ class MessageBus:
                 except Exception as e:
                     logger.error(f"Error delivering message to {message.recipient}: {e}")
 
-    async def broadcast(self, message: Message, group: Optional[str] = None) -> None:
+    async def broadcast(self, message: Message, group: str | None = None) -> None:
         """Broadcast a message to all subscribers or a group.
 
         Args:
@@ -82,7 +84,7 @@ class MessageBus:
 
     async def request_reply(
         self, message: Message, timeout: float = 30.0
-    ) -> Optional[Message]:
+    ) -> Message | None:
         """Send a message and wait for reply.
 
         Args:
@@ -97,7 +99,7 @@ class MessageBus:
 
         # Wait for reply
         reply_event = asyncio.Event()
-        reply_message: Optional[Message] = None
+        reply_message: Message | None = None
 
         async def reply_handler(msg: Message) -> None:
             nonlocal reply_message
@@ -112,7 +114,7 @@ class MessageBus:
         try:
             await asyncio.wait_for(reply_event.wait(), timeout=timeout)
             return reply_message
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Request-reply timeout for message {message.id}")
             return None
         finally:
@@ -129,7 +131,7 @@ class MessageBus:
         self._subscribers[agent_id].append(callback)
         logger.debug(f"Agent {agent_id} subscribed to message bus")
 
-    def unsubscribe(self, agent_id: str, callback: Optional[Callable] = None) -> None:
+    def unsubscribe(self, agent_id: str, callback: Callable | None = None) -> None:
         """Unsubscribe an agent from messages.
 
         Args:
@@ -144,8 +146,8 @@ class MessageBus:
             logger.debug(f"Agent {agent_id} unsubscribed from message bus")
 
     def get_history(
-        self, agent_id: Optional[str] = None, limit: Optional[int] = None
-    ) -> List[Message]:
+        self, agent_id: str | None = None, limit: int | None = None
+    ) -> list[Message]:
         """Get message history.
 
         Args:
@@ -174,7 +176,7 @@ class MessageBus:
         self._message_history.clear()
         logger.info("Message history cleared")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get message bus statistics.
 
         Returns:

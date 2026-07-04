@@ -1,11 +1,9 @@
 """Cost control and budget management for GenXAI."""
 
 import sqlite3
-from typing import Dict, Any, Optional
-from datetime import datetime, timedelta, UTC
 from dataclasses import dataclass
-import os
-
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 # Token costs per 1K tokens (as of 2026)
 TOKEN_COSTS = {
@@ -44,7 +42,7 @@ class UsageRecord:
 
 class TokenUsageTracker:
     """Track LLM token usage."""
-    
+
     def __init__(self, db_path: str = "genxai_usage.db"):
         """Initialize usage tracker.
         
@@ -53,12 +51,12 @@ class TokenUsageTracker:
         """
         self.db_path = db_path
         self._init_db()
-    
+
     def _init_db(self):
         """Initialize database schema."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS token_usage (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,15 +69,15 @@ class TokenUsageTracker:
                 timestamp TIMESTAMP NOT NULL
             )
         """)
-        
+
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_user_timestamp 
             ON token_usage(user_id, timestamp)
         """)
-        
+
         conn.commit()
         conn.close()
-    
+
     def record_usage(
         self,
         user_id: str,
@@ -101,21 +99,21 @@ class TokenUsageTracker:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             INSERT INTO token_usage 
             (user_id, provider, model, prompt_tokens, completion_tokens, cost, timestamp)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (user_id, provider, model, prompt_tokens, completion_tokens, cost, datetime.now(UTC)))
-        
+
         conn.commit()
         conn.close()
-    
+
     def get_usage(
         self,
         user_id: str,
         period: str = "day"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get usage statistics.
         
         Args:
@@ -135,10 +133,10 @@ class TokenUsageTracker:
             start_time = now - timedelta(days=30)
         else:
             start_time = now - timedelta(days=1)
-        
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             SELECT 
                 SUM(prompt_tokens) as total_prompt_tokens,
@@ -148,9 +146,9 @@ class TokenUsageTracker:
             FROM token_usage
             WHERE user_id = ? AND timestamp >= ?
         """, (user_id, start_time))
-        
+
         row = cursor.fetchone()
-        
+
         # Get breakdown by provider/model
         cursor.execute("""
             SELECT provider, model, SUM(cost) as cost
@@ -158,15 +156,15 @@ class TokenUsageTracker:
             WHERE user_id = ? AND timestamp >= ?
             GROUP BY provider, model
         """, (user_id, start_time))
-        
+
         breakdown = {}
         for provider, model, cost in cursor.fetchall():
             if provider not in breakdown:
                 breakdown[provider] = {}
             breakdown[provider][model] = cost
-        
+
         conn.close()
-        
+
         return {
             "period": period,
             "total_prompt_tokens": row[0] or 0,
@@ -179,7 +177,7 @@ class TokenUsageTracker:
 
 class BudgetManager:
     """Manage user budgets."""
-    
+
     def __init__(self, db_path: str = "genxai_budgets.db"):
         """Initialize budget manager.
         
@@ -188,12 +186,12 @@ class BudgetManager:
         """
         self.db_path = db_path
         self._init_db()
-    
+
     def _init_db(self):
         """Initialize database schema."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS budgets (
                 user_id TEXT PRIMARY KEY,
@@ -203,10 +201,10 @@ class BudgetManager:
                 updated_at TIMESTAMP NOT NULL
             )
         """)
-        
+
         conn.commit()
         conn.close()
-    
+
     def set_budget(
         self,
         user_id: str,
@@ -222,17 +220,17 @@ class BudgetManager:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         now = datetime.now(UTC)
-        
+
         cursor.execute("""
             INSERT OR REPLACE INTO budgets (user_id, amount, period, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?)
         """, (user_id, amount, period, now, now))
-        
+
         conn.commit()
         conn.close()
-    
+
     def check_budget(self, user_id: str, usage_tracker: TokenUsageTracker) -> bool:
         """Check if user is within budget.
         
@@ -246,25 +244,25 @@ class BudgetManager:
         # Get budget
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             SELECT amount, period FROM budgets WHERE user_id = ?
         """, (user_id,))
-        
+
         row = cursor.fetchone()
         conn.close()
-        
+
         if not row:
             # No budget set, allow
             return True
-        
+
         amount, period = row
-        
+
         # Get usage
         usage = usage_tracker.get_usage(user_id, period)
-        
+
         return usage["total_cost"] < amount
-    
+
     def get_remaining(self, user_id: str, usage_tracker: TokenUsageTracker) -> float:
         """Get remaining budget.
         
@@ -278,36 +276,36 @@ class BudgetManager:
         # Get budget
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             SELECT amount, period FROM budgets WHERE user_id = ?
         """, (user_id,))
-        
+
         row = cursor.fetchone()
         conn.close()
-        
+
         if not row:
             return float('inf')
-        
+
         amount, period = row
-        
+
         # Get usage
         usage = usage_tracker.get_usage(user_id, period)
-        
+
         return max(0, amount - usage["total_cost"])
 
 
 class CostEstimator:
     """Estimate costs before execution."""
-    
-    def __init__(self, costs: Optional[Dict[str, Any]] = None):
+
+    def __init__(self, costs: dict[str, Any] | None = None):
         """Initialize cost estimator.
         
         Args:
             costs: Custom cost table (default: use built-in costs)
         """
         self.costs = costs or TOKEN_COSTS
-    
+
     def estimate_cost(
         self,
         provider: str,
@@ -328,20 +326,20 @@ class CostEstimator:
         """
         if provider not in self.costs:
             return 0.0
-        
+
         if model not in self.costs[provider]:
             return 0.0
-        
+
         model_costs = self.costs[provider][model]
-        
+
         prompt_cost = (prompt_tokens / 1000) * model_costs["prompt"]
         completion_cost = (estimated_completion_tokens / 1000) * model_costs["completion"]
-        
+
         return prompt_cost + completion_cost
-    
+
     def estimate_workflow_cost(
         self,
-        steps: list[Dict[str, Any]]
+        steps: list[dict[str, Any]]
     ) -> float:
         """Estimate workflow cost.
         
@@ -352,7 +350,7 @@ class CostEstimator:
             Estimated total cost
         """
         total_cost = 0.0
-        
+
         for step in steps:
             cost = self.estimate_cost(
                 step["provider"],
@@ -361,13 +359,13 @@ class CostEstimator:
                 step["estimated_completion_tokens"]
             )
             total_cost += cost
-        
+
         return total_cost
 
 
 class CostAlertManager:
     """Send alerts when costs exceed thresholds."""
-    
+
     def __init__(self, db_path: str = "genxai_alerts.db"):
         """Initialize alert manager.
         
@@ -376,12 +374,12 @@ class CostAlertManager:
         """
         self.db_path = db_path
         self._init_db()
-    
+
     def _init_db(self):
         """Initialize database schema."""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS cost_alerts (
                 user_id TEXT PRIMARY KEY,
@@ -390,10 +388,10 @@ class CostAlertManager:
                 last_alert TIMESTAMP
             )
         """)
-        
+
         conn.commit()
         conn.close()
-    
+
     def set_alert(
         self,
         user_id: str,
@@ -409,15 +407,15 @@ class CostAlertManager:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             INSERT OR REPLACE INTO cost_alerts (user_id, threshold, notification_method)
             VALUES (?, ?, ?)
         """, (user_id, threshold, notification_method))
-        
+
         conn.commit()
         conn.close()
-    
+
     def check_and_notify(self, user_id: str, current_cost: float):
         """Check threshold and send notification.
         
@@ -427,21 +425,21 @@ class CostAlertManager:
         """
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        
+
         cursor.execute("""
             SELECT threshold, notification_method, last_alert
             FROM cost_alerts
             WHERE user_id = ?
         """, (user_id,))
-        
+
         row = cursor.fetchone()
-        
+
         if not row:
             conn.close()
             return
-        
+
         threshold, notification_method, last_alert = row
-        
+
         # Check if threshold exceeded
         if current_cost >= threshold:
             # Check if we already sent alert recently (within 1 hour)
@@ -450,7 +448,7 @@ class CostAlertManager:
                 if datetime.now(UTC) - last_alert_time < timedelta(hours=1):
                     conn.close()
                     return
-            
+
             # Send notification
             self._send_notification(
                 user_id,
@@ -458,16 +456,16 @@ class CostAlertManager:
                 current_cost,
                 threshold
             )
-            
+
             # Update last alert time
             cursor.execute("""
                 UPDATE cost_alerts SET last_alert = ? WHERE user_id = ?
             """, (datetime.now(UTC), user_id))
-            
+
             conn.commit()
-        
+
         conn.close()
-    
+
     def _send_notification(
         self,
         user_id: str,
@@ -484,7 +482,7 @@ class CostAlertManager:
             threshold: Threshold
         """
         message = f"Cost alert: User {user_id} has exceeded threshold ${threshold:.2f}. Current cost: ${current_cost:.2f}"
-        
+
         # Placeholder for actual notification implementation
         print(f"[{method.upper()}] {message}")
 

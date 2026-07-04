@@ -1,18 +1,16 @@
 """Semantic memory implementation for storing facts and knowledge."""
 
-from typing import Any, Dict, List, Optional, Set, Tuple
-from datetime import datetime
 import json
 import logging
 import uuid
+from datetime import datetime
+from typing import Any
 
+from genxai.core.memory.backends import MemoryBackendPlugin
 from genxai.core.memory.persistence import (
-    JsonMemoryStore,
     MemoryPersistenceConfig,
-    SqliteMemoryStore,
     create_memory_store,
 )
-from genxai.core.memory.backends import MemoryBackendPlugin
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +25,9 @@ class Fact:
         predicate: str,
         object: str,
         confidence: float = 1.0,
-        source: Optional[str] = None,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        source: str | None = None,
+        timestamp: datetime | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Initialize fact.
 
@@ -52,11 +50,11 @@ class Fact:
         self.timestamp = timestamp or datetime.now()
         self.metadata = metadata or {}
 
-    def to_triple(self) -> Tuple[str, str, str]:
+    def to_triple(self) -> tuple[str, str, str]:
         """Convert to RDF-style triple."""
         return (self.subject, self.predicate, self.object)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "id": self.id,
@@ -70,7 +68,7 @@ class Fact:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Fact":
+    def from_dict(cls, data: dict[str, Any]) -> "Fact":
         """Create fact from dictionary."""
         return cls(
             id=data["id"],
@@ -100,9 +98,9 @@ class SemanticMemory:
 
     def __init__(
         self,
-        graph_db: Optional[Any] = None,
-        persistence: Optional[MemoryPersistenceConfig] = None,
-        backend_plugin: Optional[MemoryBackendPlugin] = None,
+        graph_db: Any | None = None,
+        persistence: MemoryPersistenceConfig | None = None,
+        backend_plugin: MemoryBackendPlugin | None = None,
     ) -> None:
         """Initialize semantic memory.
 
@@ -117,13 +115,13 @@ class SemanticMemory:
             self._store = create_memory_store(persistence)
         else:
             self._store = None
-        
+
         # Fallback to in-memory storage
-        self._facts: Dict[str, Fact] = {}
-        self._subject_index: Dict[str, Set[str]] = {}  # subject -> fact_ids
-        self._predicate_index: Dict[str, Set[str]] = {}  # predicate -> fact_ids
-        self._object_index: Dict[str, Set[str]] = {}  # object -> fact_ids
-        
+        self._facts: dict[str, Fact] = {}
+        self._subject_index: dict[str, set[str]] = {}  # subject -> fact_ids
+        self._predicate_index: dict[str, set[str]] = {}  # predicate -> fact_ids
+        self._object_index: dict[str, set[str]] = {}  # object -> fact_ids
+
         if self._use_graph:
             logger.info("Initialized semantic memory with graph database")
         else:
@@ -141,8 +139,8 @@ class SemanticMemory:
         predicate: str,
         object: str,
         confidence: float = 1.0,
-        source: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        source: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Fact:
         """Store a new fact.
 
@@ -183,16 +181,16 @@ class SemanticMemory:
         else:
             # In-memory storage
             self._facts[fact.id] = fact
-            
+
             # Update indexes
             if subject not in self._subject_index:
                 self._subject_index[subject] = set()
             self._subject_index[subject].add(fact.id)
-            
+
             if predicate not in self._predicate_index:
                 self._predicate_index[predicate] = set()
             self._predicate_index[predicate].add(fact.id)
-            
+
             if object not in self._object_index:
                 self._object_index[object] = set()
             self._object_index[object].add(fact.id)
@@ -205,8 +203,8 @@ class SemanticMemory:
     async def retrieve_by_subject(
         self,
         subject: str,
-        predicate: Optional[str] = None,
-    ) -> List[Fact]:
+        predicate: str | None = None,
+    ) -> list[Fact]:
         """Retrieve facts about a subject.
 
         Args:
@@ -231,9 +229,9 @@ class SemanticMemory:
     async def retrieve_by_predicate(
         self,
         predicate: str,
-        subject: Optional[str] = None,
-        object: Optional[str] = None,
-    ) -> List[Fact]:
+        subject: str | None = None,
+        object: str | None = None,
+    ) -> list[Fact]:
         """Retrieve facts with a specific predicate.
 
         Args:
@@ -263,8 +261,8 @@ class SemanticMemory:
     async def retrieve_by_object(
         self,
         object: str,
-        predicate: Optional[str] = None,
-    ) -> List[Fact]:
+        predicate: str | None = None,
+    ) -> list[Fact]:
         """Retrieve facts with a specific object.
 
         Args:
@@ -288,11 +286,11 @@ class SemanticMemory:
 
     async def query(
         self,
-        subject: Optional[str] = None,
-        predicate: Optional[str] = None,
-        object: Optional[str] = None,
+        subject: str | None = None,
+        predicate: str | None = None,
+        object: str | None = None,
         min_confidence: float = 0.0,
-    ) -> List[Fact]:
+    ) -> list[Fact]:
         """Query facts with flexible filters.
 
         Args:
@@ -322,7 +320,7 @@ class SemanticMemory:
         self,
         entity: str,
         max_depth: int = 2,
-    ) -> Set[str]:
+    ) -> set[str]:
         """Get entities related to a given entity.
 
         Args:
@@ -362,7 +360,7 @@ class SemanticMemory:
     async def get_entity_properties(
         self,
         entity: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get all properties of an entity.
 
         Args:
@@ -372,7 +370,7 @@ class SemanticMemory:
             Dictionary of properties
         """
         facts = await self.retrieve_by_subject(entity)
-        
+
         properties = {}
         for fact in facts:
             if fact.predicate not in properties:
@@ -422,7 +420,7 @@ class SemanticMemory:
 
         self._persist()
 
-    async def get_stats(self) -> Dict[str, Any]:
+    async def get_stats(self) -> dict[str, Any]:
         """Get semantic memory statistics.
 
         Returns:
@@ -479,7 +477,7 @@ class SemanticMemory:
         self._predicate_index.setdefault(fact.predicate, set()).add(fact.id)
         self._object_index.setdefault(fact.object, set()).add(fact.id)
 
-    def _decode_metadata(self, value: Any) -> Dict[str, Any]:
+    def _decode_metadata(self, value: Any) -> dict[str, Any]:
         if value is None:
             return {}
         if isinstance(value, str):
@@ -490,7 +488,7 @@ class SemanticMemory:
                 return {}
         return value if isinstance(value, dict) else {}
 
-    def _fact_from_graph_payload(self, payload: Dict[str, Any]) -> Fact:
+    def _fact_from_graph_payload(self, payload: dict[str, Any]) -> Fact:
         return Fact(
             id=str(payload.get("id", "")),
             subject=str(payload.get("subject", "")),
@@ -502,8 +500,8 @@ class SemanticMemory:
             metadata=self._decode_metadata(payload.get("metadata_json")),
         )
 
-    def _records_to_facts(self, records: Any) -> List[Fact]:
-        facts: List[Fact] = []
+    def _records_to_facts(self, records: Any) -> list[Fact]:
+        facts: list[Fact] = []
         for record in records:
             if isinstance(record, dict):
                 node = record.get("f") or record
@@ -528,11 +526,11 @@ class SemanticMemory:
         subject: str,
         predicate: str,
         object: str,
-    ) -> Optional[Fact]:
+    ) -> Fact | None:
         """Find exact matching fact."""
         for fact in self._facts.values():
-            if (fact.subject == subject and 
-                fact.predicate == predicate and 
+            if (fact.subject == subject and
+                fact.predicate == predicate and
                 fact.object == object):
                 return fact
         return None
@@ -570,8 +568,8 @@ class SemanticMemory:
     async def _retrieve_by_subject_from_graph(
         self,
         subject: str,
-        predicate: Optional[str],
-    ) -> List[Fact]:
+        predicate: str | None,
+    ) -> list[Fact]:
         """Retrieve facts by subject from graph database."""
         try:
             query = """
@@ -594,9 +592,9 @@ class SemanticMemory:
     async def _retrieve_by_predicate_from_graph(
         self,
         predicate: str,
-        subject: Optional[str],
-        object: Optional[str],
-    ) -> List[Fact]:
+        subject: str | None,
+        object: str | None,
+    ) -> list[Fact]:
         """Retrieve facts by predicate from graph database."""
         try:
             query = """
@@ -629,8 +627,8 @@ class SemanticMemory:
     async def _retrieve_by_object_from_graph(
         self,
         object: str,
-        predicate: Optional[str],
-    ) -> List[Fact]:
+        predicate: str | None,
+    ) -> list[Fact]:
         """Retrieve facts by object from graph database."""
         try:
             query = """

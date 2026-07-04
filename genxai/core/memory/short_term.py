@@ -1,11 +1,11 @@
 """Short-term memory implementation with LRU eviction."""
 
-from typing import Any, Dict, List, Optional
-from datetime import datetime
-from collections import OrderedDict
 import logging
+from collections import OrderedDict
+from datetime import datetime
+from typing import Any
 
-from genxai.core.memory.base import Memory, MemoryType, MemoryConfig
+from genxai.core.memory.base import Memory, MemoryConfig, MemoryType
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class ShortTermMemory:
     the least recently used items when capacity is reached.
     """
 
-    def __init__(self, config: Optional[MemoryConfig] = None, capacity: Optional[int] = None) -> None:
+    def __init__(self, config: MemoryConfig | None = None, capacity: int | None = None) -> None:
         """Initialize short-term memory.
 
         Args:
@@ -26,11 +26,11 @@ class ShortTermMemory:
         """
         self.config = config or MemoryConfig()
         self.capacity = capacity if capacity is not None else self.config.short_term_capacity
-        
+
         # Use OrderedDict for LRU behavior
         self._memories: OrderedDict[str, Memory] = OrderedDict()
         self._access_count = 0
-        
+
         logger.info(f"Initialized short-term memory with capacity: {self.capacity}")
 
     def store(self, memory: Memory) -> None:
@@ -44,18 +44,18 @@ class ShortTermMemory:
         # If memory already exists, remove it (will be re-added at end)
         if memory.id in self._memories:
             del self._memories[memory.id]
-        
+
         # If at capacity, remove oldest (least recently used)
         if len(self._memories) >= self.capacity:
             oldest_id = next(iter(self._memories))
             evicted = self._memories.pop(oldest_id)
             logger.debug(f"Evicted memory {oldest_id} (importance: {evicted.importance})")
-        
+
         # Add new memory at end (most recently used)
         self._memories[memory.id] = memory
         logger.debug(f"Stored memory {memory.id} in short-term memory")
 
-    def retrieve(self, memory_id: str) -> Optional[Memory]:
+    def retrieve(self, memory_id: str) -> Memory | None:
         """Retrieve a memory by ID.
 
         Accessing a memory moves it to the end (most recently used).
@@ -68,20 +68,20 @@ class ShortTermMemory:
         """
         if memory_id not in self._memories:
             return None
-        
+
         # Move to end (mark as recently used)
         memory = self._memories.pop(memory_id)
         self._memories[memory_id] = memory
-        
+
         # Update access tracking
         memory.access_count += 1
         memory.last_accessed = datetime.now()
         self._access_count += 1
-        
+
         logger.debug(f"Retrieved memory {memory_id} (access count: {memory.access_count})")
         return memory
 
-    def retrieve_recent(self, limit: int = 10) -> List[Memory]:
+    def retrieve_recent(self, limit: int = 10) -> list[Memory]:
         """Retrieve the most recent memories.
 
         Args:
@@ -92,14 +92,14 @@ class ShortTermMemory:
         """
         # Get last N items (most recent)
         recent_items = list(self._memories.values())[-limit:]
-        
+
         # Reverse to get most recent first
         recent_items.reverse()
-        
+
         logger.debug(f"Retrieved {len(recent_items)} recent memories")
         return recent_items
 
-    def retrieve_older_than_recent(self, keep_recent: int) -> List[Memory]:
+    def retrieve_older_than_recent(self, keep_recent: int) -> list[Memory]:
         """Retrieve memories older than the most recent N entries.
 
         Args:
@@ -140,7 +140,7 @@ class ShortTermMemory:
 
     def format_memories_as_context(
         self,
-        memories: List[Memory],
+        memories: list[Memory],
         header: str = "Recent context:",
     ) -> str:
         """Format a list of memories as prompt-ready context text."""
@@ -152,7 +152,7 @@ class ShortTermMemory:
             context_parts.append(f"- {memory.content}")
         return "\n".join(context_parts)
 
-    def retrieve_by_importance(self, threshold: float = 0.5, limit: int = 10) -> List[Memory]:
+    def retrieve_by_importance(self, threshold: float = 0.5, limit: int = 10) -> list[Memory]:
         """Retrieve memories above an importance threshold.
 
         Args:
@@ -164,19 +164,19 @@ class ShortTermMemory:
         """
         # Filter by importance
         important = [m for m in self._memories.values() if m.importance >= threshold]
-        
+
         # Sort by importance (descending)
         important.sort(key=lambda m: m.importance, reverse=True)
-        
+
         # Limit results
         result = important[:limit]
-        
+
         logger.debug(
             f"Retrieved {len(result)} memories with importance >= {threshold}"
         )
         return result
 
-    def search(self, query: str, limit: int = 5) -> List[Memory]:
+    def search(self, query: str, limit: int = 5) -> list[Memory]:
         """Search memories by content.
 
         Simple text-based search. For semantic search, use long-term memory.
@@ -190,20 +190,20 @@ class ShortTermMemory:
         """
         query_lower = query.lower()
         matches = []
-        
+
         for memory in self._memories.values():
             # Convert content to string for searching
             content_str = str(memory.content).lower()
-            
+
             if query_lower in content_str:
                 matches.append(memory)
-        
+
         # Sort by recency (most recent first)
         matches.reverse()
-        
+
         # Limit results
         result = matches[:limit]
-        
+
         logger.debug(f"Found {len(result)} memories matching '{query}'")
         return result
 
@@ -252,7 +252,7 @@ class ShortTermMemory:
         """
         return len(self._memories) >= self.capacity
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get memory statistics.
 
         Returns:
@@ -267,9 +267,9 @@ class ShortTermMemory:
                 "avg_importance": 0.0,
                 "avg_access_count": 0.0,
             }
-        
+
         memories = list(self._memories.values())
-        
+
         return {
             "size": len(memories),
             "capacity": self.capacity,
@@ -289,7 +289,7 @@ class ShortTermMemory:
         """Check if memory exists."""
         return memory_id in self._memories
 
-    async def add(self, content: Any, metadata: Optional[Dict[str, Any]] = None) -> str:
+    async def add(self, content: Any, metadata: dict[str, Any] | None = None) -> str:
         """Add content to short-term memory.
         
         Args:
@@ -300,9 +300,10 @@ class ShortTermMemory:
             Memory ID
         """
         import uuid
-        from genxai.core.memory.base import Memory, MemoryType
         from datetime import datetime
-        
+
+        from genxai.core.memory.base import Memory
+
         memory = Memory(
             id=str(uuid.uuid4()),
             content=content,
@@ -311,10 +312,10 @@ class ShortTermMemory:
             timestamp=datetime.now(),
             metadata=metadata or {},
         )
-        
+
         self.store(memory)
         return memory.id
-    
+
     async def get_context(self, max_tokens: int = 4000) -> str:
         """Get formatted context string for LLM.
         
@@ -325,20 +326,20 @@ class ShortTermMemory:
             Formatted context string
         """
         recent = self.retrieve_recent(limit=10)
-        
+
         if not recent:
             return ""
-        
+
         return self.format_memories_as_context(recent, header="Recent context:")
-    
+
     async def clear_async(self) -> None:
         """Clear all memories (async version)."""
         count = len(self._memories)
         self._memories.clear()
         logger.info(f"Cleared {count} memories from short-term memory")
-    
+
     @property
-    def memories(self) -> List[Memory]:
+    def memories(self) -> list[Memory]:
         """Get all memories as a list."""
         return list(self._memories.values())
 

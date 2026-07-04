@@ -1,9 +1,8 @@
 """Embedding service for memory vectorization."""
 
-from typing import List, Optional, Union
-from abc import ABC, abstractmethod
 import logging
 import os
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +11,7 @@ class EmbeddingService(ABC):
     """Abstract base class for embedding services."""
 
     @abstractmethod
-    async def embed(self, text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]:
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
         """Generate embeddings for text.
 
         Args:
@@ -39,7 +38,7 @@ class OpenAIEmbeddingService(EmbeddingService):
     def __init__(
         self,
         model: str = "text-embedding-ada-002",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ) -> None:
         """Initialize OpenAI embedding service.
 
@@ -76,16 +75,16 @@ class OpenAIEmbeddingService(EmbeddingService):
             self._initialized = True
             logger.info(f"Initialized OpenAI embedding service: {self.model}")
 
-        except ImportError:
+        except ImportError as e:
             logger.error(
                 "OpenAI not installed. Install with: pip install openai"
             )
-            raise RuntimeError("OpenAI not available")
+            raise RuntimeError("OpenAI not available") from e
         except Exception as e:
             logger.error(f"Failed to initialize OpenAI: {e}")
             raise
 
-    async def embed(self, text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]:
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
         """Generate embeddings for text."""
         await self._ensure_initialized()
 
@@ -139,7 +138,7 @@ class LocalEmbeddingService(EmbeddingService):
     def __init__(
         self,
         model: str = "all-MiniLM-L6-v2",
-        device: Optional[str] = None,
+        device: str | None = None,
     ) -> None:
         """Initialize local embedding service.
 
@@ -171,17 +170,17 @@ class LocalEmbeddingService(EmbeddingService):
             self._initialized = True
             logger.info(f"Initialized local embedding model: {self.model_name}")
 
-        except ImportError:
+        except ImportError as e:
             logger.error(
                 "sentence-transformers not installed. "
                 "Install with: pip install sentence-transformers"
             )
-            raise RuntimeError("sentence-transformers not available")
+            raise RuntimeError("sentence-transformers not available") from e
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             raise
 
-    async def embed(self, text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]:
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
         """Generate embeddings for text."""
         await self._ensure_initialized()
 
@@ -216,7 +215,7 @@ class CohereEmbeddingService(EmbeddingService):
     def __init__(
         self,
         model: str = "embed-english-v3.0",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         input_type: str = "search_document",
     ) -> None:
         """Initialize Cohere embedding service.
@@ -256,16 +255,16 @@ class CohereEmbeddingService(EmbeddingService):
             self._initialized = True
             logger.info(f"Initialized Cohere embedding service: {self.model}")
 
-        except ImportError:
+        except ImportError as e:
             logger.error(
                 "Cohere not installed. Install with: pip install cohere"
             )
-            raise RuntimeError("Cohere not available")
+            raise RuntimeError("Cohere not available") from e
         except Exception as e:
             logger.error(f"Failed to initialize Cohere: {e}")
             raise
 
-    async def embed(self, text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]:
+    async def embed(self, text: str | list[str]) -> list[float] | list[list[float]]:
         """Generate embeddings for text."""
         await self._ensure_initialized()
 
@@ -358,6 +357,6 @@ class EmbeddingServiceFactory:
         logger.info(f"Registered embedding service: {name}")
 
     @classmethod
-    def list_providers(cls) -> List[str]:
+    def list_providers(cls) -> list[str]:
         """List available embedding providers."""
         return list(cls._services.keys())

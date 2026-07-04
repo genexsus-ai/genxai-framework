@@ -1,9 +1,9 @@
 """Image processor tool for analyzing and manipulating images."""
 
-from typing import Any, Dict, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -68,11 +68,11 @@ class ImageProcessorTool(Tool):
         self,
         file_path: str,
         operation: str,
-        width: Optional[int] = None,
-        height: Optional[int] = None,
-        output_format: Optional[str] = None,
-        output_path: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        width: int | None = None,
+        height: int | None = None,
+        output_format: str | None = None,
+        output_path: str | None = None,
+    ) -> dict[str, Any]:
         """Execute image processing.
 
         Args:
@@ -88,12 +88,12 @@ class ImageProcessorTool(Tool):
         """
         try:
             from PIL import Image
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "Pillow package not installed. Install with: pip install Pillow"
-            )
+            ) from e
 
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "file_path": file_path,
             "operation": operation,
             "success": False,
@@ -122,7 +122,7 @@ class ImageProcessorTool(Tool):
             elif operation == "resize":
                 if not width or not height:
                     raise ValueError("width and height required for resize operation")
-                
+
                 if not output_path:
                     raise ValueError("output_path required for resize operation")
 
@@ -140,7 +140,7 @@ class ImageProcessorTool(Tool):
             elif operation == "convert":
                 if not output_format:
                     raise ValueError("output_format required for convert operation")
-                
+
                 if not output_path:
                     raise ValueError("output_path required for convert operation")
 
@@ -161,7 +161,7 @@ class ImageProcessorTool(Tool):
             elif operation == "thumbnail":
                 if not width or not height:
                     raise ValueError("width and height required for thumbnail operation")
-                
+
                 if not output_path:
                     raise ValueError("output_path required for thumbnail operation")
 

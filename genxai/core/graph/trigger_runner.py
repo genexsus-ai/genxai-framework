@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
 from genxai.core.graph.executor import WorkflowExecutor
 
@@ -20,10 +20,10 @@ class TriggerWorkflowRunner:
 
     def __init__(
         self,
-        nodes: List[Dict[str, Any]],
-        edges: List[Dict[str, Any]],
-        openai_api_key: Optional[str] = None,
-        anthropic_api_key: Optional[str] = None,
+        nodes: list[dict[str, Any]],
+        edges: list[dict[str, Any]],
+        openai_api_key: str | None = None,
+        anthropic_api_key: str | None = None,
     ) -> None:
         self.nodes = nodes
         self.edges = edges
@@ -32,7 +32,7 @@ class TriggerWorkflowRunner:
             anthropic_api_key=anthropic_api_key,
         )
 
-    async def handle_event(self, event: TriggerEvent) -> Dict[str, Any]:
+    async def handle_event(self, event: TriggerEvent) -> dict[str, Any]:
         """Execute the workflow using the trigger event payload as input."""
         logger.info("Trigger event received: %s", event.trigger_id)
         input_data = event.payload or {}

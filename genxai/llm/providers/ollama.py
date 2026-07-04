@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, AsyncIterator
 import logging
 import os
+from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 
@@ -22,10 +23,10 @@ class OllamaProvider(LLMProvider):
     def __init__(
         self,
         model: str = "llama3",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        base_url: Optional[str] = None,
+        max_tokens: int | None = None,
+        base_url: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize Ollama provider.
@@ -46,7 +47,7 @@ class OllamaProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion using Ollama.
@@ -59,7 +60,7 @@ class OllamaProvider(LLMProvider):
         Returns:
             LLM response
         """
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
@@ -102,7 +103,7 @@ class OllamaProvider(LLMProvider):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Generate completion with streaming.
@@ -115,7 +116,7 @@ class OllamaProvider(LLMProvider):
         Yields:
             Content chunks
         """
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "prompt": prompt,
             "stream": True,

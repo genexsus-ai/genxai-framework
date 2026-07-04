@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Callable, Awaitable
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import Any
 
-from genxai.utils.enterprise_compat import get_current_user, get_policy_engine, Permission
+from genxai.utils.enterprise_compat import Permission, get_current_user, get_policy_engine
 
 logger = logging.getLogger(__name__)
 
@@ -17,19 +18,19 @@ logger = logging.getLogger(__name__)
 class SharedMemoryEntry:
     key: str
     value: Any
-    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class SharedMemoryBus:
     """In-memory shared memory store with pub/sub hooks."""
 
     def __init__(self) -> None:
-        self._store: Dict[str, SharedMemoryEntry] = {}
-        self._subscribers: Dict[str, List[Callable[[SharedMemoryEntry], Awaitable[None]]]] = {}
+        self._store: dict[str, SharedMemoryEntry] = {}
+        self._subscribers: dict[str, list[Callable[[SharedMemoryEntry], Awaitable[None]]]] = {}
         self._lock = asyncio.Lock()
 
-    async def set(self, key: str, value: Any, metadata: Optional[Dict[str, Any]] = None) -> None:
+    async def set(self, key: str, value: Any, metadata: dict[str, Any] | None = None) -> None:
         user = get_current_user()
         if user is not None:
             get_policy_engine().check(user, f"memory:{key}", Permission.MEMORY_WRITE)
@@ -45,7 +46,7 @@ class SharedMemoryBus:
         entry = self._store.get(key)
         return entry.value if entry else default
 
-    def list_keys(self) -> List[str]:
+    def list_keys(self) -> list[str]:
         return list(self._store.keys())
 
     def subscribe(

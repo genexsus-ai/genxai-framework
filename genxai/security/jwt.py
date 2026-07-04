@@ -1,10 +1,11 @@
 """JWT token management for GenXAI."""
 
-import jwt
 import os
-from datetime import datetime, timedelta, UTC
-from typing import Dict, Any, Optional
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
+import jwt
 
 
 @dataclass
@@ -20,8 +21,8 @@ class TokenPayload:
 
 class JWTManager:
     """Manage JWT tokens."""
-    
-    def __init__(self, secret_key: Optional[str] = None, algorithm: str = "HS256"):
+
+    def __init__(self, secret_key: str | None = None, algorithm: str = "HS256"):
         """Initialize JWT manager.
         
         Args:
@@ -31,7 +32,7 @@ class JWTManager:
         self.secret_key = secret_key or os.getenv("GENXAI_JWT_SECRET", "change-me-in-production")
         self.algorithm = algorithm
         self.issuer = "genxai"
-    
+
     def create_token(
         self,
         user_id: str,
@@ -52,7 +53,7 @@ class JWTManager:
         """
         now = datetime.now(UTC)
         exp = now + timedelta(seconds=expires_in)
-        
+
         payload = {
             "sub": user_id,
             "role": role,
@@ -61,11 +62,11 @@ class JWTManager:
             "iat": int(now.timestamp()),
             "iss": self.issuer
         }
-        
+
         token = jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
         return token
-    
-    def verify_token(self, token: str) -> Dict[str, Any]:
+
+    def verify_token(self, token: str) -> dict[str, Any]:
         """Verify and decode JWT token.
         
         Args:
@@ -86,11 +87,11 @@ class JWTManager:
                 issuer=self.issuer
             )
             return payload
-        except jwt.ExpiredSignatureError:
-            raise ValueError("Token has expired")
+        except jwt.ExpiredSignatureError as e:
+            raise ValueError("Token has expired") from e
         except jwt.InvalidTokenError as e:
-            raise ValueError(f"Invalid token: {str(e)}")
-    
+            raise ValueError(f"Invalid token: {str(e)}") from e
+
     def refresh_token(self, token: str, expires_in: int = 3600) -> str:
         """Refresh JWT token.
         
@@ -103,7 +104,7 @@ class JWTManager:
         """
         # Verify existing token
         payload = self.verify_token(token)
-        
+
         # Create new token with same claims
         return self.create_token(
             user_id=payload["sub"],
@@ -111,8 +112,8 @@ class JWTManager:
             permissions=payload["permissions"],
             expires_in=expires_in
         )
-    
-    def decode_token_unsafe(self, token: str) -> Dict[str, Any]:
+
+    def decode_token_unsafe(self, token: str) -> dict[str, Any]:
         """Decode token without verification (for debugging).
         
         Args:
@@ -135,8 +136,8 @@ def get_jwt_manager() -> JWTManager:
         JWTManager instance
     """
     global _jwt_manager
-    
+
     if _jwt_manager is None:
         _jwt_manager = JWTManager()
-    
+
     return _jwt_manager

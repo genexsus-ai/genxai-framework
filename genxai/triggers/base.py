@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, Optional
 import asyncio
 import logging
+from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +29,15 @@ class TriggerEvent:
     """Event emitted by triggers to start workflows."""
 
     trigger_id: str
-    payload: Dict[str, Any]
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    payload: dict[str, Any]
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class BaseTrigger(ABC):
     """Abstract base class for workflow triggers."""
 
-    def __init__(self, trigger_id: str, name: Optional[str] = None) -> None:
+    def __init__(self, trigger_id: str, name: str | None = None) -> None:
         self.trigger_id = trigger_id
         self.name = name or trigger_id
         self.status: TriggerStatus = TriggerStatus.STOPPED
@@ -47,7 +48,7 @@ class BaseTrigger(ABC):
         """Register a callback to receive trigger events."""
         self._callbacks.append(callback)
 
-    async def emit(self, payload: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None) -> None:
+    async def emit(self, payload: dict[str, Any], metadata: dict[str, Any] | None = None) -> None:
         """Emit a trigger event to registered callbacks."""
         event = TriggerEvent(
             trigger_id=self.trigger_id,

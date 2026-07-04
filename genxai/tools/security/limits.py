@@ -1,11 +1,11 @@
 """Resource limits and monitoring for tool execution."""
 
-import time
 import logging
-from typing import Dict, Any, Optional
-from dataclasses import dataclass
+import time
 from collections import defaultdict
+from dataclasses import dataclass
 from threading import Lock
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,19 +13,19 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResourceLimits:
     """Resource limits for tool execution."""
-    
+
     max_execution_time: float = 30.0  # seconds
-    max_memory_mb: Optional[float] = None  # MB (not enforced yet, placeholder)
-    max_cpu_percent: Optional[float] = None  # % (not enforced yet, placeholder)
-    
+    max_memory_mb: float | None = None  # MB (not enforced yet, placeholder)
+    max_cpu_percent: float | None = None  # % (not enforced yet, placeholder)
+
     def __post_init__(self):
         """Validate limits."""
         if self.max_execution_time <= 0:
             raise ValueError("max_execution_time must be positive")
-        
+
         if self.max_memory_mb is not None and self.max_memory_mb <= 0:
             raise ValueError("max_memory_mb must be positive")
-        
+
         if self.max_cpu_percent is not None and (
             self.max_cpu_percent <= 0 or self.max_cpu_percent > 100
         ):
@@ -34,12 +34,12 @@ class ResourceLimits:
 
 class ExecutionLimiter:
     """Rate limiter and resource monitor for tool execution."""
-    
+
     def __init__(
         self,
         max_executions_per_minute: int = 60,
         max_executions_per_hour: int = 1000,
-        resource_limits: Optional[ResourceLimits] = None
+        resource_limits: ResourceLimits | None = None
     ):
         """Initialize execution limiter.
         
@@ -51,16 +51,16 @@ class ExecutionLimiter:
         self.max_executions_per_minute = max_executions_per_minute
         self.max_executions_per_hour = max_executions_per_hour
         self.resource_limits = resource_limits or ResourceLimits()
-        
+
         # Track execution history
-        self._execution_history: Dict[str, list] = defaultdict(list)
+        self._execution_history: dict[str, list] = defaultdict(list)
         self._lock = Lock()
-        
+
         logger.info(
             f"ExecutionLimiter initialized: "
             f"{max_executions_per_minute}/min, {max_executions_per_hour}/hour"
         )
-    
+
     def _clean_old_executions(self, tool_name: str, current_time: float) -> None:
         """Remove executions older than 1 hour.
         
@@ -73,8 +73,8 @@ class ExecutionLimiter:
             ts for ts in self._execution_history[tool_name]
             if ts > hour_ago
         ]
-    
-    def check_rate_limit(self, tool_name: str) -> tuple[bool, Optional[str]]:
+
+    def check_rate_limit(self, tool_name: str) -> tuple[bool, str | None]:
         """Check if execution is allowed based on rate limits.
         
         Args:
@@ -85,16 +85,16 @@ class ExecutionLimiter:
         """
         with self._lock:
             current_time = time.time()
-            
+
             # Clean old executions
             self._clean_old_executions(tool_name, current_time)
-            
+
             executions = self._execution_history[tool_name]
-            
+
             # Check per-minute limit
             minute_ago = current_time - 60
             recent_executions = sum(1 for ts in executions if ts > minute_ago)
-            
+
             if recent_executions >= self.max_executions_per_minute:
                 error_msg = (
                     f"Rate limit exceeded: {recent_executions} executions in the last minute. "
@@ -102,7 +102,7 @@ class ExecutionLimiter:
                 )
                 logger.warning(f"Rate limit exceeded for tool '{tool_name}': {error_msg}")
                 return False, error_msg
-            
+
             # Check per-hour limit
             if len(executions) >= self.max_executions_per_hour:
                 error_msg = (
@@ -111,9 +111,9 @@ class ExecutionLimiter:
                 )
                 logger.warning(f"Rate limit exceeded for tool '{tool_name}': {error_msg}")
                 return False, error_msg
-            
+
             return True, None
-    
+
     def record_execution(self, tool_name: str) -> None:
         """Record a tool execution.
         
@@ -124,8 +124,8 @@ class ExecutionLimiter:
             current_time = time.time()
             self._execution_history[tool_name].append(current_time)
             logger.debug(f"Recorded execution for tool '{tool_name}'")
-    
-    def get_execution_stats(self, tool_name: str) -> Dict[str, Any]:
+
+    def get_execution_stats(self, tool_name: str) -> dict[str, Any]:
         """Get execution statistics for a tool.
         
         Args:
@@ -137,12 +137,12 @@ class ExecutionLimiter:
         with self._lock:
             current_time = time.time()
             self._clean_old_executions(tool_name, current_time)
-            
+
             executions = self._execution_history[tool_name]
             minute_ago = current_time - 60
-            
+
             recent_executions = sum(1 for ts in executions if ts > minute_ago)
-            
+
             return {
                 "tool_name": tool_name,
                 "executions_last_minute": recent_executions,
@@ -152,8 +152,8 @@ class ExecutionLimiter:
                 "remaining_minute": max(0, self.max_executions_per_minute - recent_executions),
                 "remaining_hour": max(0, self.max_executions_per_hour - len(executions)),
             }
-    
-    def reset_limits(self, tool_name: Optional[str] = None) -> None:
+
+    def reset_limits(self, tool_name: str | None = None) -> None:
         """Reset execution limits.
         
         Args:
@@ -166,8 +166,8 @@ class ExecutionLimiter:
             else:
                 self._execution_history.clear()
                 logger.info("Reset execution limits for all tools")
-    
-    def get_all_stats(self) -> Dict[str, Dict[str, Any]]:
+
+    def get_all_stats(self) -> dict[str, dict[str, Any]]:
         """Get execution statistics for all tools.
         
         Returns:
@@ -181,7 +181,7 @@ class ExecutionLimiter:
 
 
 # Global execution limiter instance
-_global_limiter: Optional[ExecutionLimiter] = None
+_global_limiter: ExecutionLimiter | None = None
 _limiter_lock = Lock()
 
 
@@ -192,12 +192,12 @@ def get_global_limiter() -> ExecutionLimiter:
         Global ExecutionLimiter instance
     """
     global _global_limiter
-    
+
     with _limiter_lock:
         if _global_limiter is None:
             _global_limiter = ExecutionLimiter()
             logger.info("Created global ExecutionLimiter")
-        
+
         return _global_limiter
 
 
@@ -208,7 +208,7 @@ def set_global_limiter(limiter: ExecutionLimiter) -> None:
         limiter: ExecutionLimiter instance to use globally
     """
     global _global_limiter
-    
+
     with _limiter_lock:
         _global_limiter = limiter
         logger.info("Updated global ExecutionLimiter")

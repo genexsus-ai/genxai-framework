@@ -1,9 +1,9 @@
 """Sandboxed execution environment for dynamic tools."""
 
-import signal
 import logging
-from typing import Any, Dict, Optional
+import signal
 from contextlib import contextmanager
+from typing import Any
 
 try:
     from RestrictedPython import compile_restricted, safe_globals
@@ -37,11 +37,11 @@ class SafeExecutor:
                 "RestrictedPython not available. Falling back to basic execution. "
                 "Install with: pip install RestrictedPython"
             )
-        
+
         self.timeout = timeout
         self._safe_builtins = self._create_safe_builtins()
 
-    def _create_safe_builtins(self) -> Dict[str, Any]:
+    def _create_safe_builtins(self) -> dict[str, Any]:
         """Create a safe set of built-in functions.
 
         Returns:
@@ -50,7 +50,7 @@ class SafeExecutor:
         if RESTRICTED_PYTHON_AVAILABLE:
             # Use RestrictedPython's safe globals as base
             safe_builtins = safe_globals.copy()
-            
+
             # Add additional safe functions
             safe_builtins.update({
                 '_iter_unpack_sequence_': guarded_iter_unpack_sequence,
@@ -105,7 +105,7 @@ class SafeExecutor:
                 'isinstance': isinstance,
                 'type': type,
             }
-        
+
         return safe_builtins
 
     @contextmanager
@@ -121,7 +121,7 @@ class SafeExecutor:
         # Set the signal handler and alarm
         old_handler = signal.signal(signal.SIGALRM, timeout_handler)
         signal.alarm(self.timeout)
-        
+
         try:
             yield
         finally:
@@ -146,24 +146,24 @@ class SafeExecutor:
         if RESTRICTED_PYTHON_AVAILABLE:
             # Use RestrictedPython for compilation
             byte_code = compile_restricted(code, filename, 'exec')
-            
+
             # Check for compilation errors
             if byte_code.errors:
                 error_msg = "; ".join(byte_code.errors)
                 raise ValueError(f"Code contains restricted operations: {error_msg}")
-            
+
             return byte_code.code
         else:
             # Fallback to standard compilation
             try:
                 return compile(code, filename, 'exec')
             except SyntaxError as e:
-                raise SyntaxError(f"Invalid Python code: {e}")
+                raise SyntaxError(f"Invalid Python code: {e}") from e
 
     def execute(
-        self, 
-        compiled_code: Any, 
-        parameters: Dict[str, Any],
+        self,
+        compiled_code: Any,
+        parameters: dict[str, Any],
         enable_timeout: bool = True
     ) -> Any:
         """Execute compiled code in a sandboxed environment.
@@ -208,12 +208,12 @@ class SafeExecutor:
             raise
         except Exception as e:
             logger.error(f"Code execution failed: {e}")
-            raise RuntimeError(f"Execution failed: {e}")
+            raise RuntimeError(f"Execution failed: {e}") from e
 
     def execute_code(
-        self, 
-        code: str, 
-        parameters: Dict[str, Any],
+        self,
+        code: str,
+        parameters: dict[str, Any],
         enable_timeout: bool = True
     ) -> Any:
         """Compile and execute code in one step.

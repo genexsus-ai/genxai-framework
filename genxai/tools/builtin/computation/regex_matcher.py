@@ -1,10 +1,10 @@
 """Regex matcher tool for pattern matching and extraction."""
 
-from typing import Any, Dict, List, Optional
 import logging
 import re
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +64,9 @@ class RegexMatcherTool(Tool):
         text: str,
         pattern: str,
         operation: str = "findall",
-        replacement: Optional[str] = None,
-        flags: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        replacement: str | None = None,
+        flags: str | None = None,
+    ) -> dict[str, Any]:
         """Execute regex operation.
 
         Args:
@@ -79,7 +79,7 @@ class RegexMatcherTool(Tool):
         Returns:
             Dictionary containing operation results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "operation": operation,
             "pattern": pattern,
             "success": False,
@@ -142,7 +142,7 @@ class RegexMatcherTool(Tool):
             elif operation == "sub":
                 if replacement is None:
                     raise ValueError("replacement parameter required for sub operation")
-                
+
                 new_text = compiled_pattern.sub(replacement, text)
                 result.update({
                     "original_text": text,
@@ -167,7 +167,7 @@ class RegexMatcherTool(Tool):
         logger.info(f"Regex {operation} completed: success={result['success']}")
         return result
 
-    def _parse_flags(self, flags: Optional[str]) -> int:
+    def _parse_flags(self, flags: str | None) -> int:
         """Parse regex flags from string.
 
         Args:

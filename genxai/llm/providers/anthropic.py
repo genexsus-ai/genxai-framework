@@ -1,8 +1,9 @@
 """Anthropic Claude LLM provider implementation."""
 
-from typing import Any, Dict, Optional, AsyncIterator
-import os
 import logging
+import os
+from collections.abc import AsyncIterator
+from typing import Any
 
 from genxai.llm.base import LLMProvider, LLMResponse
 
@@ -33,9 +34,9 @@ class AnthropicProvider(LLMProvider):
     def __init__(
         self,
         model: str = "claude-opus-4-8",
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
+        max_tokens: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize Anthropic provider.
@@ -50,12 +51,12 @@ class AnthropicProvider(LLMProvider):
         resolved_model = self._normalize_model(model)
         super().__init__(resolved_model, temperature, max_tokens, **kwargs)
         self.requested_model = model
-        
+
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
             logger.warning("Anthropic API key not provided. Set ANTHROPIC_API_KEY environment variable.")
-        
-        self._client: Optional[Any] = None
+
+        self._client: Any | None = None
         self._initialize_client()
 
     def _initialize_client(self) -> None:
@@ -76,7 +77,7 @@ class AnthropicProvider(LLMProvider):
     async def generate(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion using Claude.
@@ -100,13 +101,13 @@ class AnthropicProvider(LLMProvider):
         messages = [{"role": "user", "content": prompt}]
 
         # Merge parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
             "temperature": kwargs.get("temperature", self.temperature),
             "max_tokens": kwargs.get("max_tokens", self.max_tokens or 1024),
         }
-        
+
         # Add system prompt if provided
         if system_prompt:
             params["system"] = system_prompt
@@ -181,7 +182,7 @@ class AnthropicProvider(LLMProvider):
     async def generate_stream(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         **kwargs: Any,
     ) -> AsyncIterator[str]:
         """Generate completion with streaming.
@@ -204,21 +205,21 @@ class AnthropicProvider(LLMProvider):
         messages = [{"role": "user", "content": prompt}]
 
         # Merge parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
             "temperature": kwargs.get("temperature", self.temperature),
             "max_tokens": kwargs.get("max_tokens", self.max_tokens or 1024),
             "stream": True,
         }
-        
+
         # Add system prompt if provided
         if system_prompt:
             params["system"] = system_prompt
 
         try:
             logger.debug(f"Streaming from Anthropic API with model: {self.model}")
-            
+
             async with self._client.messages.stream(**params) as stream:
                 async for text in stream.text_stream:
                     yield text
@@ -229,7 +230,7 @@ class AnthropicProvider(LLMProvider):
 
     async def generate_chat(
         self,
-        messages: list[Dict[str, str]],
+        messages: list[dict[str, str]],
         **kwargs: Any,
     ) -> LLMResponse:
         """Generate completion for chat messages.
@@ -247,7 +248,7 @@ class AnthropicProvider(LLMProvider):
         # Extract system prompt if present
         system_prompt = None
         chat_messages = []
-        
+
         for msg in messages:
             if msg.get("role") == "system":
                 system_prompt = msg.get("content", "")
@@ -258,13 +259,13 @@ class AnthropicProvider(LLMProvider):
                 })
 
         # Merge parameters
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
             "messages": chat_messages,
             "temperature": kwargs.get("temperature", self.temperature),
             "max_tokens": kwargs.get("max_tokens", self.max_tokens or 1024),
         }
-        
+
         if system_prompt:
             params["system"] = system_prompt
 
@@ -354,7 +355,7 @@ class AnthropicProvider(LLMProvider):
         return "not_found_error" in message or "model:" in message
 
     @staticmethod
-    def _fallback_model(model: str) -> Optional[str]:
+    def _fallback_model(model: str) -> str | None:
         model_lower = model.lower()
         # Claude 5 family fallbacks
         if model_lower.startswith(("claude-fable-5", "claude-mythos-5")):

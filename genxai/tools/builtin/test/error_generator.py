@@ -1,7 +1,8 @@
 """Error generator tool for testing error handling."""
 
 from typing import Any
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 
 class ErrorGeneratorTool(Tool):
@@ -51,25 +52,25 @@ class ErrorGeneratorTool(Tool):
 
         if error_type == "value_error":
             raise ValueError(f"ValueError: {message}")
-        
+
         elif error_type == "type_error":
             raise TypeError(f"TypeError: {message}")
-        
+
         elif error_type == "zero_division":
             # Intentionally divide by zero
             result = 1 / 0
             return result
-        
+
         elif error_type == "key_error":
             # Access non-existent key
             data = {"key1": "value1"}
             return data["non_existent_key"]
-        
+
         elif error_type == "index_error":
             # Access out of bounds index
             data = [1, 2, 3]
             return data[10]
-        
+
         elif error_type == "none":
             # No error, return success
             return {
@@ -77,6 +78,6 @@ class ErrorGeneratorTool(Tool):
                 "message": "No error generated",
                 "error_type": error_type,
             }
-        
+
         else:
             raise ValueError(f"Unknown error type: {error_type}")

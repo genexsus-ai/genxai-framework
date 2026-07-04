@@ -4,20 +4,19 @@ import json
 import logging
 import sys
 from contextvars import ContextVar
-from datetime import datetime, UTC
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime
+from typing import Any
 
-
-_request_id_ctx: ContextVar[Optional[str]] = ContextVar("genxai_request_id", default=None)
-_workflow_id_ctx: ContextVar[Optional[str]] = ContextVar("genxai_workflow_id", default=None)
-_agent_id_ctx: ContextVar[Optional[str]] = ContextVar("genxai_agent_id", default=None)
+_request_id_ctx: ContextVar[str | None] = ContextVar("genxai_request_id", default=None)
+_workflow_id_ctx: ContextVar[str | None] = ContextVar("genxai_workflow_id", default=None)
+_agent_id_ctx: ContextVar[str | None] = ContextVar("genxai_agent_id", default=None)
 
 
 def set_log_context(
     *,
-    request_id: Optional[str] = None,
-    workflow_id: Optional[str] = None,
-    agent_id: Optional[str] = None,
+    request_id: str | None = None,
+    workflow_id: str | None = None,
+    agent_id: str | None = None,
 ) -> None:
     """Set context values for structured logging.
 
@@ -41,7 +40,7 @@ def clear_log_context() -> None:
     _agent_id_ctx.set(None)
 
 
-def get_log_context() -> Dict[str, Optional[str]]:
+def get_log_context() -> dict[str, str | None]:
     """Get current logging context values."""
     return {
         "request_id": _request_id_ctx.get(),
@@ -89,7 +88,7 @@ class StructuredFormatter(logging.Formatter):
 def setup_logging(
     level: str = "INFO",
     structured: bool = False,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
     redact_sensitive: bool = True,
 ) -> None:
     """Set up logging configuration.
@@ -130,7 +129,7 @@ def setup_logging(
     logging.info(f"Logging configured: level={level}, structured={structured}")
 
 
-def get_logger(name: str, extra: Optional[Dict[str, Any]] = None) -> logging.Logger:
+def get_logger(name: str, extra: dict[str, Any] | None = None) -> logging.Logger:
     """Get a logger with optional extra context.
 
     Args:
@@ -183,7 +182,7 @@ class LogContext:
 
 class SensitiveDataFilter(logging.Filter):
     """Filter to redact sensitive data from logs."""
-    
+
     SENSITIVE_PATTERNS = [
         (r'api[_-]?key["\']?\s*[:=]\s*["\']?([^"\'\\s]+)', 'api_key=***REDACTED***'),
         (r'password["\']?\s*[:=]\s*["\']?([^"\'\\s]+)', 'password=***REDACTED***'),
@@ -191,7 +190,7 @@ class SensitiveDataFilter(logging.Filter):
         (r'secret["\']?\s*[:=]\s*["\']?([^"\'\\s]+)', 'secret=***REDACTED***'),
         (r'authorization["\']?\s*[:=]\s*["\']?([^"\'\\s]+)', 'authorization=***REDACTED***'),
     ]
-    
+
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter and redact sensitive data.
         
@@ -202,21 +201,21 @@ class SensitiveDataFilter(logging.Filter):
             True to keep the record
         """
         import re
-        
+
         message = record.getMessage()
-        
+
         for pattern, replacement in self.SENSITIVE_PATTERNS:
             message = re.sub(pattern, replacement, message, flags=re.IGNORECASE)
-        
+
         record.msg = message
         record.args = ()
-        
+
         return True
 
 
 class StructuredLogger:
     """Structured JSON logger with context."""
-    
+
     def __init__(self, name: str):
         """Initialize structured logger.
         
@@ -224,8 +223,8 @@ class StructuredLogger:
             name: Logger name
         """
         self.logger = logging.getLogger(name)
-        self.context: Dict[str, Any] = {}
-    
+        self.context: dict[str, Any] = {}
+
     def add_context(self, **kwargs: Any) -> None:
         """Add context to all log messages.
         
@@ -233,11 +232,11 @@ class StructuredLogger:
             **kwargs: Context key-value pairs
         """
         self.context.update(kwargs)
-    
+
     def clear_context(self) -> None:
         """Clear all context."""
         self.context.clear()
-    
+
     def _format_message(self, level: str, message: str, **kwargs: Any) -> str:
         """Format log message as JSON.
         
@@ -257,7 +256,7 @@ class StructuredLogger:
             **kwargs
         }
         return json.dumps(log_entry)
-    
+
     def debug(self, message: str, **kwargs: Any) -> None:
         """Log debug message.
         
@@ -266,7 +265,7 @@ class StructuredLogger:
             **kwargs: Additional fields
         """
         self.logger.debug(self._format_message("DEBUG", message, **kwargs))
-    
+
     def info(self, message: str, **kwargs: Any) -> None:
         """Log info message.
         
@@ -275,7 +274,7 @@ class StructuredLogger:
             **kwargs: Additional fields
         """
         self.logger.info(self._format_message("INFO", message, **kwargs))
-    
+
     def warning(self, message: str, **kwargs: Any) -> None:
         """Log warning message.
         
@@ -284,7 +283,7 @@ class StructuredLogger:
             **kwargs: Additional fields
         """
         self.logger.warning(self._format_message("WARNING", message, **kwargs))
-    
+
     def error(self, message: str, **kwargs: Any) -> None:
         """Log error message.
         
@@ -293,7 +292,7 @@ class StructuredLogger:
             **kwargs: Additional fields
         """
         self.logger.error(self._format_message("ERROR", message, **kwargs))
-    
+
     def critical(self, message: str, **kwargs: Any) -> None:
         """Log critical message.
         
@@ -302,7 +301,7 @@ class StructuredLogger:
             **kwargs: Additional fields
         """
         self.logger.critical(self._format_message("CRITICAL", message, **kwargs))
-    
+
     def exception(self, message: str, **kwargs: Any) -> None:
         """Log exception with traceback.
         

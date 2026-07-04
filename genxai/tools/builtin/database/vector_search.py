@@ -1,9 +1,9 @@
 """Vector search tool for semantic similarity search."""
 
-from typing import Any, Dict, List, Optional
 import logging
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -59,10 +59,10 @@ class VectorSearchTool(Tool):
     async def _execute(
         self,
         query: str,
-        vectors: Dict[str, List[float]],
+        vectors: dict[str, list[float]],
         top_k: int = 5,
         threshold: float = 0.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute vector search.
 
         Args:
@@ -74,7 +74,7 @@ class VectorSearchTool(Tool):
         Returns:
             Dictionary containing search results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "query": query,
             "success": False,
         }
@@ -82,13 +82,13 @@ class VectorSearchTool(Tool):
         try:
             # Simple in-memory vector search using cosine similarity
             # In production, this would connect to Pinecone, Weaviate, etc.
-            
+
             # For demo purposes, we'll use a simple similarity calculation
             # Assuming query is already a vector or we have a simple embedding
-            
+
             # Convert query to simple vector (character-based for demo)
             query_vector = self._text_to_simple_vector(query)
-            
+
             # Calculate similarities
             similarities = []
             for doc_id, doc_vector in vectors.items():
@@ -98,13 +98,13 @@ class VectorSearchTool(Tool):
                         "id": doc_id,
                         "similarity": similarity,
                     })
-            
+
             # Sort by similarity
             similarities.sort(key=lambda x: x["similarity"], reverse=True)
-            
+
             # Return top k
             top_results = similarities[:top_k]
-            
+
             result.update({
                 "results": top_results,
                 "count": len(top_results),
@@ -118,7 +118,7 @@ class VectorSearchTool(Tool):
         logger.info(f"Vector search completed: success={result['success']}")
         return result
 
-    def _text_to_simple_vector(self, text: str, dim: int = 128) -> List[float]:
+    def _text_to_simple_vector(self, text: str, dim: int = 128) -> list[float]:
         """Convert text to simple vector (demo implementation).
 
         Args:
@@ -134,7 +134,7 @@ class VectorSearchTool(Tool):
             vector[i] = ord(char) / 255.0
         return vector
 
-    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+    def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """Calculate cosine similarity between two vectors.
 
         Args:
@@ -148,16 +148,16 @@ class VectorSearchTool(Tool):
         min_len = min(len(vec1), len(vec2))
         vec1 = vec1[:min_len]
         vec2 = vec2[:min_len]
-        
+
         # Calculate dot product
         dot_product = sum(a * b for a, b in zip(vec1, vec2))
-        
+
         # Calculate magnitudes
         mag1 = sum(a * a for a in vec1) ** 0.5
         mag2 = sum(b * b for b in vec2) ** 0.5
-        
+
         # Avoid division by zero
         if mag1 == 0 or mag2 == 0:
             return 0.0
-        
+
         return dot_product / (mag1 * mag2)

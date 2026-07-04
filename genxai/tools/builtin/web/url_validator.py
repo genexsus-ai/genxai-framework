@@ -1,11 +1,11 @@
 """URL validator tool for checking URL validity and accessibility."""
 
-from typing import Any, Dict
 import logging
-from urllib.parse import urlparse
 import re
+from typing import Any
+from urllib.parse import urlparse
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class URLValidatorTool(Tool):
         url: str,
         check_accessibility: bool = True,
         timeout: int = 10,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute URL validation.
 
         Args:
@@ -67,7 +67,7 @@ class URLValidatorTool(Tool):
         Returns:
             Dictionary containing validation results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "url": url,
             "is_valid": False,
             "format_valid": False,
@@ -77,24 +77,24 @@ class URLValidatorTool(Tool):
         # Validate URL format
         try:
             parsed = urlparse(url)
-            
+
             # Check basic structure
             has_scheme = bool(parsed.scheme)
             has_netloc = bool(parsed.netloc)
-            
+
             # Validate scheme
             valid_schemes = ["http", "https", "ftp", "ftps"]
             scheme_valid = parsed.scheme.lower() in valid_schemes
-            
+
             # Validate domain format
             domain_pattern = re.compile(
                 r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)*"
                 r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$"
             )
             domain_valid = bool(domain_pattern.match(parsed.netloc.split(":")[0]))
-            
+
             format_valid = has_scheme and has_netloc and scheme_valid and domain_valid
-            
+
             result.update({
                 "format_valid": format_valid,
                 "scheme": parsed.scheme,
@@ -104,7 +104,7 @@ class URLValidatorTool(Tool):
                 "query": parsed.query,
                 "fragment": parsed.fragment,
             })
-            
+
         except Exception as e:
             result["format_error"] = str(e)
             logger.warning(f"URL format validation failed for {url}: {e}")
@@ -123,7 +123,7 @@ class URLValidatorTool(Tool):
             try:
                 async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
                     response = await client.head(url)
-                    
+
                     result.update({
                         "accessible": True,
                         "status_code": response.status_code,
@@ -132,7 +132,7 @@ class URLValidatorTool(Tool):
                         "content_type": response.headers.get("content-type"),
                         "server": response.headers.get("server"),
                     })
-                    
+
             except httpx.HTTPStatusError as e:
                 result.update({
                     "accessible": False,

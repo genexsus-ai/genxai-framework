@@ -1,9 +1,11 @@
 """Tool templates for quick tool creation."""
 
-from typing import Any, Dict, List
 import logging
+from typing import Any
+
 import httpx
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +29,8 @@ TEMPLATES = {
         "parameters": ["text", "operation"],
         "config_schema": {
             "operation": {
-                "type": "string", 
-                "required": True, 
+                "type": "string",
+                "required": True,
                 "enum": ["uppercase", "lowercase", "reverse", "word_count", "char_count"]
             }
         }
@@ -62,8 +64,8 @@ class APICallTool(Tool):
         name: str,
         description: str,
         category: ToolCategory,
-        tags: List[str],
-        config: Dict[str, Any]
+        tags: list[str],
+        config: dict[str, Any]
     ):
         """Initialize API call tool."""
         metadata = ToolMetadata(
@@ -135,7 +137,7 @@ class APICallTool(Tool):
 
         except httpx.HTTPError as e:
             logger.error(f"API call failed: {e}")
-            raise RuntimeError(f"API call failed: {e}")
+            raise RuntimeError(f"API call failed: {e}") from e
 
 
 class TextProcessorTool(Tool):
@@ -146,8 +148,8 @@ class TextProcessorTool(Tool):
         name: str,
         description: str,
         category: ToolCategory,
-        tags: List[str],
-        config: Dict[str, Any]
+        tags: list[str],
+        config: dict[str, Any]
     ):
         """Initialize text processor tool."""
         metadata = ToolMetadata(
@@ -209,8 +211,8 @@ class DataTransformerTool(Tool):
         name: str,
         description: str,
         category: ToolCategory,
-        tags: List[str],
-        config: Dict[str, Any]
+        tags: list[str],
+        config: dict[str, Any]
     ):
         """Initialize data transformer tool."""
         metadata = ToolMetadata(
@@ -249,16 +251,16 @@ class DataTransformerTool(Tool):
         self.default_to = config.get("to_format", "json")
 
     async def _execute(
-        self, 
-        data: str, 
-        from_format: str = None, 
+        self,
+        data: str,
+        from_format: str = None,
         to_format: str = None,
         **kwargs: Any
     ) -> Any:
         """Execute data transformation."""
-        import json
         import csv
         import io
+        import json
 
         from_fmt = from_format or self.default_from
         to_fmt = to_format or self.default_to
@@ -278,7 +280,7 @@ class DataTransformerTool(Tool):
         elif to_fmt == "csv":
             if not isinstance(parsed_data, list):
                 parsed_data = [parsed_data]
-            
+
             output = io.StringIO()
             if parsed_data:
                 writer = csv.DictWriter(output, fieldnames=parsed_data[0].keys())
@@ -303,8 +305,8 @@ class FileProcessorTool(Tool):
         name: str,
         description: str,
         category: ToolCategory,
-        tags: List[str],
-        config: Dict[str, Any]
+        tags: list[str],
+        config: dict[str, Any]
     ):
         """Initialize file processor tool."""
         metadata = ToolMetadata(
@@ -348,12 +350,12 @@ class FileProcessorTool(Tool):
         **kwargs: Any
     ) -> Any:
         """Execute file operation."""
+
         import aiofiles
-        import os
 
         try:
             if operation == "read":
-                async with aiofiles.open(file_path, 'r', encoding=self.encoding) as f:
+                async with aiofiles.open(file_path, encoding=self.encoding) as f:
                     data = await f.read()
                 return {"operation": "read", "file_path": file_path, "content": data}
 
@@ -376,16 +378,16 @@ class FileProcessorTool(Tool):
 
         except Exception as e:
             logger.error(f"File operation failed: {e}")
-            raise RuntimeError(f"File operation failed: {e}")
+            raise RuntimeError(f"File operation failed: {e}") from e
 
 
 def create_tool_from_template(
     name: str,
     description: str,
     category: ToolCategory,
-    tags: List[str],
+    tags: list[str],
     template: str,
-    config: Dict[str, Any]
+    config: dict[str, Any]
 ) -> Tool:
     """Create a tool from a template.
 
@@ -417,7 +419,7 @@ def create_tool_from_template(
     return tool_class(name, description, category, tags, config)
 
 
-def get_available_templates() -> List[Dict[str, Any]]:
+def get_available_templates() -> list[dict[str, Any]]:
     """Get list of available templates.
 
     Returns:

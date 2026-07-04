@@ -1,10 +1,10 @@
 """Data validator tool for validating data against schemas and rules."""
 
-from typing import Any, Dict, List, Optional
 import logging
 import re
+from typing import Any
 
-from genxai.tools.base import Tool, ToolMetadata, ToolParameter, ToolCategory
+from genxai.tools.base import Tool, ToolCategory, ToolMetadata, ToolParameter
 
 logger = logging.getLogger(__name__)
 
@@ -71,10 +71,10 @@ class DataValidatorTool(Tool):
         self,
         data: str,
         validation_type: str,
-        custom_pattern: Optional[str] = None,
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
-    ) -> Dict[str, Any]:
+        custom_pattern: str | None = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
+    ) -> dict[str, Any]:
         """Execute data validation.
 
         Args:
@@ -87,7 +87,7 @@ class DataValidatorTool(Tool):
         Returns:
             Dictionary containing validation results
         """
-        result: Dict[str, Any] = {
+        result: dict[str, Any] = {
             "validation_type": validation_type,
             "data": data,
             "valid": False,
@@ -96,22 +96,22 @@ class DataValidatorTool(Tool):
         try:
             if validation_type == "email":
                 result.update(self._validate_email(data))
-            
+
             elif validation_type == "url":
                 result.update(self._validate_url(data))
-            
+
             elif validation_type == "phone":
                 result.update(self._validate_phone(data))
-            
+
             elif validation_type == "ip":
                 result.update(self._validate_ip(data))
-            
+
             elif validation_type == "date":
                 result.update(self._validate_date(data))
-            
+
             elif validation_type == "number":
                 result.update(self._validate_number(data, min_value, max_value))
-            
+
             elif validation_type == "custom_regex":
                 if not custom_pattern:
                     raise ValueError("custom_pattern required for custom_regex validation")
@@ -128,7 +128,7 @@ class DataValidatorTool(Tool):
         )
         return result
 
-    def _validate_json(self, data: str) -> Dict[str, Any]:
+    def _validate_json(self, data: str) -> dict[str, Any]:
         """Validate JSON."""
         import json
 
@@ -146,7 +146,7 @@ class DataValidatorTool(Tool):
                 "error": f"Invalid JSON: {e}",
             }
 
-    def _validate_email(self, data: str) -> Dict[str, Any]:
+    def _validate_email(self, data: str) -> dict[str, Any]:
         """Validate email address."""
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         match = re.match(pattern, data)
@@ -155,7 +155,7 @@ class DataValidatorTool(Tool):
             "format": "email",
         }
 
-    def _validate_url(self, data: str) -> Dict[str, Any]:
+    def _validate_url(self, data: str) -> dict[str, Any]:
         """Validate URL."""
         pattern = r'^https?://[^\s/$.?#].[^\s]*$'
         match = re.match(pattern, data, re.IGNORECASE)
@@ -164,7 +164,7 @@ class DataValidatorTool(Tool):
             "format": "url",
         }
 
-    def _validate_phone(self, data: str) -> Dict[str, Any]:
+    def _validate_phone(self, data: str) -> dict[str, Any]:
         """Validate phone number."""
         # Remove common separators
         cleaned = re.sub(r'[\s\-\(\)\.]', '', data)
@@ -176,23 +176,23 @@ class DataValidatorTool(Tool):
             "cleaned": cleaned if valid else None,
         }
 
-    def _validate_ip(self, data: str) -> Dict[str, Any]:
+    def _validate_ip(self, data: str) -> dict[str, Any]:
         """Validate IP address (IPv4)."""
         pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
         if not re.match(pattern, data):
             return {"valid": False, "format": "ipv4"}
-        
+
         # Check each octet is 0-255
         octets = data.split('.')
         valid = all(0 <= int(octet) <= 255 for octet in octets)
-        
+
         return {
             "valid": valid,
             "format": "ipv4",
             "octets": octets if valid else None,
         }
 
-    def _validate_date(self, data: str) -> Dict[str, Any]:
+    def _validate_date(self, data: str) -> dict[str, Any]:
         """Validate date format."""
         # Common date patterns
         patterns = [
@@ -200,33 +200,33 @@ class DataValidatorTool(Tool):
             (r'^\d{2}/\d{2}/\d{4}$', 'MM/DD/YYYY'),
             (r'^\d{2}-\d{2}-\d{4}$', 'DD-MM-YYYY'),
         ]
-        
+
         for pattern, format_name in patterns:
             if re.match(pattern, data):
                 return {
                     "valid": True,
                     "format": format_name,
                 }
-        
+
         return {
             "valid": False,
             "format": "unknown",
         }
 
     def _validate_number(
-        self, data: str, min_value: Optional[float], max_value: Optional[float]
-    ) -> Dict[str, Any]:
+        self, data: str, min_value: float | None, max_value: float | None
+    ) -> dict[str, Any]:
         """Validate number and range."""
         try:
             number = float(data)
-            
+
             # Check range
             in_range = True
             if min_value is not None and number < min_value:
                 in_range = False
             if max_value is not None and number > max_value:
                 in_range = False
-            
+
             return {
                 "valid": in_range,
                 "format": "number",
@@ -241,7 +241,7 @@ class DataValidatorTool(Tool):
                 "error": "Not a valid number",
             }
 
-    def _validate_custom_regex(self, data: str, pattern: str) -> Dict[str, Any]:
+    def _validate_custom_regex(self, data: str, pattern: str) -> dict[str, Any]:
         """Validate against custom regex pattern."""
         try:
             match = re.match(pattern, data)

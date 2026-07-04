@@ -1,9 +1,10 @@
 """Base agent class and configuration."""
 
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict
-from enum import Enum
 import logging
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -26,21 +27,21 @@ class AgentConfig(BaseModel):
     role: str = Field(..., description="Role of the agent")
     goal: str = Field(..., description="Goal the agent should achieve")
     backstory: str = Field(default="", description="Background story for the agent")
-    
+
     # LLM configuration
     llm_provider: str = Field(default="openai", description="LLM provider to use")
     llm_model: str = Field(default="gpt-4", description="LLM model name")
     llm_temperature: float = Field(default=0.7, ge=0.0, le=2.0)
-    llm_max_tokens: Optional[int] = Field(default=None, description="Max tokens for response")
-    
+    llm_max_tokens: int | None = Field(default=None, description="Max tokens for response")
+
     # Tools
-    tools: List[str] = Field(default_factory=list, description="List of tool names")
+    tools: list[str] = Field(default_factory=list, description="List of tool names")
     allow_tool_creation: bool = Field(default=False, description="Allow dynamic tool creation")
-    
+
     # Memory
     enable_memory: bool = Field(default=True, description="Enable memory system")
     memory_type: str = Field(default="short_term", description="Type of memory to use")
-    
+
     # Behavior
     agent_type: AgentType = Field(default=AgentType.REACTIVE)
     max_iterations: int = Field(default=10, description="Max iterations for agent execution")
@@ -51,13 +52,13 @@ class AgentConfig(BaseModel):
         default=False,
         description="Enable LLM-based ranking utility for downstream selection",
     )
-    
+
     # Guardrails
-    max_execution_time: Optional[float] = Field(default=None, description="Max execution time in seconds")
-    allowed_domains: List[str] = Field(default_factory=list, description="Allowed domains for web access")
-    
+    max_execution_time: float | None = Field(default=None, description="Max execution time in seconds")
+    allowed_domains: list[str] = Field(default_factory=list, description="Allowed domains for web access")
+
     # Metadata
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 
@@ -68,11 +69,11 @@ class Agent(BaseModel):
 
     id: str = Field(..., description="Unique agent identifier")
     config: AgentConfig
-    
+
     # Runtime state
     _execution_count: int = 0
     _total_tokens: int = 0
-    _last_result: Optional[Any] = None
+    _last_result: Any | None = None
 
 
     def __init__(self, id: str, config: AgentConfig, **kwargs: Any) -> None:
@@ -86,7 +87,7 @@ class Agent(BaseModel):
         super().__init__(id=id, config=config, **kwargs)
         logger.info(f"Agent initialized: {self.id} (role: {self.config.role})")
 
-    async def execute(self, task: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def execute(self, task: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute a task.
 
         This is a placeholder that will be implemented by AgentRuntime.
@@ -99,9 +100,9 @@ class Agent(BaseModel):
             Execution result
         """
         self._execution_count += 1
-        
+
         logger.info(f"Agent {self.id} executing task: {task}")
-        
+
         # Placeholder implementation
         result = {
             "agent_id": self.id,
@@ -110,11 +111,11 @@ class Agent(BaseModel):
             "output": f"Agent {self.config.role} processed: {task}",
             "execution_count": self._execution_count,
         }
-        
+
         self._last_result = result
         return result
 
-    async def reflect(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    async def reflect(self, result: dict[str, Any]) -> dict[str, Any]:
         """Reflect on execution result.
 
         Args:
@@ -124,14 +125,14 @@ class Agent(BaseModel):
             Reflection insights
         """
         logger.debug(f"Agent {self.id} reflecting on result")
-        
+
         return {
             "agent_id": self.id,
             "reflection": "Reflection placeholder",
             "improvements": [],
         }
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get agent statistics.
 
         Returns:
@@ -152,7 +153,7 @@ class Agent(BaseModel):
         self._last_result = None
         logger.info(f"Agent {self.id} statistics reset")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert agent to dictionary.
 
         Returns:
@@ -195,11 +196,11 @@ class AgentFactory:
             goal=goal,
             **kwargs,
         )
-        
+
         return Agent(id=id, config=config)
 
     @staticmethod
-    def create_from_dict(data: Dict[str, Any]) -> Agent:
+    def create_from_dict(data: dict[str, Any]) -> Agent:
         """Create agent from dictionary.
 
         Args:

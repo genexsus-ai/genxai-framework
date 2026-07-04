@@ -1,6 +1,5 @@
 """Agent registry for managing agent instances."""
 
-from typing import Dict, Optional, List
 import logging
 
 from genxai.core.agent.base import Agent
@@ -11,7 +10,7 @@ logger = logging.getLogger(__name__)
 class AgentRegistry:
     """Global registry for managing agent instances."""
 
-    _agents: Dict[str, Agent] = {}
+    _agents: dict[str, Agent] = {}
 
     @classmethod
     def register(cls, agent: Agent) -> None:
@@ -25,12 +24,12 @@ class AgentRegistry:
         """
         if agent.id in cls._agents:
             logger.warning(f"Agent '{agent.id}' already registered, overwriting")
-        
+
         cls._agents[agent.id] = agent
         logger.info(f"Registered agent: {agent.id} (role: {agent.config.role})")
 
     @classmethod
-    def get(cls, agent_id: str) -> Optional[Agent]:
+    def get(cls, agent_id: str) -> Agent | None:
         """Get an agent by ID.
 
         Args:
@@ -61,7 +60,7 @@ class AgentRegistry:
         return False
 
     @classmethod
-    def list_all(cls) -> List[str]:
+    def list_all(cls) -> list[str]:
         """List all registered agent IDs.
 
         Returns:
@@ -70,7 +69,7 @@ class AgentRegistry:
         return list(cls._agents.keys())
 
     @classmethod
-    def get_all(cls) -> Dict[str, Agent]:
+    def get_all(cls) -> dict[str, Agent]:
         """Get all registered agents.
 
         Returns:
@@ -86,7 +85,7 @@ class AgentRegistry:
         logger.info(f"Cleared {count} agents from registry")
 
     @classmethod
-    def get_stats(cls) -> Dict[str, int]:
+    def get_stats(cls) -> dict[str, int]:
         """Get registry statistics.
 
         Returns:

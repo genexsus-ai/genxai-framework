@@ -1,7 +1,8 @@
 """State schema definition and validation."""
 
-from typing import Any, Dict, Optional, Type
-from pydantic import BaseModel, Field, create_model, ConfigDict
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
 
 class StateSchema(BaseModel):
@@ -9,12 +10,12 @@ class StateSchema(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    fields: Dict[str, Type[Any]] = Field(default_factory=dict)
+    fields: dict[str, type[Any]] = Field(default_factory=dict)
     required_fields: set[str] = Field(default_factory=set)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
-    def validate_state(self, state: Dict[str, Any]) -> bool:
+    def validate_state(self, state: dict[str, Any]) -> bool:
         """Validate state against schema.
 
         Args:
@@ -43,7 +44,7 @@ class StateSchema(BaseModel):
 
         return True
 
-    def create_pydantic_model(self, model_name: str = "DynamicState") -> Type[BaseModel]:
+    def create_pydantic_model(self, model_name: str = "DynamicState") -> type[BaseModel]:
         """Create a Pydantic model from the schema.
 
         Args:
@@ -62,7 +63,7 @@ class StateSchema(BaseModel):
         return create_model(model_name, **field_definitions)
 
     def add_field(
-        self, name: str, field_type: Type[Any], required: bool = False
+        self, name: str, field_type: type[Any], required: bool = False
     ) -> None:
         """Add a field to the schema.
 
@@ -86,7 +87,7 @@ class StateSchema(BaseModel):
         if name in self.required_fields:
             self.required_fields.remove(name)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert schema to dictionary.
 
         Returns:
@@ -99,7 +100,7 @@ class StateSchema(BaseModel):
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "StateSchema":
+    def from_dict(cls, data: dict[str, Any]) -> "StateSchema":
         """Create schema from dictionary.
 
         Args:

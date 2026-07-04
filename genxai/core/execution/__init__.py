@@ -1,14 +1,14 @@
 """Distributed execution primitives for GenXAI."""
 
+from genxai.core.execution.metadata import ExecutionRecord, ExecutionStore
 from genxai.core.execution.queue import (
+    InMemoryQueueBackend,
     QueueBackend,
     QueueTask,
-    InMemoryQueueBackend,
-    WorkerQueueEngine,
     RedisQueueBackend,
     RQQueueBackend,
+    WorkerQueueEngine,
 )
-from genxai.core.execution.metadata import ExecutionRecord, ExecutionStore
 
 __all__ = [
     "QueueBackend",

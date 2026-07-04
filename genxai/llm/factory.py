@@ -1,12 +1,13 @@
 """LLM Provider Factory for creating and managing LLM providers."""
 
-from typing import Optional, Dict, Any, Iterable, List
-import os
 import logging
+import os
+from collections.abc import Iterable
+from typing import Any
 
 from genxai.llm.base import LLMProvider
-from genxai.llm.routing import RoutedLLMProvider
 from genxai.llm.providers.openai import OpenAIProvider
+from genxai.llm.routing import RoutedLLMProvider
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 class LLMProviderFactory:
     """Factory for creating LLM provider instances."""
 
-    _fallback_chain: List[str] = [
+    _fallback_chain: list[str] = [
         "gpt-4",
         "gpt-4-turbo",
         "gpt-3.5-turbo",
@@ -22,7 +23,7 @@ class LLMProviderFactory:
         "claude-haiku-4-5",
     ]
 
-    _providers: Dict[str, type[LLMProvider]] = {
+    _providers: dict[str, type[LLMProvider]] = {
         # OpenAI
         "openai": OpenAIProvider,
         "gpt-4": OpenAIProvider,
@@ -30,9 +31,9 @@ class LLMProviderFactory:
         "gpt-4-turbo": OpenAIProvider,
         "gpt-4o": OpenAIProvider,
     }
-    
+
     # Lazy-loaded providers (imported on demand)
-    _provider_modules: Dict[str, str] = {
+    _provider_modules: dict[str, str] = {
         "anthropic": "genxai.llm.providers.anthropic.AnthropicProvider",
         "claude-fable-5": "genxai.llm.providers.anthropic.AnthropicProvider",
         "claude-opus-4-8": "genxai.llm.providers.anthropic.AnthropicProvider",
@@ -76,10 +77,10 @@ class LLMProviderFactory:
     def create_provider(
         cls,
         model: str,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        fallback_models: Optional[list[str]] = None,
+        max_tokens: int | None = None,
+        fallback_models: list[str] | None = None,
         **kwargs: Any,
     ) -> LLMProvider:
         """Create an LLM provider instance.
@@ -165,7 +166,7 @@ class LLMProviderFactory:
     def create_routed_provider(
         cls,
         primary_model: str,
-        fallback_models: Optional[List[str]] = None,
+        fallback_models: list[str] | None = None,
         **kwargs: Any,
     ) -> LLMProvider:
         """Create a routed provider with a fallback chain.
@@ -194,12 +195,12 @@ class LLMProviderFactory:
     def _create_fallback_providers(
         cls,
         fallback_models: Iterable[str],
-        api_key: Optional[str],
+        api_key: str | None,
         temperature: float,
-        max_tokens: Optional[int],
+        max_tokens: int | None,
         **kwargs: Any,
-    ) -> List[LLMProvider]:
-        providers: List[LLMProvider] = []
+    ) -> list[LLMProvider]:
+        providers: list[LLMProvider] = []
         for fallback_model in fallback_models:
             try:
                 provider_class = cls._get_provider_class(fallback_model)
@@ -220,7 +221,7 @@ class LLMProviderFactory:
         return providers
 
     @classmethod
-    def _load_provider_class(cls, module_path: str) -> Optional[type[LLMProvider]]:
+    def _load_provider_class(cls, module_path: str) -> type[LLMProvider] | None:
         """Dynamically load a provider class.
 
         Args:
@@ -238,7 +239,7 @@ class LLMProviderFactory:
             return None
 
     @classmethod
-    def _get_provider_class(cls, model: str) -> Optional[type[LLMProvider]]:
+    def _get_provider_class(cls, model: str) -> type[LLMProvider] | None:
         """Get provider class for a model.
 
         Args:
@@ -289,7 +290,7 @@ class LLMProviderFactory:
         return None
 
     @classmethod
-    def _get_api_key_for_provider(cls, provider_class: type[LLMProvider]) -> Optional[str]:
+    def _get_api_key_for_provider(cls, provider_class: type[LLMProvider]) -> str | None:
         """Get API key from environment for a provider.
 
         Args:
@@ -299,7 +300,7 @@ class LLMProviderFactory:
             API key or None
         """
         provider_name = provider_class.__name__
-        
+
         if provider_name == "OpenAIProvider":
             return os.getenv("OPENAI_API_KEY")
         elif provider_name == "AnthropicProvider":
@@ -310,7 +311,7 @@ class LLMProviderFactory:
             return os.getenv("COHERE_API_KEY")
         elif provider_name == "OllamaProvider":
             return os.getenv("OLLAMA_API_KEY")
-        
+
         return None
 
     @classmethod

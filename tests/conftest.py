@@ -76,8 +76,16 @@ def reset_policy_engine():
     policy_engine._policy_engine = None
 
 
+_ENTERPRISE_IMPORT_RE = None
+
+
 def pytest_ignore_collect(collection_path, config):
-    """Skip enterprise-only tests when enterprise package is unavailable."""
+    """Skip enterprise-only tests when the enterprise package is unavailable.
+
+    Only files that actually *import* from the enterprise namespace are
+    skipped — matching on a bare mention would silently hide broken tests
+    (this previously masked an unimportable genxai.triggers package).
+    """
     if HAS_ENTERPRISE:
         return False
 
@@ -89,7 +97,14 @@ def pytest_ignore_collect(collection_path, config):
     except Exception:
         return False
 
-    return any(
-        marker in content
-        for marker in ("genxai_enterprise", "enterprise.genxai", "enterprise.cli")
-    )
+    global _ENTERPRISE_IMPORT_RE
+    if _ENTERPRISE_IMPORT_RE is None:
+        import re
+
+        _ENTERPRISE_IMPORT_RE = re.compile(
+            r"^\s*(?:from\s+(?:enterprise|genxai_enterprise)[.\s]"
+            r"|import\s+(?:enterprise|genxai_enterprise)\b)",
+            re.MULTILINE,
+        )
+
+    return bool(_ENTERPRISE_IMPORT_RE.search(content))

@@ -1,20 +1,11 @@
-# Licensing and Edition Boundaries
+# Licensing
 
-This repository contains the **MIT‑licensed GenXAI core framework**.
+GenXAI is **fully open source** under the **MIT license**. There is no
+commercial edition — everything in this repository is MIT.
 
-## OSS vs Enterprise Summary
+## Scope
 
-- **OSS core (MIT)**: everything in this repository — `genxai/` (including
-  connectors, triggers, security, and observability), `applications/`,
-  `examples/`, `docs/`, `tests/`, `scripts/`
-  - Includes the OSS CLI at `genxai/cli`
-- **Enterprise (commercial)**: the Studio UI and Studio-only assets, planned
-  for a separate commercial repository. No enterprise code is included in
-  this repository.
-
-## Open‑Source (MIT) Scope
-
-The following paths are part of the OSS core and are licensed under **MIT**:
+All paths in this repository are licensed under MIT:
 
 - `genxai/` (core graph/agent/runtime, tools, flows, llm, connectors,
   triggers, security, observability, CLI)
@@ -25,19 +16,12 @@ The following paths are part of the OSS core and are licensed under **MIT**:
 - `scripts/`
 - Project root metadata (e.g., `pyproject.toml`, `README.md`, `LICENSE`)
 
-## Enterprise (Commercial) Scope
-
-The following are **planned** for a separate commercial repository and will
-**not** be covered by the MIT license:
-
-- Studio UI + backend (visual workflow builder)
-- Enterprise-only CLI command groups
-- Any future enterprise modules (e.g., SSO, compliance packs, proprietary
-  connectors)
-
-None of these exist in this repository today.
+Planned features (such as the Studio UI visual workflow builder) will also be
+released under MIT when they land.
 
 ## Notes
 
-- This file is informational and does not replace the official license texts.
-- For the enterprise edition, use a commercial license (EULA) in the enterprise repo.
+- This file is informational and does not replace the official license text —
+  see [LICENSE](./LICENSE).
+- Third-party dependencies retain their own licenses; see each package's
+  distribution for details.

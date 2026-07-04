@@ -12,14 +12,14 @@ GenXAI is an advanced agentic AI framework designed to surpass existing solution
 
 - **Graph-Based Orchestration** (like LangGraph) for complex agent workflows
 - **Advanced Memory Systems** with multiple memory types (short-term, long-term, episodic, semantic, procedural)
-- **No-Code Studio (Enterprise)** for visual workflow building
+- **No-Code Studio (planned)** for visual workflow building
 - **50+ Built-in Tools** for web, database, file, computation, and communication tasks
-- **Enterprise-Grade Features (OSS)** including observability, security, connectors, and scalability
+- **Production-Grade Features** including observability, security, connectors, and scalability
 
-> **Open Source vs Enterprise**: This repository contains the **MIT-licensed core framework** plus
-> enterprise-grade runtime features (connectors, triggers, observability, security, CLI extensions).
-> The **Studio UI** is planned as an enterprise-only product in a separate commercial repository;
-> its code is not included in this repository.
+> **Fully open source**: everything in this repository — the core framework and all
+> production-grade runtime features (connectors, triggers, observability, security,
+> CLI extensions) — is **MIT-licensed**. There is no commercial edition. The **Studio UI**
+> (visual workflow builder) is planned but not yet built.
 
 ## 🧩 Applications
 
@@ -28,19 +28,19 @@ GenXAI is an advanced agentic AI framework designed to surpass existing solution
 - **[AI Strategy Agent (P2P Brainstorming)](./applications/ai_strategy_agent/backend/README.md)**: peer-to-peer brainstorming workflow with layered architecture and local observability hooks.
 - **[Travel Planning Agent](./applications/travel_planning_agent/README.md)**: GenXAI-powered travel planning app with FastAPI backend, React frontend, and streaming itinerary updates.
 
-## ✅ OSS vs Enterprise
+## ✅ What's Included (All MIT)
 
-**Open-source (MIT) core + enterprise-grade runtime** — available in OSS:
+Everything in this repository is open source under the MIT license:
 - `genxai/` (agents, graph engine, flows, tools, LLM providers)
 - `genxai/connectors` (Kafka, SQS, Postgres CDC, webhooks, Slack, GitHub, Jira, Notion, Google Workspace)
 - `genxai/triggers` (webhook, schedule, queue triggers)
 - `genxai/observability` (logging, metrics, tracing)
 - `genxai/security` (RBAC, policy engine, audit, rate limits)
 - CLI commands: `tool`, `workflow`, `connector`, `metrics`, `approval`, `audit`
-- `examples/`, `docs/`, `tests/`, `scripts/`
+- `applications/`, `examples/`, `docs/`, `tests/`, `scripts/`
 
-**Enterprise (commercial) features** — planned for a separate commercial repository:
-- Studio UI/backend + Studio-only assets (not included in this repository)
+**Planned (not yet built):**
+- Studio UI/backend (visual workflow builder) — will also be open source
 
 ---
 
@@ -79,14 +79,14 @@ print(stats["backend_plugins"].keys())  # e.g. redis/sqlite/neo4j (when configur
 ```
 
 ### 🎨 No-Code Studio
-The Studio UI and its backend are **planned** as an enterprise-only product in a separate
-commercial repository. They are **not part of the MIT-licensed core** and are not included
-in this repository.
+The Studio UI (visual workflow builder) is a **planned feature**. It has not been built
+yet and is not included in this repository. When it lands, it will be open source like
+the rest of the project.
 
 ### ⚡ Trigger SDK (OSS)
 Trigger SDKs are part of the OSS runtime and live under `genxai/triggers`.
 
-### 🏢 Enterprise-Ready (OSS Runtime)
+### 🏢 Production-Ready Runtime
 - **Observability**: Logging, metrics, tracing
 - **Security**: RBAC, encryption, guardrails
 - **Scalability**: Horizontal scaling, distributed execution
@@ -131,7 +131,7 @@ _Figure: PNG preview for environments that don’t render SVG._
 1. **Superior to Existing Frameworks**: More features than CrewAI, AutoGen, BeeAI
 2. **Graph-First**: Complex orchestration like LangGraph, but better
 3. **No-Code Friendly**: Visual interface for non-technical users
-4. **Enterprise-Grade**: Production-ready with observability and security
+4. **Production-Grade**: Ready for real deployments with observability and security
 5. **Extensible**: Plugin architecture for easy customization
 
 ---
@@ -367,13 +367,13 @@ pip install "genxai-framework[llm,tools,api]"
 pip install "genxai-framework[all]"
 ```
 
-> The Studio UI is planned for a separate commercial repository and is not included here.
+> The Studio UI is a planned feature and is not yet available.
 
 ---
 
-## 🧩 OSS Enterprise Features (Studio Excluded)
+## 🧩 Production-Grade Features
 
-The following enterprise-grade capabilities are **included in OSS**:
+The following production-grade capabilities are included:
 
 - **Connectors**: Kafka, SQS, Postgres CDC, Webhooks, Slack, GitHub, Notion, Jira, Google Workspace
 - **Triggers**: Webhook, schedule, and queue triggers
@@ -426,7 +426,7 @@ The following enterprise-grade capabilities are **included in OSS**:
 ✅ Advanced memory system  
 ✅ No-code interface  
 ✅ Learning agents  
-✅ Enterprise features
+✅ Production features
 
 ### vs AutoGen
 ✅ Simpler configuration  
@@ -439,7 +439,7 @@ The following enterprise-grade capabilities are **included in OSS**:
 ✅ More sophisticated agents  
 ✅ Complex orchestration  
 ✅ Advanced memory  
-✅ Enterprise scalability  
+✅ Production scalability  
 ✅ Comprehensive tooling
 
 ### vs LangGraph

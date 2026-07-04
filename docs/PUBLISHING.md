@@ -50,12 +50,11 @@ password = pypi-YOUR_TESTPYPI_API_TOKEN_HERE
 
 ## Publishing Process
 
-## OSS vs Enterprise Packaging
+## Packaging Scope
 
-PyPI releases are **OSS-only**. The packaging config in `pyproject.toml` includes only
-`genxai*` and explicitly excludes `tests*`, `docs*`, `examples*`, `studio*`, and anything
-under `enterprise/`. That means a `pip install genxai` publishes/installs the open-source
-core only.
+The packaging config in `pyproject.toml` includes only `genxai*` and explicitly
+excludes `tests*`, `docs*`, and `examples*`. That means a `pip install genxai`
+installs the framework package only.
 
 To verify locally:
 

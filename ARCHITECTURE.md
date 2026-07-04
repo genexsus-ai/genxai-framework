@@ -26,7 +26,7 @@ GenXAI is an advanced agentic AI framework designed to surpass existing solution
 - **Superior Capabilities**: More features than existing frameworks
 - **Graph-Based Orchestration**: Complex agent relationships and workflows
 - **No-Code Support**: Visual studio for non-technical users
-- **Enterprise-Ready**: Scalable, observable, and secure
+- **Production-Ready**: Scalable, observable, and secure
 - **Extensible**: Plugin architecture for easy customization
 
 ---
@@ -391,7 +391,7 @@ string parsing.
 - ✅ Advanced memory system
 - ✅ No-code interface
 - ✅ Learning agents
-- ✅ Enterprise features
+- ✅ Production features
 
 ### vs AutoGen
 - ✅ Simpler configuration
@@ -404,7 +404,7 @@ string parsing.
 - ✅ More sophisticated agents
 - ✅ Complex orchestration
 - ✅ Advanced memory
-- ✅ Enterprise scalability
+- ✅ Production scalability
 - ✅ Comprehensive tooling
 
 ### vs LangGraph

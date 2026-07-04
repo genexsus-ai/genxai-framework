@@ -1,7 +1,7 @@
 # Audit Logging & Approvals
 
 GenXAI records audit events and supports simple approval workflows for sensitive actions.
-This capability is part of the OSS runtime (Studio remains enterprise-only).
+This capability is part of the MIT-licensed runtime.
 
 ## Audit Log
 

@@ -1,9 +1,9 @@
 # GenXAI CLI
 
-The GenXAI CLI is available in the **OSS core** and includes enterprise-grade
+The GenXAI CLI ships with the framework and includes production-grade
 runtime commands (connectors, metrics, approvals, audit) out of the box.
 
-## OSS vs Enterprise CLI model
+## CLI command groups
 
 - **OSS** provides the base executable `genxai` and the core command groups:
   - `genxai tool ...`
@@ -28,9 +28,9 @@ pip install "genxai[llm,tools,api]"
 pip install "genxai[all]"
 ```
 
-### Studio-only CLI note
+### Studio note
 
-The Studio UI remains enterprise-only. The OSS CLI focuses on runtime
+The Studio UI is a planned feature. The CLI focuses on runtime
 operations and does not require Studio.
 
 ## Tool Management Commands

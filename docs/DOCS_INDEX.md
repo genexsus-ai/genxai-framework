@@ -45,7 +45,7 @@ Complete guide to GenXAI framework documentation.
 | Document | Description |
 |----------|-------------|
 | [CLI_USAGE (OSS Runtime)](./CLI_USAGE.md) | OSS CLI (`genxai tool/workflow/connector/metrics/approval/audit`) |
-| [MCP_SETUP (Enterprise)](./MCP_SETUP.md) | Model Context Protocol server setup (enterprise-only) |
+| [MCP_SETUP](./MCP_SETUP.md) | Model Context Protocol server setup |
 
 ---
 
@@ -80,19 +80,17 @@ Complete guide to GenXAI framework documentation.
 
 ---
 
-## 🏢 Enterprise & Roadmap
+## 🏢 Roadmap
 
 | Document | Description |
 |----------|-------------|
 | [COMPETITIVE_MATRIX](./COMPETITIVE_MATRIX.md) | Comparison vs CrewAI, AutoGen, BeeAI, LangGraph |
-| [ENTERPRISE_ROADMAP_BACKLOG](../ENTERPRISE_ROADMAP_BACKLOG.md) | Enterprise feature backlog |
 
 ---
 
-## 🧩 OSS Enterprise Features (Studio Excluded)
+## 🧩 Production-Grade Features
 
-The OSS runtime includes enterprise-grade capabilities (Studio UI remains
-enterprise-only):
+The runtime includes production-grade capabilities:
 
 - **Connectors**: Kafka, SQS, Postgres CDC, Webhooks, Slack, GitHub, Notion, Jira, Google Workspace
 - **Triggers**: Webhook, schedule, queue triggers
@@ -127,8 +125,7 @@ enterprise-only):
 - [examples/patterns/](../examples/patterns/) - Common workflow patterns
 
 ### Studio (Visual Workflow Builder)
-- The Studio UI is planned as an enterprise-only product in a separate
-  commercial repository; it is not included in this repository.
+- The Studio UI is a planned feature and is not yet built.
 
 ---
 
@@ -146,7 +143,7 @@ enterprise-only):
 2. [API_REFERENCE](./API_REFERENCE.md) (OSS Triggers & Connectors section)
 3. [LLM_INTEGRATION](./LLM_INTEGRATION.md)
 
-**Enterprise Deployment**
+**Production Deployment**
 1. [WORKER_QUEUE_ENGINE (OSS Runtime)](./WORKER_QUEUE_ENGINE.md)
 2. [GOVERNANCE_POLICY (OSS Runtime)](./GOVERNANCE_POLICY.md)
 3. [AUDIT_LOGGING (OSS Runtime)](./AUDIT_LOGGING.md)
@@ -154,7 +151,7 @@ enterprise-only):
 
 **CLI & Automation**
 1. [CLI_USAGE (OSS Runtime)](./CLI_USAGE.md)
-2. [MCP_SETUP (Enterprise)](./MCP_SETUP.md)
+2. [MCP_SETUP](./MCP_SETUP.md)
 
 **Performance & Monitoring**
 1. [BENCHMARKING](./BENCHMARKING.md)

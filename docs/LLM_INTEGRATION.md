@@ -788,7 +788,7 @@ pip install cohere
 ### Coming Soon
 
 - [ ] **LM Studio** - Local model integration
-- [ ] **Azure OpenAI** - Enterprise OpenAI deployment
+- [ ] **Azure OpenAI** - Azure-hosted OpenAI deployment
 - [ ] **AWS Bedrock** - Claude, Llama via AWS
 - [ ] **Response Caching** - Cache LLM responses for repeated queries
 - [ ] **Streaming UI** - Real-time streaming in Studio

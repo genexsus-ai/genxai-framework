@@ -74,7 +74,7 @@ Use this outline to create a slide deck quickly.
 
 ## Slide 10 — Which One Is Better?
 - **CrewAI**: simpler task-first API, sequential workflows
-- **GenXAI**: graph orchestration, advanced memory/tools, enterprise runtime
+- **GenXAI**: graph orchestration, advanced memory/tools, production runtime
 
 ---
 

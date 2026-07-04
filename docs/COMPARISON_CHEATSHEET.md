@@ -93,7 +93,7 @@ graph.add_node(AgentNode(id="research_task", agent_id=researcher.id))
 
 - **CrewAI**: best for simpler task-first APIs and mostly sequential workflows.
 - **GenXAI**: best for graph orchestration, memory, tools/registry, triggers, and
-  enterprise-grade runtime capabilities.
+  production-grade runtime capabilities.
 
 ---
 

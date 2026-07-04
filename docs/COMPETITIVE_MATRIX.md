@@ -15,11 +15,11 @@ multi‑provider LLM support, and **workflow triggers/connectors**. It competes 
 **CrewAI**, **AutoGen**, **LangChain**, and **LlamaIndex** on developer‑centric orchestration,
 but still trails **n8n** on breadth of plug‑and‑play integrations and GUI‑first automation UX.
 Compared to **BeeAI** and **AutoGPT**, GenXAI offers stronger graph orchestration,
-enterprise‑grade observability/security, and broader built‑in runtime controls.
+production‑grade observability/security, and broader built‑in runtime controls.
 
 Key gaps to reach parity across the board:
 
-- Broader **connector ecosystem** (SaaS + enterprise systems)
+- Broader **connector ecosystem** (SaaS + business systems)
 - Rich **plugin marketplace** and community template packs
 - Expanded **integration test matrix** for memory/vector store backends
 
@@ -64,7 +64,7 @@ Scale: **1 = missing**, **3 = partial**, **5 = best‑in‑class**
 | Tooling & schemas | 4 | 4 | 4 | 3 | 5 | 4 | 3 | 5 |
 | Memory & persistence | 4 | 2 | 4 | 2 | 3 | 4 | 2 | 3 |
 | Observability & governance | 4 | 2 | 3 | 2 | 3 | 3 | 2 | 5 |
-| Enterprise readiness | 4 | 2 | 3 | 2 | 4 | 3 | 2 | 5 |
+| Production readiness | 4 | 2 | 3 | 2 | 4 | 3 | 2 | 5 |
 | Ecosystem/connectors | 3 | 4 | 4 | 3 | 5 | 4 | 2 | 5 |
 | UX/automation experience | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 5 |
 | Extensibility/plug‑ins | 3 | 4 | 4 | 3 | 5 | 4 | 2 | 5 |
@@ -81,7 +81,7 @@ Weights (sum = 100):
 | Tooling & schemas | 10 |
 | Memory & persistence | 10 |
 | Observability & governance | 10 |
-| Enterprise readiness | 12 |
+| Production readiness | 12 |
 | Ecosystem/connectors | 12 |
 | UX/automation experience | 5 |
 | Extensibility/plug‑ins | 4 |
@@ -108,9 +108,9 @@ Weighted score formula: **(score / 5) × weight**
 
 ### Alternative Weighting Scenarios
 
-#### Scenario A — Enterprise‑First
+#### Scenario A — Production‑First
 
-Weights emphasize enterprise readiness, observability, and governance.
+Weights emphasize production readiness, observability, and governance.
 
 | Dimension | Weight |
 |---|---:|
@@ -120,12 +120,12 @@ Weights emphasize enterprise readiness, observability, and governance.
 | Tooling & schemas | 8 |
 | Memory & persistence | 10 |
 | Observability & governance | 15 |
-| Enterprise readiness | 20 |
+| Production readiness | 20 |
 | Ecosystem/connectors | 12 |
 | UX/automation experience | 4 |
 | Extensibility/plug‑ins | 3 |
 
-Weighted totals (Enterprise‑First):
+Weighted totals (Production‑First):
 
 | Framework | Weighted Total (0–100) |
 |---|---:|
@@ -150,7 +150,7 @@ Weights emphasize agent patterns, graph flexibility, provider breadth, and exten
 | Tooling & schemas | 10 |
 | Memory & persistence | 10 |
 | Observability & governance | 8 |
-| Enterprise readiness | 7 |
+| Production readiness | 7 |
 | Ecosystem/connectors | 8 |
 | UX/automation experience | 6 |
 | Extensibility/plug‑ins | 6 |
@@ -178,7 +178,7 @@ Weighted totals (Developer‑First):
 | Tooling & schemas | 🟩4 | 🟩4 | 🟩4 | 🟨3 | 🟩5 | 🟩4 | 🟨3 | 🟩5 |
 | Memory & persistence | 🟩4 | 🟥2 | 🟩4 | 🟥2 | 🟨3 | 🟩4 | 🟥2 | 🟨3 |
 | Observability & governance | 🟩4 | 🟥2 | 🟨3 | 🟥2 | 🟨3 | 🟨3 | 🟥2 | 🟩5 |
-| Enterprise readiness | 🟩4 | 🟥2 | 🟨3 | 🟥2 | 🟩4 | 🟨3 | 🟥2 | 🟩5 |
+| Production readiness | 🟩4 | 🟥2 | 🟨3 | 🟥2 | 🟩4 | 🟨3 | 🟥2 | 🟩5 |
 | Ecosystem/connectors | 🟨3 | 🟩4 | 🟩4 | 🟨3 | 🟩5 | 🟩4 | 🟥2 | 🟩5 |
 | UX/automation experience | 🟥2 | 🟨3 | 🟨3 | 🟨3 | 🟨3 | 🟨3 | 🟨3 | 🟩5 |
 | Extensibility/plug‑ins | 🟨3 | 🟩4 | 🟩4 | 🟨3 | 🟩5 | 🟩4 | 🟥2 | 🟩5 |
@@ -187,8 +187,8 @@ Weighted totals (Developer‑First):
 - GenXAI scores highest in **provider breadth, graph flexibility, and memory tooling**.
 - LangChain leads in **overall extensibility + ecosystem breadth** among developer frameworks.
 - LlamaIndex is especially strong in **RAG-centric memory/indexing workflows**.
-- AutoGPT remains useful for autonomous loop-style use cases but is less enterprise mature.
-- n8n dominates **automation UX, connectors, and enterprise polish**.
+- AutoGPT remains useful for autonomous loop-style use cases but is less mature for production use.
+- n8n dominates **automation UX, connectors, and product polish**.
 - AutoGen leads in **multi‑agent research depth** but requires more production scaffolding.
 - CrewAI is strong in **agent collaboration + ecosystem**, less in advanced orchestration.
 - BeeAI is solid for lightweight agentic automation but has a smaller ecosystem.
@@ -204,7 +204,7 @@ Weighted totals (Developer‑First):
 - Observability scaffolding and security modules.
 
 **Weaknesses**
-- Limited **connector ecosystem** (SaaS/enterprise integrations still growing).
+- Limited **connector ecosystem** (SaaS integrations still growing).
 - Limited **ecosystem/marketplace** compared to CrewAI/AutoGen/n8n.
 
 ### CrewAI
@@ -231,7 +231,7 @@ Weighted totals (Developer‑First):
 - Fast prototyping for self-directed task execution.
 
 **Weaknesses**
-- Less mature enterprise controls for governance, security, and observability.
+- Less mature controls for governance, security, and observability.
 - Weaker graph abstraction and composability than modern workflow-centric stacks.
 
 ### LangChain (+ LangGraph)
@@ -241,7 +241,7 @@ Weighted totals (Developer‑First):
 
 **Weaknesses**
 - Operational complexity can increase quickly for large deployments.
-- Enterprise guardrails often require additional conventions and platform setup.
+- Production guardrails often require additional conventions and platform setup.
 
 ### LlamaIndex
 **Strengths**
@@ -258,7 +258,7 @@ Weighted totals (Developer‑First):
 - Local‑first model support in some workflows.
 
 **Weaknesses**
-- Smaller ecosystem and fewer enterprise‑grade observability/security modules.
+- Smaller ecosystem and fewer production‑grade observability/security modules.
 
 ### n8n
 **Strengths**
@@ -275,14 +275,14 @@ Weighted totals (Developer‑First):
 
 **Competitive with CrewAI/AutoGen on core orchestration and tooling.**
 GenXAI now includes **core triggers/connectors** and a **worker queue engine**.
-To compete with **n8n** and broader enterprise platforms, GenXAI needs broader
+To compete with **n8n** and broader automation platforms, GenXAI needs broader
 connector coverage, richer templates, and ecosystem growth.
 
 ---
 
 ## Recommended Next Milestones
 
-1. **Connector Ecosystem Expansion** (top SaaS + enterprise systems)
+1. **Connector Ecosystem Expansion** (top SaaS + business systems)
 2. **Expanded Vector Store Coverage** + integration tests
 3. **Template Marketplace** (discoverable workflow packs)
 4. **Deployment Hardening** (K8s/Helm, secrets policy, CI benchmarks)

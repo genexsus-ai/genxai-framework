@@ -209,8 +209,7 @@ genxai workflow run examples/nocode/shared_memory_workflow.yaml \
   --input '{"task": "Draft a short response"}'
 ```
 
-> Note: Some templates may reference Studio-only features in enterprise builds, but
-> the OSS CLI can run standard workflow YAML via `genxai workflow run`.
+> Note: The CLI runs standard workflow YAML via `genxai workflow run`.
 
 ---
 

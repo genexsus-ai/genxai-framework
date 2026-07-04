@@ -430,7 +430,7 @@ It’s passed at runtime in `input_data` or as the `task` argument when executin
   multi-agent workflows with minimal orchestration complexity.
 - **Choose GenXAI** if you need **graph-based orchestration**, advanced memory,
   tool registry and schema-based calling, event-driven triggers/connectors, and
-  enterprise-grade runtime features.
+  production-grade runtime features.
 
 If you share your use case (workflow complexity, integrations, team size),
 we can give a direct recommendation.

@@ -246,13 +246,12 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 
 MIT License - see [LICENSE](./LICENSE) for details.
 
-## 🟢 Enterprise Edition
+## 🟢 Fully Open Source
 
-The connectors, triggers, security, and observability modules ship in the OSS
-runtime under `genxai/`. The Studio UI is planned as an enterprise-only product
-in a **separate commercial repository** and is not included here. The OSS CLI
-ships in `genxai/cli`; enterprise distributions can add extra CLI command
-groups via plugins.
+Everything ships in this repository under the MIT license — including the
+connectors, triggers, security, and observability modules under `genxai/`
+and the CLI under `genxai/cli`. There is no commercial edition. The Studio
+UI (visual workflow builder) is a planned feature and is not yet available.
 
 ## 🆘 Support
 

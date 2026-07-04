@@ -4,7 +4,7 @@ The **WorkerQueueEngine** provides a minimal async worker pool for running workf
 in a queued, distributed‑friendly way. It uses an in‑memory backend by default and is
 designed to be swapped with Redis/Celery/RQ implementations later.
 
-This engine is part of the OSS runtime (Studio remains enterprise-only).
+This engine is part of the MIT-licensed runtime.
 
 ## Quick Start
 

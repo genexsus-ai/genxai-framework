@@ -4,8 +4,8 @@ import json
 
 from click.testing import CliRunner
 
-from cli.commands.audit import audit
-from genxai_enterprise.security.audit import get_audit_log, AuditEvent
+from genxai.cli.commands.audit import audit
+from genxai.security.audit import get_audit_log, AuditEvent
 
 
 def test_cli_audit_list_export_clear(tmp_path):

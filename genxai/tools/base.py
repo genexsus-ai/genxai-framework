@@ -9,7 +9,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from genxai.tools.security.policy import is_tool_allowed
-from genxai.utils.enterprise_compat import (
+from genxai.utils.runtime_services import (
     AuditEvent,
     Permission,
     get_audit_log,

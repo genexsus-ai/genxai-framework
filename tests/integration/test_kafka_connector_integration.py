@@ -36,7 +36,7 @@ async def test_kafka_connector_emits_messages(monkeypatch):
 
     fake_module = types.SimpleNamespace(AIOKafkaConsumer=FakeConsumer)
     sys.modules["aiokafka"] = fake_module
-    from genxai_enterprise.connectors.kafka import KafkaConnector
+    from genxai.connectors.kafka import KafkaConnector
 
     connector = KafkaConnector(connector_id="k1", topic="topic", bootstrap_servers="localhost:9092")
     connector.on_event(lambda event: messages.append(event.payload))

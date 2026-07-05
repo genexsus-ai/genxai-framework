@@ -27,7 +27,7 @@ RATE_LIMITS = {
         requests_per_hour=1000,
         requests_per_day=10000,
     ),
-    "enterprise": RateLimitConfig(
+    "business": RateLimitConfig(
         requests_per_minute=300,
         requests_per_hour=10000,
         requests_per_day=100000,
@@ -128,7 +128,7 @@ class RateLimiter:
         
         Args:
             key: User ID or API key
-            tier: Rate limit tier (free, pro, enterprise)
+            tier: Rate limit tier (free, pro, business)
             cost: Cost in tokens (default: 1)
             
         Returns:

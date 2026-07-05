@@ -4,7 +4,7 @@ import hmac
 import hashlib
 import pytest
 
-from enterprise.genxai.connectors.webhook import WebhookConnector
+from genxai.connectors.webhook import WebhookConnector
 
 
 @pytest.mark.asyncio

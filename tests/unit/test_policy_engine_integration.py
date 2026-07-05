@@ -3,8 +3,8 @@
 import pytest
 
 from genxai.core.memory.shared import SharedMemoryBus
-from genxai_enterprise.security.policy_engine import AccessRule, get_policy_engine
-from genxai_enterprise.security.rbac import Permission, Role, User, set_current_user, PermissionDenied
+from genxai.security.policy_engine import AccessRule, get_policy_engine
+from genxai.security.rbac import Permission, Role, User, set_current_user, PermissionDenied
 
 
 @pytest.mark.asyncio

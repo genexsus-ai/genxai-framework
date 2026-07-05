@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from genxai.utils.enterprise_compat import Permission, get_current_user, get_policy_engine
+from genxai.utils.runtime_services import Permission, get_current_user, get_policy_engine
 
 logger = logging.getLogger(__name__)
 

@@ -109,7 +109,7 @@ def create_comparison_pdf(output_path):
         "multi-provider LLM support, and workflow triggers/connectors. It competes well with "
         "CrewAI and AutoGen in orchestration depth and tooling, but still trails n8n on breadth "
         "of plug-and-play integrations and GUI-first automation UX. Compared to BeeAI, GenXAI "
-        "offers stronger multi-provider support, graph orchestration, and enterprise-grade "
+        "offers stronger multi-provider support, graph orchestration, and production-grade "
         "observability/security.",
         body_style
     ))
@@ -120,7 +120,7 @@ def create_comparison_pdf(output_path):
     
     framework_data = [
         ["Framework", "Primary Focus", "Key Strength"],
-        ["GenXAI", "Multi-agent orchestration with graph workflows", "Provider breadth & enterprise features"],
+        ["GenXAI", "Multi-agent orchestration with graph workflows", "Provider breadth & production features"],
         ["CrewAI", "Agent collaboration & role-based teams", "Prompt engineering & templates"],
         ["AutoGen", "Conversational multi-agent systems", "Research-backed agent patterns"],
         ["BeeAI", "Lightweight agent automation", "Local-first model support"],
@@ -206,7 +206,7 @@ def create_comparison_pdf(output_path):
         ["Tooling & schemas", "4", "4", "4", "3", "5"],
         ["Memory & persistence", "4", "2", "4", "2", "3"],
         ["Observability & governance", "4", "2", "3", "2", "5"],
-        ["Enterprise readiness", "4", "2", "3", "2", "5"],
+        ["Production readiness", "4", "2", "3", "2", "5"],
         ["Ecosystem/connectors", "3", "4", "4", "2", "5"],
         ["UX/automation experience", "2", "3", "3", "3", "5"],
         ["Extensibility/plug-ins", "3", "4", "4", "2", "5"],
@@ -234,7 +234,7 @@ def create_comparison_pdf(output_path):
     elements.append(Paragraph("Weighted Total Scores (0-100 Scale)", heading2_style))
     
     weighted_data = [
-        ["Framework", "Default Weights", "Enterprise-First", "Developer-First"],
+        ["Framework", "Default Weights", "Production-First", "Developer-First"],
         ["GenXAI", "76.8", "77.0", "77.2"],
         ["CrewAI", "61.8", "56.8", "63.2"],
         ["AutoGen", "75.2", "72.2", "76.8"],
@@ -261,7 +261,7 @@ def create_comparison_pdf(output_path):
     
     elements.append(Paragraph(
         "<b>Note:</b> Scores are normalized to a 0-100 scale. Different weighting scenarios "
-        "emphasize different priorities (enterprise features vs. developer experience).",
+        "emphasize different priorities (production features vs. developer experience).",
         ParagraphStyle('Note', parent=body_style, fontSize=8, textColor=colors.HexColor('#7f8c8d'))
     ))
     elements.append(PageBreak())
@@ -282,7 +282,7 @@ def create_comparison_pdf(output_path):
         ["Tooling & schemas", "🟩 4", "🟩 4", "🟩 4", "🟨 3", "🟩 5"],
         ["Memory & persistence", "🟩 4", "🟥 2", "🟩 4", "🟥 2", "🟨 3"],
         ["Observability & governance", "🟩 4", "🟥 2", "🟨 3", "🟥 2", "🟩 5"],
-        ["Enterprise readiness", "🟩 4", "🟥 2", "🟨 3", "🟥 2", "🟩 5"],
+        ["Production readiness", "🟩 4", "🟥 2", "🟨 3", "🟥 2", "🟩 5"],
         ["Ecosystem/connectors", "🟨 3", "🟩 4", "🟩 4", "🟥 2", "🟩 5"],
         ["UX/automation experience", "🟥 2", "🟨 3", "🟨 3", "🟨 3", "🟩 5"],
         ["Extensibility/plug-ins", "🟨 3", "🟩 4", "🟩 4", "🟥 2", "🟩 5"],
@@ -317,7 +317,7 @@ def create_comparison_pdf(output_path):
         "Strong tooling system with schemas, registry, templates, and built-in tools",
         "Multi-LLM provider support with fallback routing and local Ollama",
         "Comprehensive memory systems (short-term, long-term, episodic, semantic, procedural)",
-        "Enterprise-grade observability scaffolding and security modules",
+        "Production-grade observability scaffolding and security modules",
         "Workflow triggers and connectors for event-driven automation"
     ]
     for strength in strengths:
@@ -326,7 +326,7 @@ def create_comparison_pdf(output_path):
     elements.append(Spacer(1, 0.1*inch))
     elements.append(Paragraph("<b>Weaknesses:</b>", body_style))
     weaknesses = [
-        "Limited connector ecosystem compared to n8n (SaaS/enterprise integrations still growing)",
+        "Limited connector ecosystem compared to n8n (SaaS integrations still growing)",
         "No GUI workflow builder in core framework (Studio UI is separate)",
         "Smaller community and marketplace compared to established frameworks"
     ]
@@ -352,7 +352,7 @@ def create_comparison_pdf(output_path):
     crewai_weaknesses = [
         "Less opinionated graph orchestration capabilities",
         "Fewer LLM provider options out-of-the-box",
-        "Limited enterprise features (observability, security, governance)",
+        "Limited production features (observability, security, governance)",
         "Basic memory system compared to competitors"
     ]
     for weakness in crewai_weaknesses:
@@ -378,7 +378,7 @@ def create_comparison_pdf(output_path):
         "Heavier setup required for production orchestration",
         "GUI/connector ecosystem is limited (outside of extensions)",
         "Steeper learning curve for complex workflows",
-        "Less focus on enterprise features"
+        "Less focus on production features"
     ]
     for weakness in autogen_weaknesses:
         elements.append(Paragraph(f"• {weakness}", body_style))
@@ -400,7 +400,7 @@ def create_comparison_pdf(output_path):
     elements.append(Spacer(1, 0.1*inch))
     elements.append(Paragraph("<b>Weaknesses:</b>", body_style))
     beeai_weaknesses = [
-        "Smaller ecosystem and fewer enterprise-grade features",
+        "Smaller ecosystem and fewer production-grade features",
         "Limited observability and security modules",
         "Less sophisticated orchestration capabilities",
         "Smaller community and fewer resources"
@@ -418,7 +418,7 @@ def create_comparison_pdf(output_path):
         "Production-grade scheduling and integrations",
         "Excellent GUI workflow builder for non-technical users",
         "Large marketplace and community ecosystem",
-        "Strong enterprise features (observability, security, RBAC)"
+        "Strong production features (observability, security, RBAC)"
     ]
     for strength in n8n_strengths:
         elements.append(Paragraph(f"• {strength}", body_style))
@@ -443,7 +443,7 @@ def create_comparison_pdf(output_path):
         ("Choose GenXAI when:", [
             "You need complex graph-based agent workflows with parallel execution",
             "Multi-provider LLM support with fallback routing is critical",
-            "Enterprise features (observability, security, governance) are required",
+            "Production features (observability, security, governance) are required",
             "Advanced memory systems are needed for agent learning",
             "You want a balance between code-first and no-code approaches"
         ]),
@@ -495,7 +495,7 @@ def create_comparison_pdf(output_path):
     conclusions = [
         "<b>Graph-based orchestration:</b> Superior to CrewAI and AutoGen for complex workflows",
         "<b>Multi-provider support:</b> Best-in-class LLM provider breadth with fallback routing",
-        "<b>Enterprise readiness:</b> Comprehensive observability, security, and governance features",
+        "<b>Production readiness:</b> Comprehensive observability, security, and governance features",
         "<b>Memory systems:</b> Advanced multi-layered memory architecture for agent learning",
         "<b>Balanced approach:</b> Code-first with planned no-code Studio UI"
     ]
@@ -508,7 +508,7 @@ def create_comparison_pdf(output_path):
         "While n8n leads in connector ecosystem and GUI experience, and AutoGen excels in "
         "research-backed agent patterns, GenXAI offers the most balanced feature set for "
         "production-grade agentic AI applications. The framework is particularly well-suited "
-        "for organizations that need sophisticated agent orchestration with enterprise features, "
+        "for organizations that need sophisticated agent orchestration with production features, "
         "while maintaining flexibility for both developers and future no-code users.",
         body_style
     ))

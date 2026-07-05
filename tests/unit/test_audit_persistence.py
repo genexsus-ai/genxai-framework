@@ -2,7 +2,7 @@
 
 import os
 
-from enterprise.genxai.security.audit import AuditEvent, get_audit_log, get_approval_service, reset_audit_services
+from genxai.security.audit import AuditEvent, get_audit_log, get_approval_service, reset_audit_services
 
 
 def test_audit_persistence(tmp_path, monkeypatch):

@@ -6,11 +6,7 @@ import logging
 from typing import Any
 
 from genxai.core.graph.executor import WorkflowExecutor
-
-try:  # enterprise-only feature
-    from enterprise.genxai.triggers.base import TriggerEvent  # type: ignore
-except Exception:  # pragma: no cover
-    TriggerEvent = Any  # type: ignore
+from genxai.triggers.base import TriggerEvent
 
 logger = logging.getLogger(__name__)
 

@@ -32,7 +32,7 @@ async def test_sqs_connector_emits_messages(monkeypatch):
             return FakeSession()
 
     sys.modules["aioboto3"] = FakeBoto()
-    from genxai_enterprise.connectors.sqs import SQSConnector
+    from genxai.connectors.sqs import SQSConnector
 
     connector = SQSConnector(connector_id="s1", queue_url="url", poll_interval=0)
     async def _on_event(event):

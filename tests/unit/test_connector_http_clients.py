@@ -6,11 +6,11 @@ from typing import Any, Dict, Optional
 
 import pytest
 
-from enterprise.genxai.connectors.slack import SlackConnector
-from enterprise.genxai.connectors.github import GitHubConnector
-from enterprise.genxai.connectors.notion import NotionConnector
-from enterprise.genxai.connectors.jira import JiraConnector
-from enterprise.genxai.connectors.google_workspace import GoogleWorkspaceConnector
+from genxai.connectors.slack import SlackConnector
+from genxai.connectors.github import GitHubConnector
+from genxai.connectors.notion import NotionConnector
+from genxai.connectors.jira import JiraConnector
+from genxai.connectors.google_workspace import GoogleWorkspaceConnector
 
 
 class FakeResponse:
@@ -60,7 +60,7 @@ async def test_slack_connector_send_message(monkeypatch: pytest.MonkeyPatch) -> 
         ("GET", "/conversations.list"): {"ok": True, "channels": []},
     }
     fake_client = FakeClient(responses)
-    _patch_async_client(monkeypatch, "enterprise.genxai.connectors.slack", fake_client)
+    _patch_async_client(monkeypatch, "genxai.connectors.slack", fake_client)
 
     connector = SlackConnector(connector_id="slack", bot_token="token")
     await connector.start()
@@ -87,7 +87,7 @@ async def test_github_connector_issue_flow(monkeypatch: pytest.MonkeyPatch) -> N
         ("POST", "/repos/genxai/genxai/issues"): {"id": 123},
     }
     fake_client = FakeClient(responses)
-    _patch_async_client(monkeypatch, "enterprise.genxai.connectors.github", fake_client)
+    _patch_async_client(monkeypatch, "genxai.connectors.github", fake_client)
 
     connector = GitHubConnector(connector_id="github", token="token")
     await connector.start()
@@ -107,7 +107,7 @@ async def test_notion_connector_pages(monkeypatch: pytest.MonkeyPatch) -> None:
         ("POST", "/pages"): {"id": "page_2"},
     }
     fake_client = FakeClient(responses)
-    _patch_async_client(monkeypatch, "enterprise.genxai.connectors.notion", fake_client)
+    _patch_async_client(monkeypatch, "genxai.connectors.notion", fake_client)
 
     connector = NotionConnector(connector_id="notion", token="token")
     await connector.start()
@@ -127,7 +127,7 @@ async def test_jira_connector_issue_flow(monkeypatch: pytest.MonkeyPatch) -> Non
         ("POST", "/rest/api/3/issue"): {"key": "OPS-1"},
     }
     fake_client = FakeClient(responses)
-    _patch_async_client(monkeypatch, "enterprise.genxai.connectors.jira", fake_client)
+    _patch_async_client(monkeypatch, "genxai.connectors.jira", fake_client)
 
     connector = JiraConnector(
         connector_id="jira",
@@ -153,7 +153,7 @@ async def test_google_workspace_connector(monkeypatch: pytest.MonkeyPatch) -> No
         ("GET", "/calendar/v3/calendars/primary/events"): {"items": []},
     }
     fake_client = FakeClient(responses)
-    _patch_async_client(monkeypatch, "enterprise.genxai.connectors.google_workspace", fake_client)
+    _patch_async_client(monkeypatch, "genxai.connectors.google_workspace", fake_client)
 
     connector = GoogleWorkspaceConnector(connector_id="gws", access_token="token")
     await connector.start()

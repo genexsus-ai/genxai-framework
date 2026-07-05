@@ -1,6 +1,5 @@
 """Role-Based Access Control (RBAC) for GenXAI."""
 
-import sys
 from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
@@ -246,13 +245,3 @@ def require_role(role: Role):
 
     return decorator
 
-
-def _alias_enterprise_module() -> None:
-    """Ensure enterprise.* imports resolve to this module instance."""
-    module_name = __name__
-    alias_name = "enterprise.genxai.security.rbac"
-    sys.modules[alias_name] = sys.modules[module_name]
-    sys.modules["genxai.security.rbac"] = sys.modules[module_name]
-
-
-_alias_enterprise_module()

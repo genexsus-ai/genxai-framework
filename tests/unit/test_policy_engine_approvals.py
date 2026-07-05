@@ -2,9 +2,9 @@
 
 import pytest
 
-from genxai_enterprise.security.policy_engine import AccessRule, get_policy_engine
-from genxai_enterprise.security.rbac import Permission, Role, User, PermissionDenied
-from genxai_enterprise.security.audit import get_approval_service
+from genxai.security.policy_engine import AccessRule, get_policy_engine
+from genxai.security.rbac import Permission, Role, User, PermissionDenied
+from genxai.security.audit import get_approval_service
 
 
 def test_policy_engine_requires_approval():

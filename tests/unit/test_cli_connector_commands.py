@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 from click.testing import CliRunner
 
-from enterprise.cli.commands.connector import connector as connector_group, CONNECTOR_CATALOG
+from genxai.cli.commands.connector import connector as connector_group, CONNECTOR_CATALOG
 
 
 @dataclass

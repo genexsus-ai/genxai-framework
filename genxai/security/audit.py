@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -304,19 +303,3 @@ def reset_audit_services() -> None:
     _approval_service = None
     _audit_store = None
 
-
-def _alias_enterprise_module() -> None:
-    """Ensure enterprise.* imports resolve to this module instance.
-
-    Some test shims create a synthetic `enterprise.genxai` package that points
-    to the local source tree. Without aliasing, imports like
-    `enterprise.genxai.security.audit` can create a second module instance,
-    leading to duplicated singleton state. We alias to keep a single state.
-    """
-
-    module_name = __name__
-    alias_name = "enterprise.genxai.security.audit"
-    sys.modules[alias_name] = sys.modules[module_name]
-
-
-_alias_enterprise_module()

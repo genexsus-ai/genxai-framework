@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [project.scripts]
-# OSS CLI entry point. Enterprise editions can extend this CLI via
+# CLI entry point. Additional command groups can be attached via
 # `genxai.cli_plugins` entry points.
 genxai = "genxai.cli.main:main"
 

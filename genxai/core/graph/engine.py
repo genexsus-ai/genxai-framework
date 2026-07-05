@@ -20,7 +20,7 @@ from genxai.core.graph.edges import Edge
 from genxai.core.graph.nodes import Node, NodeConfig, NodeStatus, NodeType
 from genxai.core.memory.shared import SharedMemoryBus
 from genxai.tools.registry import ToolRegistry
-from genxai.utils.enterprise_compat import (
+from genxai.utils.runtime_services import (
     record_exception,
     record_workflow_execution,
     record_workflow_node_execution,

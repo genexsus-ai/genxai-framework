@@ -26,7 +26,7 @@ async def test_postgres_cdc_connector_emits_changes(monkeypatch):
 
     fake_module = types.SimpleNamespace(connect=fake_connect)
     sys.modules["asyncpg"] = fake_module
-    from genxai_enterprise.connectors.postgres_cdc import PostgresCDCConnector
+    from genxai.connectors.postgres_cdc import PostgresCDCConnector
 
     connector = PostgresCDCConnector(
         connector_id="p1",

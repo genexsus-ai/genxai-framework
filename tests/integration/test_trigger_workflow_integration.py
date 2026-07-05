@@ -8,11 +8,11 @@ from pathlib import Path
 import sys
 import tempfile
 
-from genxai_enterprise.triggers.file_watcher import FileWatcherTrigger
-from genxai_enterprise.triggers.queue import QueueTrigger
-from genxai_enterprise.triggers.registry import TriggerRegistry
-from genxai_enterprise.triggers.schedule import ScheduleTrigger
-from genxai_enterprise.triggers.webhook import WebhookTrigger
+from genxai.triggers.file_watcher import FileWatcherTrigger
+from genxai.triggers.queue import QueueTrigger
+from genxai.triggers.registry import TriggerRegistry
+from genxai.triggers.schedule import ScheduleTrigger
+from genxai.triggers.webhook import WebhookTrigger
 from genxai.core.graph.trigger_runner import TriggerWorkflowRunner
 from genxai.llm.factory import LLMProviderFactory
 
@@ -30,6 +30,10 @@ def mock_llm_provider(monkeypatch):
         return MockLLMProvider(model=model)
 
     monkeypatch.setattr(LLMProviderFactory, "create_provider", _create_provider)
+    # AgentRuntime skips provider creation entirely when no API key is
+    # available, which would bypass the mock — supply a dummy key so the
+    # patched factory is actually invoked.
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
 
 
 @pytest.mark.asyncio

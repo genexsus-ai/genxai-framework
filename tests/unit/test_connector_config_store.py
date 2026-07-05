@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from enterprise.genxai.connectors.config_store import ConnectorConfigEntry, ConnectorConfigStore
+from genxai.connectors.config_store import ConnectorConfigEntry, ConnectorConfigStore
 
 
 def test_config_store_save_get_delete(tmp_path: Path) -> None:

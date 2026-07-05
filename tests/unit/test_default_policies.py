@@ -1,8 +1,8 @@
 """Tests for default policy registration with explicit approvals."""
-from genxai_enterprise.security.default_policies import register_default_policies
-from genxai_enterprise.security.audit import get_approval_service
+from genxai.security.default_policies import register_default_policies
+from genxai.security.audit import get_approval_service
 
-from genxai_enterprise.security.policy_engine import get_policy_engine
+from genxai.security.policy_engine import get_policy_engine
 
 
 def test_register_default_policies_creates_approvals():

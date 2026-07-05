@@ -28,7 +28,7 @@ from genxai.core.memory.shared import SharedMemoryBus
 from genxai.tools.builtin.computation.calculator import CalculatorTool
 from genxai.tools.builtin.file.file_reader import FileReaderTool
 from genxai.tools.registry import ToolRegistry
-from genxai.utils.enterprise_compat import (
+from genxai.utils.runtime_services import (
     AuditEvent,
     Permission,
     get_audit_log,

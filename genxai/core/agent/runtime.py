@@ -4,6 +4,7 @@ import asyncio
 import copy
 import json
 import logging
+import os
 import re
 import time
 from typing import Any
@@ -12,7 +13,7 @@ from genxai.core.agent.base import Agent
 from genxai.core.memory.shared import SharedMemoryBus
 from genxai.llm.base import LLMProvider
 from genxai.llm.factory import LLMProviderFactory
-from genxai.utils.enterprise_compat import (
+from genxai.utils.runtime_services import (
     AuditEvent,
     Permission,
     add_event,
@@ -79,16 +80,19 @@ class AgentRuntime:
 
                 if model.startswith("claude"):
                     # Claude models use Anthropic API key
-                    selected_api_key = anthropic_api_key or api_key
+                    selected_api_key = anthropic_api_key or api_key or os.getenv("ANTHROPIC_API_KEY")
                     requires_api_key = True
                     logger.info(f"Using Anthropic API key for Claude model: {agent.config.llm_model}")
                 elif model.startswith("gpt"):
                     # GPT models use OpenAI API key
-                    selected_api_key = openai_api_key or api_key
+                    selected_api_key = openai_api_key or api_key or os.getenv("OPENAI_API_KEY")
                     requires_api_key = True
                     logger.info(f"Using OpenAI API key for GPT model: {agent.config.llm_model}")
-                elif model.startswith("gemini") or model.startswith("command"):
-                    selected_api_key = openai_api_key or anthropic_api_key or api_key
+                elif model.startswith("gemini"):
+                    selected_api_key = api_key or os.getenv("GOOGLE_API_KEY")
+                    requires_api_key = True
+                elif model.startswith("command"):
+                    selected_api_key = api_key or os.getenv("COHERE_API_KEY")
                     requires_api_key = True
                 else:
                     # For local models, allow missing key

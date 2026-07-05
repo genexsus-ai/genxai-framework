@@ -2,7 +2,7 @@
 GenXAI - Advanced Agentic AI Framework
 
 A powerful framework for building multi-agent AI systems with graph-based orchestration,
-advanced memory systems, and enterprise-grade features.
+advanced memory systems, and production-grade features.
 """
 
 from importlib.metadata import PackageNotFoundError, version

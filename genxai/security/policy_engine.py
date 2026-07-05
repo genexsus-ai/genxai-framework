@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
 from enum import Enum
 
@@ -81,13 +80,3 @@ def get_policy_engine() -> PolicyEngine:
         _policy_engine = PolicyEngine()
     return _policy_engine
 
-
-def _alias_enterprise_module() -> None:
-    """Ensure enterprise.* imports resolve to this module instance."""
-    module_name = __name__
-    alias_name = "enterprise.genxai.security.policy_engine"
-    sys.modules[alias_name] = sys.modules[module_name]
-    sys.modules["genxai.security.policy_engine"] = sys.modules[module_name]
-
-
-_alias_enterprise_module()

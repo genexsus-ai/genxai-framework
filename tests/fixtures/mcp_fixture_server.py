@@ -19,5 +19,16 @@ def add(a: float, b: float) -> str:
     return json.dumps({"sum": a + b})
 
 
+
+
+@mcp.tool()
+async def slow(seconds: float) -> str:
+    """Sleep for the given number of seconds (used to test cancellation)."""
+    import asyncio
+
+    await asyncio.sleep(seconds)
+    return "done"
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

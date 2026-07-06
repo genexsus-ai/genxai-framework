@@ -338,6 +338,12 @@ class WorkflowExecutor:
                 )
             else:
                 logger.warning(f"Unknown node type: {node_type}")
+                continue
+
+            # Attach the per-node execution policy (retry/timeout/continue_on_error)
+            execution_policy = config.get("execution")
+            if execution_policy and node_id in graph.nodes:
+                graph.nodes[node_id].config.data["execution"] = execution_policy
 
         # Add edges
         for edge in edges:

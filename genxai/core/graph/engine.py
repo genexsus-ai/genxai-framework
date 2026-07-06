@@ -399,7 +399,7 @@ class Graph:
                 "genxai.workflow.node",
                 {"workflow_id": self.name, "node_id": node_id, "node_type": node.type.value},
             ):
-                result = await self._execute_node_logic(node, state, max_iterations)
+                result = await self._run_with_policy(node, state, max_iterations)
             node.result = result
             node.status = NodeStatus.COMPLETED
             logger.debug(f"Node completed: {node_id}")
@@ -432,41 +432,7 @@ class Graph:
             # Update state with result
             state[node_id] = result
 
-            # Resolve outgoing edges as satisfied or declined so downstream
-            # joins know when all their incoming branches are in. Declined
-            # edges cascade (see _propagate_decline) so joins behind untaken
-            # branches resolve instead of waiting forever.
-            outgoing_edges = self.get_outgoing_edges(node_id)
-            resolutions = state.setdefault("_edge_resolutions", {})
-            parallel_edges = [e for e in outgoing_edges if e.metadata.get("parallel", False)]
-            sequential_edges = [e for e in outgoing_edges if not e.metadata.get("parallel", False)]
-
-            # Parallel edges: resolve upfront, then execute taken ones concurrently
-            tasks = []
-            declined_targets: list[str] = []
-            for edge in parallel_edges:
-                edge_key = str(self._edge_index.get(id(edge), -1))
-                if edge.evaluate_condition(state):
-                    resolutions[edge_key] = "satisfied"
-                    tasks.append(self._execute_node(edge.target, state, max_iterations, event_callback))
-                else:
-                    resolutions[edge_key] = "declined"
-                    declined_targets.append(edge.target)
-            for target in declined_targets:
-                await self._propagate_decline(target, state, max_iterations, event_callback)
-            if tasks:
-                await self._gather_with_config(tasks, state)
-
-            # Sequential edges: evaluate lazily in priority order, so a later
-            # edge's condition can read results of earlier siblings.
-            for edge in sorted(sequential_edges, key=lambda e: e.priority):
-                edge_key = str(self._edge_index.get(id(edge), -1))
-                if edge.evaluate_condition(state):
-                    resolutions[edge_key] = "satisfied"
-                    await self._execute_node(edge.target, state, max_iterations, event_callback)
-                else:
-                    resolutions[edge_key] = "declined"
-                    await self._propagate_decline(edge.target, state, max_iterations, event_callback)
+            await self._resolve_and_traverse(node_id, state, max_iterations, event_callback)
 
         except Exception as e:
             node.status = NodeStatus.FAILED
@@ -496,7 +462,105 @@ class Graph:
                 "duration_ms": node_duration_ms,
                 "error": str(e),
             }
+
+            policy = node.config.data.get("execution") or {}
+            if policy.get("continue_on_error"):
+                # n8n-style "continue on fail": record the failure as the
+                # node's result and keep the workflow going so downstream
+                # nodes (and edge conditions) can react to it.
+                error_result = {"success": False, "error": str(e)}
+                node.result = error_result
+                state[node_id] = error_result
+                state["node_results"][node_id]["output"] = error_result
+                logger.warning(
+                    "Node %s failed but continue_on_error is set; continuing", node_id
+                )
+                await self._resolve_and_traverse(node_id, state, max_iterations, event_callback)
+                return
+
             raise GraphExecutionError(f"Node {node_id} failed: {e}") from e
+
+    async def _run_with_policy(
+        self, node: Node, state: dict[str, Any], max_iterations: int
+    ) -> Any:
+        """Execute node logic under its per-node execution policy.
+
+        The policy lives in node.config.data["execution"]:
+            {"retry_count": int, "timeout_seconds": float,
+             "backoff_seconds": float, "continue_on_error": bool}
+        Defaults preserve prior behavior (no retry, no timeout).
+        """
+        policy = node.config.data.get("execution") or {}
+        retries = max(int(policy.get("retry_count", 0)), 0)
+        timeout = policy.get("timeout_seconds")
+        backoff = float(policy.get("backoff_seconds", 1.0))
+
+        attempt = 0
+        while True:
+            try:
+                coro = self._execute_node_logic(node, state, max_iterations)
+                if timeout:
+                    return await asyncio.wait_for(coro, timeout=float(timeout))
+                return await coro
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                if attempt >= retries:
+                    raise
+                attempt += 1
+                logger.warning(
+                    "Node %s attempt %d/%d failed; retrying in %.1fs",
+                    node.id,
+                    attempt,
+                    retries + 1,
+                    backoff,
+                )
+                await asyncio.sleep(backoff)
+                backoff *= 2
+
+    async def _resolve_and_traverse(
+        self,
+        node_id: str,
+        state: dict[str, Any],
+        max_iterations: int,
+        event_callback: Callable[[dict[str, Any]], Any] | None = None,
+    ) -> None:
+        """Resolve outgoing edges as satisfied/declined and execute targets.
+
+        Declined edges cascade (see _propagate_decline) so joins behind
+        untaken branches resolve instead of waiting forever.
+        """
+        outgoing_edges = self.get_outgoing_edges(node_id)
+        resolutions = state.setdefault("_edge_resolutions", {})
+        parallel_edges = [e for e in outgoing_edges if e.metadata.get("parallel", False)]
+        sequential_edges = [e for e in outgoing_edges if not e.metadata.get("parallel", False)]
+
+        # Parallel edges: resolve upfront, then execute taken ones concurrently
+        tasks = []
+        declined_targets: list[str] = []
+        for edge in parallel_edges:
+            edge_key = str(self._edge_index.get(id(edge), -1))
+            if edge.evaluate_condition(state):
+                resolutions[edge_key] = "satisfied"
+                tasks.append(self._execute_node(edge.target, state, max_iterations, event_callback))
+            else:
+                resolutions[edge_key] = "declined"
+                declined_targets.append(edge.target)
+        for target in declined_targets:
+            await self._propagate_decline(target, state, max_iterations, event_callback)
+        if tasks:
+            await self._gather_with_config(tasks, state)
+
+        # Sequential edges: evaluate lazily in priority order, so a later
+        # edge's condition can read results of earlier siblings.
+        for edge in sorted(sequential_edges, key=lambda e: e.priority):
+            edge_key = str(self._edge_index.get(id(edge), -1))
+            if edge.evaluate_condition(state):
+                resolutions[edge_key] = "satisfied"
+                await self._execute_node(edge.target, state, max_iterations, event_callback)
+            else:
+                resolutions[edge_key] = "declined"
+                await self._propagate_decline(edge.target, state, max_iterations, event_callback)
 
     def _node_ready(self, node_id: str, state: dict[str, Any]) -> bool:
         """Check whether all forward incoming edges of a node are resolved.

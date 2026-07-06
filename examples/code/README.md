@@ -234,5 +234,5 @@ To add new examples:
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/irsal2012/GenXAI/issues
+- GitHub Issues: https://github.com/genexsus-ai/genxai-framework/issues
 - Documentation: See `/docs` folder

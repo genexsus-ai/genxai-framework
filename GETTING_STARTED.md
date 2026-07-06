@@ -8,8 +8,8 @@ Welcome to GenXAI - an advanced agentic AI framework with graph-based orchestrat
 
 ```bash
 # Clone the repository
-git clone https://github.com/irsal2012/GenXAI.git
-cd GenXAI
+git clone https://github.com/genexsus-ai/genxai-framework.git
+cd genxai-framework
 
 # Install dependencies
 pip install -e ".[dev,llm]"

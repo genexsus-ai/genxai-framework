@@ -15,8 +15,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/irsal2012/GenXAI.git
-cd GenXAI
+git clone https://github.com/genexsus-ai/genxai-framework.git
+cd genxai-framework
 
 # Create virtual environment
 python -m venv venv

@@ -113,8 +113,8 @@ all = [
 [project.urls]
 Homepage = "https://genxai.dev"
 Documentation = "https://docs.genxai.dev"
-Repository = "https://github.com/genexsus-ai/genxai"
-Issues = "https://github.com/genexsus-ai/genxai/issues"
+Repository = "https://github.com/genexsus-ai/genxai-framework"
+Issues = "https://github.com/genexsus-ai/genxai-framework/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -306,8 +306,8 @@ code: |
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/irsal2012/GenXAI/issues
-- Documentation: https://github.com/irsal2012/GenXAI
+- GitHub Issues: https://github.com/genexsus-ai/genxai-framework/issues
+- Documentation: https://github.com/genexsus-ai/genxai-framework
 - MCP Specification: https://modelcontextprotocol.io
 
 ## License

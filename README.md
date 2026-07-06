@@ -496,7 +496,7 @@ MIT License
 ## 🔗 Links
 
 - **Documentation**: See docs/ directory
-- **GitHub**: https://github.com/genexsus-ai/genxai
+- **GitHub**: https://github.com/genexsus-ai/genxai-framework
 - **Discord**: (To be created)
 - **Website**: https://www.genxai.dev
 

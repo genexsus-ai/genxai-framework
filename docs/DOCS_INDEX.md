@@ -188,8 +188,8 @@ The runtime includes production-grade capabilities:
 
 ## 🆘 Getting Help
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/irsal2012/GenXAI/issues)
-- **Discussions**: [Ask questions and share ideas](https://github.com/irsal2012/GenXAI/discussions)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/genexsus-ai/genxai-framework/issues)
+- **Discussions**: [Ask questions and share ideas](https://github.com/genexsus-ai/genxai-framework/discussions)
 - **Documentation**: Start with [GETTING_STARTED](../GETTING_STARTED.md)
 
 ---

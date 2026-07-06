@@ -40,8 +40,8 @@ Thank you for your interest in contributing to GenXAI! This document provides gu
 
 ```bash
 # Clone the repository
-git clone https://github.com/irsal2012/GenXAI.git
-cd GenXAI
+git clone https://github.com/genexsus-ai/genxai-framework.git
+cd genxai-framework
 
 # Create virtual environment
 python3 -m venv venv
@@ -167,7 +167,6 @@ genxai/
 │   ├── security/       # RBAC, policies, audit, rate limits
 │   ├── observability/  # Logging & metrics
 │   └── cli/            # OSS CLI
-├── applications/        # Example apps built on the framework
 ├── tests/               # Tests
 ├── examples/            # Examples
 └── docs/                # Documentation

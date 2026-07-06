@@ -12,6 +12,7 @@ from genxai.core.agent.registry import AgentRegistry
 from genxai.core.execution import ExecutionStore, WorkerQueueEngine
 from genxai.core.graph.edges import ConditionalEdge, Edge
 from genxai.core.graph.engine import Graph
+from genxai.core.graph.interpolation import TemplateResolutionError, resolve_templates
 from genxai.core.graph.nodes import (
     AgentNode,
     ConditionNode,
@@ -84,8 +85,13 @@ class EnhancedGraph(Graph):
             if agent is None:
                 raise ValueError(f"Agent '{agent_id}' not found in registry")
 
-            # Prepare task from state
-            task = state.get("task", "Process the input data")
+            # Node-level task takes priority; fall back to the run input's task.
+            task = node.config.data.get("task") or state.get("task", "Process the input data")
+            if isinstance(task, str):
+                try:
+                    task = resolve_templates(task, state)
+                except TemplateResolutionError as exc:
+                    raise ValueError(f"Agent node '{node.id}': {exc}") from exc
 
             # Execute agent with tools if available
             result = await self._execute_agent_with_tools(agent, task, state)
@@ -302,7 +308,7 @@ class WorkflowExecutor:
             elif node_type in {"output", "end"}:
                 graph.add_node(OutputNode(id=node_id))
             elif node_type == "agent":
-                graph.add_node(AgentNode(id=node_id, agent_id=node_id))
+                graph.add_node(AgentNode(id=node_id, agent_id=node_id, task=config.get("task")))
             elif node_type == "tool":
                 tool_name = config.get("tool_name") or config.get("name") or "tool"
                 tool_params = config.get("tool_params") or {}

@@ -17,6 +17,7 @@ from genxai.core.graph.checkpoints import (
     create_checkpoint,
 )
 from genxai.core.graph.edges import Edge
+from genxai.core.graph.interpolation import TemplateResolutionError, resolve_templates
 from genxai.core.graph.nodes import Node, NodeConfig, NodeStatus, NodeType
 from genxai.core.memory.shared import SharedMemoryBus
 from genxai.tools.registry import ToolRegistry
@@ -652,6 +653,11 @@ class Graph:
             raise GraphExecutionError(f"Agent '{agent_id}' not found in registry")
 
         task = node.config.data.get("task") or state.get("task") or "Process input"
+        if isinstance(task, str):
+            try:
+                task = resolve_templates(task, state)
+            except TemplateResolutionError as exc:
+                raise GraphExecutionError(f"Agent node '{node.id}': {exc}") from exc
 
         llm_provider = state.get("llm_provider")
         runtime = AgentRuntime(
@@ -763,6 +769,11 @@ class Graph:
             raise GraphExecutionError(
                 f"Tool node '{node.id}' tool_params must be a dict"
             )
+
+        try:
+            tool_params = resolve_templates(tool_params, state)
+        except TemplateResolutionError as exc:
+            raise GraphExecutionError(f"Tool node '{node.id}': {exc}") from exc
 
         result = await tool.execute(**tool_params)
         return result.model_dump() if hasattr(result, "model_dump") else result

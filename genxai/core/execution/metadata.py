@@ -50,6 +50,9 @@ class ExecutionStore:
         self._engine = None
         self._table = None
 
+        if persistence_path is not None and persistence_path.is_dir():
+            self._load_persisted()
+
         if sql_url:
             try:
                 import sqlalchemy as sa
@@ -171,6 +174,26 @@ class ExecutionStore:
         self._persistence_path.mkdir(parents=True, exist_ok=True)
         path = self._persistence_path / f"execution_{record.run_id}.json"
         path.write_text(json.dumps(record.to_dict(), indent=2, default=str))
+
+    def _load_persisted(self) -> None:
+        """Load previously persisted execution records so history survives restarts."""
+        assert self._persistence_path is not None
+        for path in sorted(self._persistence_path.glob("execution_*.json")):
+            try:
+                data = json.loads(path.read_text())
+                record = ExecutionRecord(
+                    run_id=data["run_id"],
+                    workflow=data.get("workflow", ""),
+                    status=data.get("status", "unknown"),
+                    started_at=data.get("started_at"),
+                    completed_at=data.get("completed_at"),
+                    metadata=data.get("metadata") or {},
+                    error=data.get("error"),
+                    result=data.get("result"),
+                )
+            except Exception:
+                continue
+            self._records[record.run_id] = record
 
     def close(self) -> None:
         """Dispose of SQL resources if enabled."""

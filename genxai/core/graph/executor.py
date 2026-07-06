@@ -305,7 +305,8 @@ class WorkflowExecutor:
                 graph.add_node(AgentNode(id=node_id, agent_id=node_id))
             elif node_type == "tool":
                 tool_name = config.get("tool_name") or config.get("name") or "tool"
-                graph.add_node(ToolNode(id=node_id, tool_name=tool_name))
+                tool_params = config.get("tool_params") or {}
+                graph.add_node(ToolNode(id=node_id, tool_name=tool_name, tool_params=tool_params))
             elif node_type == "decision":
                 condition = config.get("condition", "")
                 graph.add_node(ConditionNode(id=node_id, condition=condition))
@@ -325,7 +326,10 @@ class WorkflowExecutor:
             elif node_type == "loop":
                 condition = config.get("condition", "")
                 max_iterations = int(config.get("max_iterations", 5))
-                graph.add_node(LoopNode(id=node_id, condition=condition, max_iterations=max_iterations))
+                body = config.get("body")
+                graph.add_node(
+                    LoopNode(id=node_id, condition=condition, max_iterations=max_iterations, body=body)
+                )
             else:
                 logger.warning(f"Unknown node type: {node_type}")
 

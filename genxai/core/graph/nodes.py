@@ -120,12 +120,21 @@ class AgentNode(Node):
 class ToolNode(Node):
     """Node that executes a tool."""
 
-    def __init__(self, id: str, tool_name: str, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        id: str,
+        tool_name: str,
+        tool_params: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize tool node."""
         super().__init__(
             id=id,
             type=NodeType.TOOL,
-            config=NodeConfig(type=NodeType.TOOL, data={"tool_name": tool_name}),
+            config=NodeConfig(
+                type=NodeType.TOOL,
+                data={"tool_name": tool_name, "tool_params": tool_params or {}},
+            ),
             **kwargs,
         )
 
@@ -178,13 +187,20 @@ class SubgraphNode(Node):
 class LoopNode(Node):
     """Node that represents a loop with a termination condition."""
 
-    def __init__(self, id: str, condition: str, max_iterations: int = 5, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        id: str,
+        condition: str,
+        max_iterations: int = 5,
+        body: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        data: dict[str, Any] = {"condition": condition, "max_iterations": max_iterations}
+        if body:
+            data["body"] = body
         super().__init__(
             id=id,
             type=NodeType.LOOP,
-            config=NodeConfig(
-                type=NodeType.LOOP,
-                data={"condition": condition, "max_iterations": max_iterations},
-            ),
+            config=NodeConfig(type=NodeType.LOOP, data=data),
             **kwargs,
         )

@@ -125,7 +125,7 @@ The runtime includes production-grade capabilities:
 - [examples/patterns/](../examples/patterns/) - Common workflow patterns
 
 ### Studio (Visual Workflow Builder)
-- The Studio UI is a planned feature and is not yet built.
+- A no-code drag-and-drop workflow builder is developed separately and is not included in this repository.
 
 ---
 

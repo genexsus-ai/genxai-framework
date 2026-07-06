@@ -106,6 +106,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.venv311/
 env/
 venv/
 ENV/
@@ -202,3 +203,4 @@ docs/.doctrees/
 # OS files
 .DS_Store
 Thumbs.db
+restart_workflow_studio_*.sh

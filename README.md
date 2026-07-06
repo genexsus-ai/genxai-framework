@@ -12,21 +12,19 @@ GenXAI is an advanced agentic AI framework designed to surpass existing solution
 
 - **Graph-Based Orchestration** (like LangGraph) for complex agent workflows
 - **Advanced Memory Systems** with multiple memory types (short-term, long-term, episodic, semantic, procedural)
-- **No-Code Studio (planned)** for visual workflow building
+- **No-Code Workflow Studio** for visual drag-and-drop workflow building
 - **50+ Built-in Tools** for web, database, file, computation, and communication tasks
 - **Production-Grade Features** including observability, security, connectors, and scalability
 
 > **Fully open source**: everything in this repository — the core framework and all
 > production-grade runtime features (connectors, triggers, observability, security,
-> CLI extensions) — is **MIT-licensed**. There is no commercial edition. The **Studio UI**
-> (visual workflow builder) is planned but not yet built.
+> CLI extensions) — is **MIT-licensed**. There is no commercial edition.
 
 ## 🧩 Applications
 
-- **[Autonomous Coding Agent](https://github.com/genexsus-ai/genxbot/blob/main/README.md)**: GenXAI-powered autonomous coding application.
+- **Workflow Studio**: no-code drag-and-drop workflow builder (n8n-style) — visual canvas for composing agent/tool pipelines with live execution status, built on this framework (developed separately; not included in this repository).
+- **[Autonomous Coding Agent](https://github.com/genexsus-ai/genxbot/blob/main/README.md)**: GenXAI-powered autonomous coding application (separate repository).
   - Includes recipe-template run support with blended recipe + agent-generated actions (dedupe + fallback action coverage), plus structured observability hooks for planning latency, tool invocations, safety decisions, and retry/failure events.
-- **[AI Strategy Agent (P2P Brainstorming)](./applications/ai_strategy_agent/backend/README.md)**: peer-to-peer brainstorming workflow with layered architecture and local observability hooks.
-- **[Travel Planning Agent](./applications/travel_planning_agent/README.md)**: GenXAI-powered travel planning app with FastAPI backend, React frontend, and streaming itinerary updates.
 
 ## ✅ What's Included (All MIT)
 
@@ -37,10 +35,7 @@ Everything in this repository is open source under the MIT license:
 - `genxai/observability` (logging, metrics, tracing)
 - `genxai/security` (RBAC, policy engine, audit, rate limits)
 - CLI commands: `tool`, `workflow`, `connector`, `metrics`, `approval`, `audit`
-- `applications/`, `examples/`, `docs/`, `tests/`, `scripts/`
-
-**Planned (not yet built):**
-- Studio UI/backend (visual workflow builder) — will also be open source
+- `examples/`, `docs/`, `tests/`, `scripts/`
 
 ---
 
@@ -78,10 +73,11 @@ stats = await memory.get_stats()
 print(stats["backend_plugins"].keys())  # e.g. redis/sqlite/neo4j (when configured)
 ```
 
-### 🎨 No-Code Studio
-The Studio UI (visual workflow builder) is a **planned feature**. It has not been built
-yet and is not included in this repository. When it lands, it will be open source like
-the rest of the project.
+### 🎨 No-Code Workflow Studio
+A drag-and-drop visual workflow builder (drag agents, tools, decisions, and
+loops onto a canvas, wire them into a pipeline, and run it with live per-node
+status) is built on this framework and developed separately; it is not
+included in this repository.
 
 ### ⚡ Trigger SDK (OSS)
 Trigger SDKs are part of the OSS runtime and live under `genxai/triggers`.
@@ -367,7 +363,7 @@ pip install "genxai-framework[llm,tools,api]"
 pip install "genxai-framework[all]"
 ```
 
-> The Studio UI is a planned feature and is not yet available.
+> The Workflow Studio (visual builder) is developed separately and not included here.
 
 ---
 
@@ -405,11 +401,10 @@ The following production-grade capabilities are included:
 - Cohere
 - Local models (Ollama, LM Studio)
 
-### No-Code Studio
-- **Frontend**: React + TypeScript
-- **Graph Viz**: ReactFlow
-- **Styling**: TailwindCSS
-- **Backend**: FastAPI
+### No-Code Workflow Studio
+- **Frontend**: React + TypeScript (Vite)
+- **Graph Viz**: React Flow (@xyflow/react)
+- **Backend**: FastAPI + SSE streaming
 
 ### DevOps
 - **Containers**: Docker

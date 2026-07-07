@@ -256,3 +256,73 @@ workflow:
 
     assert override_agent.config.enable_memory is True
     assert override_agent.config.memory_type == "short_term"
+
+
+def test_load_workflow_yaml_accepts_subgraph_and_loop_node_types(tmp_path: Path) -> None:
+    """The schema validator must accept every node type the graph engine
+    actually executes (input/output/agent/tool/condition/subgraph/loop) —
+    it previously rejected 'subgraph' and 'loop', which broke loading the
+    library's own examples/nocode/workflow_composition.yaml."""
+    workflow_yaml = tmp_path / "workflow.yaml"
+    workflow_yaml.write_text(
+        """
+workflow:
+  name: "Composed"
+  graph:
+    nodes:
+      - id: "start"
+        type: "input"
+      - id: "sub"
+        type: "subgraph"
+        workflow_id: "nested"
+      - id: "retry"
+        type: "loop"
+        condition: "done"
+        max_iterations: 2
+      - id: "end"
+        type: "output"
+    edges:
+      - from: "start"
+        to: "sub"
+      - from: "sub"
+        to: "retry"
+      - from: "retry"
+        to: "end"
+""".strip()
+    )
+    workflow_dict = load_workflow_yaml(workflow_yaml)
+    node_types = {node["id"]: node["type"] for node in workflow_dict["graph"]["nodes"]}
+    assert node_types == {"start": "input", "sub": "subgraph", "retry": "loop", "end": "output"}
+
+
+def test_load_workflow_yaml_resolves_agent_reference_by_name(tmp_path: Path) -> None:
+    """An agent node's graph id may differ from the agent definition it
+    references via `agent: <id>` — validation must check the reference,
+    not assume the node id and agent id are the same."""
+    workflow_yaml = tmp_path / "workflow.yaml"
+    workflow_yaml.write_text(
+        """
+workflow:
+  name: "Named reference"
+  agents:
+    - id: "router_agent"
+      role: "Router"
+      llm: "gpt-4"
+  graph:
+    nodes:
+      - id: "start"
+        type: "input"
+      - id: "router"
+        type: "agent"
+        agent: "router_agent"
+      - id: "end"
+        type: "output"
+    edges:
+      - from: "start"
+        to: "router"
+      - from: "router"
+        to: "end"
+""".strip()
+    )
+    workflow_dict = load_workflow_yaml(workflow_yaml)  # must not raise
+    assert workflow_dict["name"] == "Named reference"

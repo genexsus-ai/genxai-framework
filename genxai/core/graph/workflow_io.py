@@ -137,7 +137,17 @@ def _validate_workflow_schema(workflow: dict[str, Any]) -> None:
         if "id" not in node or "type" not in node:
             raise ValueError("Each node requires 'id' and 'type'")
         node_ids.add(node["id"])
-        if node["type"] not in {"input", "start", "output", "end", "agent", "tool", "condition"}:
+        if node["type"] not in {
+            "input",
+            "start",
+            "output",
+            "end",
+            "agent",
+            "tool",
+            "condition",
+            "subgraph",
+            "loop",
+        }:
             raise ValueError(f"Unsupported node type: {node['type']}")
 
     for edge in edges:
@@ -150,7 +160,13 @@ def _validate_workflow_schema(workflow: dict[str, Any]) -> None:
 
     agent_ids = {agent.get("id") for agent in workflow.get("agents", []) if isinstance(agent, dict)}
     for node in nodes:
-        if node.get("type") == "agent" and node.get("id") not in agent_ids:
+        if node.get("type") != "agent":
+            continue
+        # Agent nodes may reference a differently-named agent definition via
+        # `agent: <id>` (the graph node's own id is just its position in the
+        # graph); fall back to the node's own id when no reference is given.
+        referenced = node.get("agent", node.get("id"))
+        if referenced not in agent_ids:
             raise ValueError(f"Agent node '{node['id']}' has no matching agent definition")
 
 

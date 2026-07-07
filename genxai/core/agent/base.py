@@ -41,6 +41,14 @@ class AgentConfig(BaseModel):
     # Memory
     enable_memory: bool = Field(default=True, description="Enable memory system")
     memory_type: str = Field(default="short_term", description="Type of memory to use")
+    memory_persistence_path: str | None = Field(
+        default=None,
+        description="Directory for persistent memory; when set, memory survives across runs",
+    )
+    memory_id: str | None = Field(
+        default=None,
+        description="Stable identity for persistent memory (defaults to the agent id)",
+    )
 
     # Behavior
     agent_type: AgentType = Field(default=AgentType.REACTIVE)

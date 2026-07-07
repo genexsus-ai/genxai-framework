@@ -123,8 +123,16 @@ class AgentRuntime:
         # Initialize memory system if enabled
         if enable_memory and agent.config.enable_memory:
             try:
+                from pathlib import Path
+
                 from genxai.core.memory.manager import MemorySystem
-                self._memory = MemorySystem(agent_id=agent.id)
+
+                memory_path = agent.config.memory_persistence_path
+                self._memory = MemorySystem(
+                    agent_id=agent.config.memory_id or agent.id,
+                    persistence_enabled=bool(memory_path),
+                    persistence_path=Path(memory_path) if memory_path else None,
+                )
                 logger.info(f"Memory system initialized for agent {agent.id}")
             except Exception as e:
                 logger.warning(f"Failed to initialize memory system: {e}")

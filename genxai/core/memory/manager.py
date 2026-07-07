@@ -7,11 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from genxai.core.memory.backends import MemoryBackendPlugin, MemoryBackendRegistry
-from genxai.core.memory.base import Memory, MemoryConfig
+from genxai.core.memory.base import Memory, MemoryConfig, MemoryType
 from genxai.core.memory.embedding import EmbeddingServiceFactory
 from genxai.core.memory.episodic import Episode, EpisodicMemory
 from genxai.core.memory.long_term import LongTermMemory
-from genxai.core.memory.persistence import MemoryPersistenceConfig
+from genxai.core.memory.persistence import JsonMemoryStore, MemoryPersistenceConfig
 from genxai.core.memory.procedural import ProceduralMemory, Procedure
 from genxai.core.memory.semantic import Fact, SemanticMemory
 from genxai.core.memory.short_term import ShortTermMemory
@@ -98,8 +98,13 @@ class MemorySystem:
         self.summary_updated_at: datetime | None = None
         self.summary_version: int = 0
 
-        # Initialize short-term memory
+        # Initialize short-term memory (reloaded from disk when persistence is on,
+        # so conversation context survives across runs)
         self.short_term = ShortTermMemory(capacity=self.config.short_term_capacity)
+        self._short_term_store: JsonMemoryStore | None = None
+        if self._persistence.enabled:
+            self._short_term_store = JsonMemoryStore(self._persistence)
+            self._load_short_term()
 
         # Initialize working memory
         self.working = WorkingMemory(capacity=self.config.working_capacity)
@@ -178,6 +183,48 @@ class MemorySystem:
 
     # ==================== Short-term Memory ====================
 
+    def _short_term_filename(self) -> str:
+        safe = "".join(c if (c.isalnum() or c in "-_") else "_" for c in self.agent_id)
+        return f"short_term_{safe}.json"
+
+    def _load_short_term(self) -> None:
+        """Reload persisted short-term memories (oldest first, capacity evicts)."""
+        if not self._short_term_store:
+            return
+        for item in self._short_term_store.load_list(self._short_term_filename()):
+            try:
+                self.short_term.store(
+                    Memory(
+                        id=item["id"],
+                        type=MemoryType.SHORT_TERM,
+                        content=item.get("content"),
+                        metadata=item.get("metadata") or {},
+                        timestamp=datetime.fromisoformat(item["timestamp"]),
+                        importance=item.get("importance", 0.5),
+                        tags=item.get("tags") or [],
+                    )
+                )
+            except Exception as exc:
+                logger.warning("Skipping unreadable persisted memory: %s", exc)
+
+    def _save_short_term(self) -> None:
+        if not self._short_term_store:
+            return
+        self._short_term_store.save_list(
+            self._short_term_filename(),
+            [
+                {
+                    "id": memory.id,
+                    "content": memory.content,
+                    "metadata": memory.metadata,
+                    "timestamp": memory.timestamp.isoformat(),
+                    "importance": memory.importance,
+                    "tags": memory.tags,
+                }
+                for memory in self.short_term.memories
+            ],
+        )
+
     async def add_to_short_term(
         self,
         content: Any,
@@ -190,6 +237,7 @@ class MemorySystem:
             metadata: Optional metadata
         """
         await self.short_term.add(content, metadata)
+        self._save_short_term()
 
     async def get_short_term_context(self, max_tokens: int = 4000) -> str:
         """Get context from short-term memory for LLM.
@@ -244,7 +292,10 @@ class MemorySystem:
             Number of removed entries
         """
         window = keep_recent or self.config.short_term_window_size
-        return self.short_term.prune_to_recent(window)
+        removed = self.short_term.prune_to_recent(window)
+        if removed:
+            self._save_short_term()
+        return removed
 
     def set_rolling_summary(self, summary: str) -> None:
         """Set rolling summary text with configured token bound."""
@@ -293,6 +344,7 @@ class MemorySystem:
         """Clear short-term memory."""
         # clear() is sync; clear_async() is the async variant.
         await self.short_term.clear_async()
+        self._save_short_term()
 
     # ==================== Working Memory ====================
 

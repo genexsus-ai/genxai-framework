@@ -265,6 +265,8 @@ class WorkflowExecutor:
                 llm_model = config.get("llm_model", "gpt-4")
                 temperature = config.get("temperature", 0.7)
 
+                memory = config.get("memory") or {}
+
                 # Create agent
                 agent = AgentFactory.create_agent(
                     id=agent_id,
@@ -273,7 +275,10 @@ class WorkflowExecutor:
                     backstory=backstory,
                     tools=tools,
                     llm_model=llm_model,
-                    temperature=temperature,
+                    llm_temperature=temperature,
+                    enable_memory=config.get("enable_memory", True),
+                    memory_persistence_path=memory.get("persistence_path"),
+                    memory_id=memory.get("memory_id"),
                 )
 
                 # Register agent

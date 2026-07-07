@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Iterable
 from typing import Any
 
@@ -47,9 +47,18 @@ class FlowOrchestrator(ABC):
         for agent in self.agents:
             AgentRegistry.register(agent)
 
-    @abstractmethod
     def build_graph(self) -> Graph:
-        """Construct a Graph for this flow pattern."""
+        """Construct a Graph for this flow pattern.
+
+        Graph-building flows (round-robin, parallel, ...) override this and
+        run through the graph engine via the base ``run()``. Runtime-orchestrated
+        flows (auction, critic-review, p2p, ...) override ``run()`` directly and
+        never build a graph, so this base implementation only raises if a
+        subclass forgot to override one of the two.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__} must override either build_graph() or run()"
+        )
 
     async def run(
         self,

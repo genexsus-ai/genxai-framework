@@ -17,6 +17,7 @@ class NodeType(str, Enum):
     INPUT = "input"
     OUTPUT = "output"
     LOOP = "loop"
+    FLOW = "flow"
 
 
 class NodeConfig(BaseModel):
@@ -180,6 +181,50 @@ class SubgraphNode(Node):
             id=id,
             type=NodeType.SUBGRAPH,
             config=NodeConfig(type=NodeType.SUBGRAPH, data={"workflow_id": workflow_id}),
+            **kwargs,
+        )
+
+
+class FlowNode(Node):
+    """Node that runs a multi-agent flow pattern as a single step.
+
+    Wraps a ``genxai.flows`` orchestrator (auction, critic-review, map-reduce,
+    p2p, ...) so collaboration patterns that coordinate several agents at
+    runtime can be embedded in a graph like any other node.
+    """
+
+    def __init__(
+        self,
+        id: str,
+        flow_type: str,
+        agents: list[dict[str, Any]],
+        params: dict[str, Any] | None = None,
+        task: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize flow node.
+
+        Args:
+            id: Node id.
+            flow_type: Key into ``genxai.flows.FLOW_TYPES`` (e.g. "critic_review").
+            agents: Ordered agent specs ({role, goal, backstory?, llm_model?,
+                temperature?, tools?}). Order carries meaning per pattern:
+                coordinator first, critic second, reducer last, etc.
+            params: Extra constructor kwargs for the flow (max_rounds,
+                consensus_threshold, ...). Unknown keys are ignored.
+            task: Optional task template seeded into the flow's state.
+        """
+        data: dict[str, Any] = {
+            "flow_type": flow_type,
+            "agents": agents,
+            "params": params or {},
+        }
+        if task is not None:
+            data["task"] = task
+        super().__init__(
+            id=id,
+            type=NodeType.FLOW,
+            config=NodeConfig(type=NodeType.FLOW, data=data),
             **kwargs,
         )
 

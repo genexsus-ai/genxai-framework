@@ -16,6 +16,7 @@ from genxai.core.graph.interpolation import TemplateResolutionError, resolve_tem
 from genxai.core.graph.nodes import (
     AgentNode,
     ConditionNode,
+    FlowNode,
     InputNode,
     LoopNode,
     Node,
@@ -341,6 +342,21 @@ class WorkflowExecutor:
                 graph.add_node(
                     LoopNode(id=node_id, condition=condition, max_iterations=max_iterations, body=body)
                 )
+            elif node_type == "flow":
+                flow_node = FlowNode(
+                    id=node_id,
+                    flow_type=config.get("flow_type", ""),
+                    agents=config.get("agents") or [],
+                    params=config.get("params") or {},
+                    task=config.get("task"),
+                )
+                # Pattern-specific state seeds (critic_task, bid_task, ...) and
+                # an optional input template pass through to the executor.
+                if config.get("state"):
+                    flow_node.config.data["state"] = config["state"]
+                if "input" in config:
+                    flow_node.config.data["input"] = config["input"]
+                graph.add_node(flow_node)
             else:
                 logger.warning(f"Unknown node type: {node_type}")
                 continue

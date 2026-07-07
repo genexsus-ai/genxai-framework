@@ -693,6 +693,9 @@ class Graph:
         if node.type == NodeType.LOOP:
             return await self._execute_loop_node(node, state, max_iterations)
 
+        if node.type == NodeType.FLOW:
+            return await self._execute_flow_node(node, state, max_iterations)
+
         # Default fallback for unsupported nodes
         return {"node_id": node.id, "type": node.type.value}
 
@@ -892,6 +895,98 @@ class Graph:
         # a circular reference that breaks JSON serialization of results.
         result_state = {k: v for k, v in result_state.items() if k != "parent_state"}
         return {"workflow_id": workflow_id, "state": result_state}
+
+    async def _execute_flow_node(
+        self, node: Node, state: dict[str, Any], max_iterations: int
+    ) -> Any:
+        """Execute a multi-agent flow pattern (genxai.flows) as a single node.
+
+        config.data:
+            flow_type: key into genxai.flows.FLOW_TYPES
+            agents: ordered agent specs (role/goal/backstory/llm_model/
+                temperature/tools); order carries pattern meaning
+            params: extra flow-constructor kwargs, filtered by signature
+            task: optional task template, resolved against workflow state
+            state: optional dict seeded into the flow's state (template-resolved),
+                for pattern keys like critic_task or bid_task
+            input: optional input template; defaults to the workflow input
+        """
+        import inspect
+
+        # Lazy import: genxai.flows imports this module
+        from genxai.core.agent.base import AgentFactory
+        from genxai.flows import FLOW_TYPES
+
+        data = node.config.data
+        flow_type = data.get("flow_type")
+        flow_cls = FLOW_TYPES.get(flow_type)
+        if flow_cls is None:
+            raise GraphExecutionError(
+                f"Flow node '{node.id}': unknown flow_type '{flow_type}'. "
+                f"Available: {sorted(FLOW_TYPES)}"
+            )
+
+        agent_specs = data.get("agents") or []
+        if not agent_specs:
+            raise GraphExecutionError(f"Flow node '{node.id}' has no agents configured")
+
+        agents = []
+        for index, spec in enumerate(agent_specs):
+            agent = AgentFactory.create_agent(
+                id=spec.get("id") or f"{node.id}_agent_{index + 1}",
+                role=spec.get("role", "Agent"),
+                goal=spec.get("goal", "Process tasks"),
+                backstory=spec.get("backstory", ""),
+                tools=spec.get("tools", []),
+                llm_model=spec.get("llm_model", "gpt-4"),
+                llm_temperature=spec.get("temperature", 0.7),
+            )
+            AgentRegistry.register(agent)
+            agents.append(agent)
+
+        # Keep only params the flow's constructor accepts; warn on the rest.
+        raw_params = dict(data.get("params") or {})
+        accepted = set(inspect.signature(flow_cls.__init__).parameters) - {
+            "self", "agents", "name", "llm_provider"
+        }
+        params = {k: v for k, v in raw_params.items() if k in accepted}
+        if dropped := set(raw_params) - set(params):
+            logger.warning(
+                "Flow node '%s': dropping params not accepted by %s: %s",
+                node.id, flow_cls.__name__, sorted(dropped),
+            )
+
+        try:
+            flow = flow_cls(
+                agents=agents,
+                name=f"{node.id}:{flow_type}",
+                llm_provider=state.get("llm_provider"),
+                **params,
+            )
+        except (TypeError, ValueError) as exc:
+            raise GraphExecutionError(f"Flow node '{node.id}': {exc}") from exc
+
+        # Seed the flow's private state: a resolved task plus any pattern
+        # keys (critic_task, bid_task, ...) from config.data["state"].
+        flow_state: dict[str, Any] = {}
+        try:
+            if task := data.get("task"):
+                flow_state["task"] = resolve_templates(task, state)
+            for key, value in (data.get("state") or {}).items():
+                flow_state[key] = resolve_templates(value, state)
+            if "input" in data:
+                input_data = resolve_templates(data["input"], state)
+            else:
+                input_data = copy.deepcopy(state.get("input"))
+        except TemplateResolutionError as exc:
+            raise GraphExecutionError(f"Flow node '{node.id}': {exc}") from exc
+
+        result = await flow.run(
+            input_data=input_data,
+            state=flow_state,
+            max_iterations=max_iterations,
+        )
+        return {"flow_type": flow_type, "result": result}
 
     async def _execute_loop_node(
         self, node: Node, state: dict[str, Any], max_iterations: int

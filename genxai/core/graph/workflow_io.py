@@ -147,6 +147,7 @@ def _validate_workflow_schema(workflow: dict[str, Any]) -> None:
             "condition",
             "subgraph",
             "loop",
+            "flow",
         }:
             raise ValueError(f"Unsupported node type: {node['type']}")
 

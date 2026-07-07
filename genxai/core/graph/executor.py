@@ -405,6 +405,7 @@ class WorkflowExecutor:
         event_callback: Callable[[dict[str, Any]], Any] | None = None,
         shared_memory: bool = False,
         llm_provider: Any | None = None,
+        subgraphs: dict[str, dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Execute a workflow.
 
@@ -412,6 +413,8 @@ class WorkflowExecutor:
             nodes: Workflow nodes
             edges: Workflow edges
             input_data: Input data for execution
+            subgraphs: Nested workflow definitions ({workflow_id: {nodes, edges}})
+                referenced by subgraph nodes
 
         Returns:
             Execution result with status, result, and metadata
@@ -462,6 +465,7 @@ class WorkflowExecutor:
                 )
             result = await graph.run(
                 input_data=input_data,
+                state={"subgraphs": dict(subgraphs)} if subgraphs else None,
                 resume_from=checkpoint,
                 event_callback=event_callback,
             )
@@ -608,6 +612,7 @@ async def execute_workflow_async(
     model_override: str | None = None,
     event_callback: Callable[[dict[str, Any]], Any] | None = None,
     shared_memory: bool = False,
+    subgraphs: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Async convenience function for workflow execution.
 
@@ -635,5 +640,6 @@ async def execute_workflow_async(
         model_override=model_override,
         event_callback=event_callback,
         shared_memory=shared_memory,
+        subgraphs=subgraphs,
     )
 

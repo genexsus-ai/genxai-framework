@@ -332,3 +332,75 @@ async def test_tool_node_missing_tool_in_registry():
 
     with pytest.raises(GraphExecutionError):
         await graph._execute_tool_node(tool_node, {})
+
+
+@pytest.mark.asyncio
+async def test_subgraph_node_runs_nested_workflow_via_subgraphs_param():
+    """execute() accepts nested workflow definitions and a subgraph node
+    executes the referenced one."""
+    from genxai.core.graph.executor import execute_workflow_async
+
+    nested = {
+        "nodes": [
+            {"id": "n_start", "type": "input", "config": {}},
+            {
+                "id": "n_calc",
+                "type": "tool",
+                "config": {"tool_name": "calculator", "tool_params": {"expression": "6 * 7"}},
+            },
+            {"id": "n_end", "type": "output", "config": {}},
+        ],
+        "edges": [
+            {"source": "n_start", "target": "n_calc"},
+            {"source": "n_calc", "target": "n_end"},
+        ],
+    }
+    result = await execute_workflow_async(
+        nodes=[
+            {"id": "start", "type": "input", "config": {}},
+            {"id": "sub", "type": "subgraph", "config": {"workflow_id": "nested-wf"}},
+            {"id": "end", "type": "output", "config": {}},
+        ],
+        edges=[
+            {"source": "start", "target": "sub"},
+            {"source": "sub", "target": "end"},
+        ],
+        input_data={},
+        subgraphs={"nested-wf": nested},
+    )
+    assert result["status"] == "success"
+    sub_result = result["result"]["node_results"]["sub"]["output"]
+    assert sub_result["workflow_id"] == "nested-wf"
+    assert sub_result["state"]["n_calc"]["data"]["result"] == 42
+
+
+@pytest.mark.asyncio
+async def test_subgraph_result_state_has_no_circular_parent_reference():
+    """A subgraph node's returned state must not embed a reference back to
+    the parent state, or JSON-serializing the workflow result (as the
+    Studio does for its SSE stream) raises 'Circular reference detected'."""
+    import json
+
+    from genxai.core.graph.executor import execute_workflow_async
+
+    nested = {
+        "nodes": [
+            {"id": "n_start", "type": "input", "config": {}},
+            {"id": "n_end", "type": "output", "config": {}},
+        ],
+        "edges": [{"source": "n_start", "target": "n_end"}],
+    }
+    result = await execute_workflow_async(
+        nodes=[
+            {"id": "start", "type": "input", "config": {}},
+            {"id": "sub", "type": "subgraph", "config": {"workflow_id": "nested-wf"}},
+            {"id": "end", "type": "output", "config": {}},
+        ],
+        edges=[{"source": "start", "target": "sub"}, {"source": "sub", "target": "end"}],
+        input_data={},
+        subgraphs={"nested-wf": nested},
+    )
+    assert result["status"] == "success"
+    sub_state = result["result"]["node_results"]["sub"]["output"]["state"]
+    assert "parent_state" not in sub_state
+    json.dumps(result)  # must not raise ValueError: Circular reference detected

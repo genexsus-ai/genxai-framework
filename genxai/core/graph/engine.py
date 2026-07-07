@@ -886,6 +886,11 @@ class Graph:
             max_iterations=max_iterations,
             state={"parent_state": state},
         )
+        # Drop the parent-state backreference: run() returns the same dict
+        # object it was given, so leaving it in place would make the outer
+        # state embed itself once this result is stored under node.id —
+        # a circular reference that breaks JSON serialization of results.
+        result_state = {k: v for k, v in result_state.items() if k != "parent_state"}
         return {"workflow_id": workflow_id, "state": result_state}
 
     async def _execute_loop_node(

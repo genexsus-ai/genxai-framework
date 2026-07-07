@@ -150,6 +150,31 @@ class ExecutionStore:
             self._records[run_id] = record
             return record
 
+    def delete(self, run_id: str) -> bool:
+        """Remove a run record from memory and all configured persistence backends.
+
+        Returns True if a record existed and was removed, False otherwise.
+        """
+        existed = self._records.pop(run_id, None) is not None
+
+        if self._engine is not None and self._table is not None:
+            import sqlalchemy as sa
+
+            with self._engine.begin() as conn:
+                result = conn.execute(
+                    self._table.delete().where(self._table.c.run_id == run_id)
+                )
+                if result.rowcount:
+                    existed = True
+
+        if self._persistence_path:
+            path = self._persistence_path / f"execution_{run_id}.json"
+            if path.exists():
+                path.unlink()
+                existed = True
+
+        return existed
+
     def _persist(self, record: ExecutionRecord) -> None:
         if self._engine is not None and self._table is not None:
             import sqlalchemy as sa

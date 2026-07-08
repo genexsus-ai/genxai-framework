@@ -204,3 +204,6 @@ docs/.doctrees/
 .DS_Store
 Thumbs.db
 restart_workflow_studio_*.sh
+
+# Built distributions
+dist_pypi/

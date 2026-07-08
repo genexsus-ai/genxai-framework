@@ -247,10 +247,11 @@ Releases follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ### High Priority
 
-- Additional built-in tools (web, database, communication)
+- Additional built-in tools toward the 50-tool target (web, database, communication)
 - Long-term memory with vector DB integration
 - Episodic memory with graph DB
-- More LLM providers (Anthropic, Google, Cohere)
+- Cost tracking for LLM usage
+- Vector-store adapters (Pinecone, Weaviate, Qdrant)
 - Graph editor UI component
 - Agent designer UI component
 

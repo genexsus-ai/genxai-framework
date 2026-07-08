@@ -3,7 +3,6 @@
 Complete API documentation for the core GenXAI framework (non-Studio runtime).
 
 > **Note:** This reference matches the current code in `genxai/`.
-> For Studio workflow execution, see `docs/WORKFLOW_EXECUTION.md`.
 
 ---
 
@@ -47,11 +46,16 @@ Tools:
 Memory:
 - `enable_memory: bool = True`
 - `memory_type: str = "short_term"`
+- `memory_persistence_path: Optional[str] = None` (directory for persistent memory; when set, memory survives across runs)
+- `memory_id: Optional[str] = None` (stable identity for persistent memory; defaults to the agent id)
 
 Behavior:
 - `agent_type: AgentType = "reactive"`
 - `max_iterations: int = 10`
 - `verbose: bool = False`
+
+Ranking:
+- `enable_llm_ranking: bool = False` (LLM-based ranking utility for downstream selection)
 
 Guardrails:
 - `max_execution_time: Optional[float] = None`

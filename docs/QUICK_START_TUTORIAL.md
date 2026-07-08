@@ -57,7 +57,7 @@ async def main():
         role="Helpful Assistant",
         goal="Answer user questions clearly and concisely",
         llm_model="gpt-4",
-        temperature=0.7,
+        llm_temperature=0.7,
     )
 
     # Create runtime
@@ -113,7 +113,7 @@ async def main():
         goal="Solve mathematical problems accurately",
         tools=["calculator"],  # Specify which tools to use
         llm_model="gpt-4",
-        temperature=0.1,
+        llm_temperature=0.1,
     )
     
     # Get tools from registry
@@ -443,7 +443,7 @@ open htmlcov/index.html
 
 ### Explore Features
 - **Graph Patterns**: See `examples/patterns/` for workflow patterns
-- **Tool Creation**: Read `TOOLS_DESIGN.md` to create custom tools
+- **Tool Creation**: Read `docs/TOOL_CREATION.md` to create custom tools
 - **Memory System**: Explore `MEMORY_DESIGN.md` for advanced memory features
 - **LLM Integration**: Check `docs/LLM_INTEGRATION.md` for provider setup
 

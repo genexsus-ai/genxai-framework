@@ -29,26 +29,14 @@ policy.add_rule(
     AccessRule(permissions={Permission.MEMORY_READ, Permission.MEMORY_WRITE}, allowed_users={"alice"})
 )
 
-# Trigger-level policies
-policy.add_rule(
-    "trigger:webhook_inbound",
-    AccessRule(permissions={Permission.TRIGGER_EXECUTE}, allowed_users={"alice", "bob"})
-)
-
-# Connector-level policies
-policy.add_rule(
-    "connector:kafka_events",
-    AccessRule(permissions={Permission.CONNECTOR_READ, Permission.CONNECTOR_WRITE}, allowed_users={"alice"})
-)
-
-policy.add_rule(
-    "connector:postgres_cdc",
-    AccessRule(permissions={Permission.CONNECTOR_READ}, allowed_users={"alice", "bob"})
-)
-
 set_current_user(User(user_id="alice", role=Role.DEVELOPER))
-# Tool, trigger, and connector execution will be allowed only for alice.
+# Tool, agent, and memory access will be allowed only for alice.
 ```
+
+> **Note**: The `Permission` enum currently covers `AGENT_*`, `WORKFLOW_*`,
+> `TOOL_*`, and `MEMORY_*` permissions only. Dedicated trigger-level and
+> connector-level permissions are not yet implemented and are planned as
+> future work.
 
 ## Policy Enforcement Points
 
@@ -57,12 +45,12 @@ GenXAI enforces policies at multiple layers:
 1. **Tool Execution**: Before executing any tool, the policy engine checks if the current user has `TOOL_EXECUTE` permission for that specific tool resource.
 2. **Agent Execution**: Before running an agent, the policy engine validates `AGENT_EXECUTE` permission.
 3. **Memory Access**: Read/write operations on shared memory require `MEMORY_READ`/`MEMORY_WRITE` permissions.
-4. **Trigger Activation**: Triggers (webhook, schedule, queue, file watcher) require `TRIGGER_EXECUTE` permission.
-5. **Connector Operations**: Connectors (webhook, Kafka, SQS, Postgres CDC) require `CONNECTOR_READ`/`CONNECTOR_WRITE` permissions.
+4. **Trigger Activation** *(planned)*: Dedicated trigger-level permissions for triggers (webhook, schedule, queue, file watcher) are not yet implemented.
+5. **Connector Operations** *(planned)*: Dedicated connector-level permissions for connectors (webhook, Kafka, SQS, Postgres CDC) are not yet implemented.
 
 ## Best Practices
 
 - **Principle of Least Privilege**: Grant only the minimum permissions required for each user/role.
-- **Resource-Specific Rules**: Use fine-grained ACLs for sensitive tools, triggers, and connectors.
+- **Resource-Specific Rules**: Use fine-grained ACLs for sensitive tools, agents, and memory resources.
 - **Audit Logging**: Enable audit logging to track all policy decisions and access attempts.
 - **Regular Reviews**: Periodically review and update policies as your system evolves.

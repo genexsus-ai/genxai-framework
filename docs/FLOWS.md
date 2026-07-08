@@ -212,6 +212,74 @@ flow = AuctionFlow(agents)
 result_state = await flow.run({"task": "Handle request"})
 ```
 
+## Using flows inside graph workflows
+
+Flows can also run as a single node inside a graph workflow via `FlowNode`
+(`NodeType.FLOW`). The engine looks up the orchestrator class in
+`genxai.flows.FLOW_TYPES`, builds the agents with `AgentFactory` from the
+ordered specs, and stores the flow's output under the node id.
+
+Eight patterns are addressable by name: `round_robin`, `parallel`, `auction`,
+`coordinator_worker`, `critic_review`, `ensemble_voting`, `map_reduce`, and
+`p2p`. The conditional, router, selector, and subworkflow flows are excluded
+from `FLOW_TYPES` because they need Python callables (or a pre-built graph)
+that cannot be expressed in a serialized node config.
+
+```python
+from genxai.core.graph.nodes import FlowNode
+
+node = FlowNode(
+    id="review_loop",
+    flow_type="critic_review",
+    agents=[
+        {"role": "Writer", "goal": "Draft the summary"},
+        {"role": "Critic", "goal": "Review the draft"},
+    ],
+    params={"max_iterations": 2},
+    task="Summarize: {{ input }}",
+)
+```
+
+Or as a serialized node dict in a workflow definition:
+
+```json
+{
+  "id": "review_loop",
+  "type": "flow",
+  "config": {
+    "flow_type": "critic_review",
+    "agents": [
+      {"role": "Writer", "goal": "Draft the summary"},
+      {"role": "Critic", "goal": "Review the draft"}
+    ],
+    "params": {"max_iterations": 2},
+    "task": "Summarize: {{ input }}"
+  }
+}
+```
+
+Behavior details:
+
+- **Agent specs**: each entry supports `role`, `goal`, and optional
+  `backstory`, `llm_model`, `temperature`, and `tools`. Order carries meaning
+  per pattern: coordinator first for `coordinator_worker`, critic second for
+  `critic_review`, reducer last for `map_reduce`, and so on.
+- **Params**: extra constructor kwargs for the flow (e.g. `max_rounds`,
+  `consensus_threshold`). Keys the flow's constructor does not accept are
+  dropped with a warning.
+- **Templates**: `{{ ... }}` placeholders in `task`, `state`, and `input` are
+  resolved against the workflow state before the flow runs. `input` defaults
+  to the workflow's input when omitted.
+- **Result**: the node stores `{"flow_type": ..., "result": ...}` in the
+  workflow state under the node's id (also visible in
+  `state["node_results"]["<node_id>"]["output"]`), so downstream nodes can
+  reference it, e.g. `{{ review_loop.result }}`.
+
+> Note: an earlier bug made several runtime flows (including auction,
+> critic-review, and map-reduce) uninstantiable due to an abstract
+> `build_graph` declaration. This has been fixed; all eight `FLOW_TYPES`
+> patterns above can be constructed and run.
+
 ## Notes
 - These flows register agents in `AgentRegistry` automatically.
 - Flow orchestrators include default execution safeguards: 120s timeout per agent call,

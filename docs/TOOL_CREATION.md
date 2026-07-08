@@ -1,7 +1,8 @@
 # Tool Creation Guide
 
 This guide explains how to create tools in GenXAI and register them so agents
-can use them at runtime. For detailed architecture, see `TOOLS_DESIGN.md`.
+can use them at runtime. For the underlying implementation, see the `Tool` base
+class in `genxai/tools/base.py` and `DynamicTool` in `genxai/tools/dynamic.py`.
 
 ---
 
@@ -82,5 +83,5 @@ genxai tool create \
 
 ## 5) See Also
 
-- `TOOLS_DESIGN.md` for full architecture
+- `genxai/tools/base.py` (`Tool` base class) and `genxai/tools/dynamic.py` (`DynamicTool`) for the tool architecture
 - `docs/CLI_USAGE.md` for CLI examples

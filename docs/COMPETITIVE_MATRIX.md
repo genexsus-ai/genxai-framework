@@ -6,6 +6,10 @@ popular agentic frameworks and workflow engines: **CrewAI**, **AutoGen**, **BeeA
 
 > Scope note: Studio‑specific GUI features are intentionally excluded from this comparison.
 
+> As of July 2026 — framework versions evaluated at time of writing. Competitor
+> capabilities evolve quickly; verify against current releases before relying on
+> this matrix.
+
 ---
 
 ## Executive Summary

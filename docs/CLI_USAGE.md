@@ -18,14 +18,14 @@ runtime commands (connectors, metrics, approvals, audit) out of the box.
 # Install GenXAI (core only)
 pip install -e .
 
-# Or install from PyPI (when published)
-pip install genxai
+# Or install from PyPI
+pip install genxai-framework
 
 # Full install with providers/tools/API (core)
-pip install "genxai[llm,tools,api]"
+pip install "genxai-framework[llm,tools,api]"
 
 # Everything included
-pip install "genxai[all]"
+pip install "genxai-framework[all]"
 ```
 
 ### Studio note
@@ -276,17 +276,15 @@ genxai approval reject <request_id> --reason "Security concern"
 Query and export audit logs:
 
 ```bash
-# List recent audit events
-genxai audit list --limit 50
+# List audit events (table output by default)
+genxai audit list
 
-# Filter by user
-genxai audit list --user alice
-
-# Filter by resource type
-genxai audit list --resource-type tool
+# List audit events as JSON or CSV
+genxai audit list --format json
+genxai audit list --format csv
 
 # Export audit logs to JSON
-genxai audit export --output audit_logs.json --start-date 2026-01-01
+genxai audit export --output audit_logs.json --format json
 ```
 
 ## Tool Categories
@@ -397,7 +395,7 @@ jobs:
           python-version: '3.11'
       
       - name: Install GenXAI
-        run: pip install genxai
+        run: pip install genxai-framework
       
       - name: Configure encrypted connector configs (optional)
         env:

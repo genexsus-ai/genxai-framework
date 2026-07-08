@@ -1,8 +1,8 @@
 # GenXAI Framework - Requirements Specification
 
 **Version:** 1.0.0  
-**Last Updated:** January 28, 2026  
-**Status:** Design Phase
+**Last Updated:** July 2026  
+**Status:** Living requirements (largely implemented)
 
 ---
 
@@ -43,7 +43,7 @@ Create the most advanced agentic AI framework that combines the best features of
 
 #### FR1.1: Graph Definition
 - **REQ-1.1.1**: Support directed graph definition with nodes and edges
-- **REQ-1.1.2**: Support multiple node types: Agent, Tool, Condition, Subgraph, Human-in-the-loop
+- **REQ-1.1.2**: Support multiple node types: Agent, Tool, Condition, Subgraph, Human-in-the-loop, Input, Output, Loop, Flow
 - **REQ-1.1.3**: Support conditional edges based on state
 - **REQ-1.1.4**: Support parallel execution of independent branches
 - **REQ-1.1.5**: Support cycles and loops with termination conditions
@@ -132,7 +132,7 @@ Create the most advanced agentic AI framework that combines the best features of
 - **REQ-4.1.3**: File tools (read, write, parse)
 - **REQ-4.1.4**: Computation tools (calculator, code execution)
 - **REQ-4.1.5**: Communication tools (email, Slack, SMS)
-- **REQ-4.1.6**: Minimum 50 built-in tools
+- **REQ-4.1.6**: Minimum 50 built-in tools *(partially met: ~32 shipped)*
 
 #### FR4.2: Tool Management
 - **REQ-4.2.1**: Central tool registry
@@ -146,7 +146,7 @@ Create the most advanced agentic AI framework that combines the best features of
 - **REQ-4.3.3**: Create tools using LLM generation
 - **REQ-4.3.4**: Tool composition and chaining
 
-#### FR4.4: Tool Marketplace
+#### FR4.4: Tool Marketplace *(Not implemented — future)*
 - **REQ-4.4.1**: Browse available tools
 - **REQ-4.4.2**: Install tools from marketplace
 - **REQ-4.4.3**: Publish custom tools

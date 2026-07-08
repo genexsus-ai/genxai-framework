@@ -13,7 +13,7 @@ GenXAI is an advanced agentic AI framework designed to surpass existing solution
 - **Graph-Based Orchestration** (like LangGraph) for complex agent workflows
 - **Advanced Memory Systems** with multiple memory types (short-term, long-term, episodic, semantic, procedural)
 - **No-Code Workflow Studio** for visual drag-and-drop workflow building
-- **50+ Built-in Tools** for web, database, file, computation, and communication tasks
+- **30+ Built-in Tools** for web, database, file, computation, and communication tasks
 - **Production-Grade Features** including observability, security, connectors, and scalability
 
 > **Fully open source**: everything in this repository — the core framework and all
@@ -22,7 +22,7 @@ GenXAI is an advanced agentic AI framework designed to surpass existing solution
 
 ## 🧩 Applications
 
-- **Workflow Studio**: no-code drag-and-drop workflow builder (n8n-style) — visual canvas for composing agent/tool pipelines with live execution status, built on this framework (developed separately; not included in this repository).
+- **Workflow Studio**: no-code drag-and-drop workflow builder (n8n-style) — visual canvas for composing agent/tool pipelines with live execution status, built on this framework. Included at `applications/workflow_studio/` (tracked as its own git repository; excluded from this package's build).
 - **[Autonomous Coding Agent](https://github.com/genexsus-ai/genxbot/blob/main/README.md)**: GenXAI-powered autonomous coding application (separate repository).
   - Includes recipe-template run support with blended recipe + agent-generated actions (dedupe + fallback action coverage), plus structured observability hooks for planning latency, tool invocations, safety decisions, and retry/failure events.
 
@@ -46,13 +46,14 @@ Everything in this repository is open source under the MIT license:
 - Conditional edges and dynamic routing
 - Parallel and sequential execution
 - Cycles, loops, and subgraphs
+- Agent-team (FLOW) nodes: embed multi-agent flow patterns (critic review, ensemble voting, map-reduce, p2p, and more) as a single workflow node via `FLOW_TYPES`
 - Real-time visualization
 
 ### 🧠 Advanced Agent Capabilities
 - **Multi-Modal**: Text, vision, audio, code understanding
 - **Learning**: Self-improvement through feedback
 - **Memory**: Multi-layered memory system
-- **Tools**: 50+ built-in tools + custom tool creation
+- **Tools**: 30+ built-in tools + custom tool creation
 - **Personality**: Configurable agent personalities
 - **LLM Ranking (opt-in)**: Safe JSON-based ranking with heuristic fallbacks for tool selection ([docs/LLM_INTEGRATION.md](./docs/LLM_INTEGRATION.md))
 
@@ -76,8 +77,9 @@ print(stats["backend_plugins"].keys())  # e.g. redis/sqlite/neo4j (when configur
 ### 🎨 No-Code Workflow Studio
 A drag-and-drop visual workflow builder (drag agents, tools, decisions, and
 loops onto a canvas, wire them into a pipeline, and run it with live per-node
-status) is built on this framework and developed separately; it is not
-included in this repository.
+status) is built on this framework and included at `applications/workflow_studio/`
+(tracked as its own git repository; excluded from this package's build). Run it
+with `./restart_workflow_studio_backend.sh` and `./restart_workflow_studio_frontend.sh`.
 
 ### ⚡ Trigger SDK (OSS)
 Trigger SDKs are part of the OSS runtime and live under `genxai/triggers`.
@@ -99,13 +101,9 @@ Comprehensive documentation is available in the following files:
 
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete system architecture and design principles
 - **[REQUIREMENTS.md](./REQUIREMENTS.md)** - Detailed functional and non-functional requirements
-- **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)** - Development roadmap
-- **[TOOLS_DESIGN.md](./TOOLS_DESIGN.md)** - Tool system architecture and 50+ built-in tools
 - **[MEMORY_DESIGN.md](./MEMORY_DESIGN.md)** - Multi-layered memory system design
 - **[WORKFLOW_COMPOSITION.md](./docs/WORKFLOW_COMPOSITION.md)** - Composing global workflows with subflows
 - **[COMPARISON.md](./docs/COMPARISON.md)** - CrewAI vs GenXAI comparison guide
-- **[COMPARISON_CHEATSHEET.md](./docs/COMPARISON_CHEATSHEET.md)** - Condensed comparison cheatsheet
-- **[COMPARISON_SLIDES.md](./docs/COMPARISON_SLIDES.md)** - Slide-style outline for presentations
 
 ### 🖼️ Workflow Composition Preview
 
@@ -363,7 +361,7 @@ pip install "genxai-framework[llm,tools,api]"
 pip install "genxai-framework[all]"
 ```
 
-> The Workflow Studio (visual builder) is developed separately and not included here.
+> The Workflow Studio (visual builder) lives at `applications/workflow_studio/` in the source repository (its own git repository; excluded from this package's build).
 
 ---
 

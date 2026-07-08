@@ -25,8 +25,6 @@ Complete guide to GenXAI framework documentation.
 | [WORKFLOW_COMPOSITION](./WORKFLOW_COMPOSITION.md) | Compose global workflows with subflows + deterministic steps |
 | [WORKFLOW_COMPOSITION_JSON](./diagrams/workflow_composition.json) | JSON snapshot of the workflow composition graph |
 | [COMPARISON](./COMPARISON.md) | CrewAI vs GenXAI comparison guide |
-| [COMPARISON_CHEATSHEET](./COMPARISON_CHEATSHEET.md) | Condensed comparison cheatsheet |
-| [COMPARISON_SLIDES](./COMPARISON_SLIDES.md) | Slide-style comparison outline |
 
 ---
 
@@ -35,6 +33,7 @@ Complete guide to GenXAI framework documentation.
 | Document | Description |
 |----------|-------------|
 | [API_REFERENCE](./API_REFERENCE.md) | Complete API reference with examples |
+| [API](./API.md) | Condensed API guide |
 | [CONNECTOR_SDK (OSS Runtime)](./CONNECTOR_SDK.md) | Connector SDK for external integrations |
 | [LLM_INTEGRATION](./LLM_INTEGRATION.md) | LLM provider integration guide |
 
@@ -45,6 +44,7 @@ Complete guide to GenXAI framework documentation.
 | Document | Description |
 |----------|-------------|
 | [CLI_USAGE (OSS Runtime)](./CLI_USAGE.md) | OSS CLI (`genxai tool/workflow/connector/metrics/approval/audit`) |
+| [TOOL_CREATION](./TOOL_CREATION.md) | Creating custom tools |
 | [MCP_SETUP](./MCP_SETUP.md) | Model Context Protocol server setup |
 
 ---
@@ -76,7 +76,6 @@ Complete guide to GenXAI framework documentation.
 |----------|-------------|
 | [RELEASE_CHECKLIST](./RELEASE_CHECKLIST.md) | Pre-release checklist |
 | [PUBLISHING](./PUBLISHING.md) | PyPI publishing guide |
-| [LAUNCH_PLAN](../LAUNCH_PLAN.md) | 4-week go-to-market plan |
 
 ---
 
@@ -84,7 +83,7 @@ Complete guide to GenXAI framework documentation.
 
 | Document | Description |
 |----------|-------------|
-| [COMPETITIVE_MATRIX](./COMPETITIVE_MATRIX.md) | Comparison vs CrewAI, AutoGen, BeeAI, LangGraph |
+| [COMPETITIVE_MATRIX](./COMPETITIVE_MATRIX.md) | Comparison vs CrewAI, AutoGen, BeeAI, LangChain |
 
 ---
 
@@ -106,7 +105,6 @@ The runtime includes production-grade capabilities:
 | Document | Description |
 |----------|-------------|
 | [CONTRIBUTING](../CONTRIBUTING.md) | Contribution guidelines |
-| [IMPLEMENTATION_PLAN](../IMPLEMENTATION_PLAN.md) | Development roadmap |
 
 ---
 
@@ -125,7 +123,7 @@ The runtime includes production-grade capabilities:
 - [examples/patterns/](../examples/patterns/) - Common workflow patterns
 
 ### Studio (Visual Workflow Builder)
-- A no-code drag-and-drop workflow builder is developed separately and is not included in this repository.
+- A no-code drag-and-drop workflow builder (Workflow Studio) lives in this repo at `applications/workflow_studio/` (its own git repository, excluded from the package build). See its README for setup.
 
 ---
 
@@ -176,7 +174,6 @@ The runtime includes production-grade capabilities:
 - ✅ CLI_USAGE.md
 - ✅ BENCHMARKING.md
 - ✅ GOVERNANCE_POLICY.md
-- 📋 LAUNCH_PLAN.md
 - ✅ RELEASE_CHECKLIST.md
 - ✅ SECURITY_CHECKLIST.md
 - ✅ CONNECTOR_SDK.md
@@ -194,4 +191,4 @@ The runtime includes production-grade capabilities:
 
 ---
 
-**Last Updated**: February 3, 2026
+**Last Updated**: July 2026

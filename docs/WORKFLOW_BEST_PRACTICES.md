@@ -28,14 +28,19 @@ Each agent should have one clear, well-defined responsibility.
 **✅ Good:**
 ```python
 # Specialized agents
-classifier = Agent(role="Request Classifier", goal="Categorize requests")
-processor = Agent(role="Data Processor", goal="Process classified data")
+classifier = AgentFactory.create_agent(
+    id="classifier", role="Request Classifier", goal="Categorize requests"
+)
+processor = AgentFactory.create_agent(
+    id="processor", role="Data Processor", goal="Process classified data"
+)
 ```
 
 **❌ Bad:**
 ```python
 # Agent doing too much
-super_agent = Agent(
+super_agent = AgentFactory.create_agent(
+    id="super_agent",
     role="Do Everything Agent",
     goal="Classify, process, validate, and report"
 )
@@ -80,8 +85,9 @@ Workflows should produce the same result when run multiple times with the same i
 # Use deterministic settings for reproducibility
 agent = AgentFactory.create_agent(
     id="processor",
-    temperature=0.0,  # Deterministic
-    seed=42  # Reproducible
+    role="Data Processor",
+    goal="Process classified data",
+    llm_temperature=0.0,  # Deterministic
 )
 ```
 
@@ -125,12 +131,13 @@ Define clear state schemas to prevent errors.
 from genxai.core.state.schema import StateSchema
 
 schema = StateSchema(
-    required_fields=["input", "category", "priority"],
-    optional_fields=["metadata", "history"],
-    field_types={
+    fields={
+        "input": str,
+        "category": str,
         "priority": int,
-        "category": str
-    }
+    },
+    required_fields={"input", "category", "priority"},
+    metadata={"description": "Request-processing workflow state"},
 )
 
 state_manager = StateManager(schema=schema)
@@ -147,8 +154,8 @@ state_manager.checkpoint("before_analysis")
 try:
     result = await expensive_operation()
 except Exception as e:
-    # Restore from checkpoint
-    state_manager.restore("before_analysis")
+    # Roll back to the checkpointed version
+    state_manager.rollback()
     logger.error(f"Operation failed: {e}")
 ```
 
@@ -157,13 +164,13 @@ except Exception as e:
 Track state evolution for debugging and auditing.
 
 ```python
-# Enable versioning
-state_manager = StateManager(enable_versioning=True)
+# Versioning is built in - every set/delete records a history entry
+state_manager = StateManager()
 
 # Access history
 history = state_manager.get_history()
-for version in history:
-    print(f"Version {version.id}: {version.changes}")
+for entry in history:
+    print(f"Version {entry['version']}: {entry['action']} {entry.get('key', '')}")
 ```
 
 ### 4. Clean Up State
@@ -172,11 +179,13 @@ Remove unnecessary data to prevent memory bloat.
 
 ```python
 # Remove temporary data after use
-state_manager.remove("temp_calculations")
-state_manager.remove("intermediate_results")
+state_manager.delete("temp_calculations")
+state_manager.delete("intermediate_results")
 
 # Keep only essential data
-state_manager.keep_only(["final_result", "metadata"])
+for key in list(state_manager.get_all()):
+    if key not in ("final_result", "metadata"):
+        state_manager.delete(key)
 ```
 
 ---
@@ -472,14 +481,18 @@ Provide agents with tools relevant to their responsibilities.
 
 ```python
 # Research agent
-research_agent = Agent(
+research_agent = AgentFactory.create_agent(
+    id="researcher",
     role="Researcher",
+    goal="Gather and summarize relevant information",
     tools=["web_search", "document_reader", "summarizer"]
 )
 
 # Analysis agent
-analysis_agent = Agent(
+analysis_agent = AgentFactory.create_agent(
+    id="analyst",
     role="Analyst",
+    goal="Analyze data and produce insights",
     tools=["calculator", "statistical_analyzer", "visualizer"]
 )
 ```
@@ -565,7 +578,8 @@ import pytest
 async def test_classifier_agent():
     agent = AgentFactory.create_agent(
         id="classifier",
-        role="Classifier"
+        role="Classifier",
+        goal="Categorize incoming requests"
     )
     
     result = await agent.execute({
@@ -708,8 +722,11 @@ with workflow_duration.time():
 Enable detailed debugging when needed.
 
 ```python
-# Enable debug mode
-graph = Graph(name="workflow", debug=True)
+# Enable debug logging
+import logging
+logging.getLogger("genxai").setLevel(logging.DEBUG)
+
+graph = Graph(name="workflow")
 
 # Debug output shows:
 # - Node execution order
@@ -901,15 +918,14 @@ async def process_workflow_queue():
 The coordinator should focus on high-level oversight.
 
 ```python
-coordinator = Agent(
+coordinator = AgentFactory.create_agent(
+    id="coordinator",
     role="Project Coordinator",
     goal="Ensure project success and quality",
-    responsibilities=[
-        "Define success criteria",
-        "Monitor overall progress",
-        "Ensure quality standards",
-        "Handle escalations"
-    ],
+    backstory=(
+        "You define success criteria, monitor overall progress, "
+        "ensure quality standards, and handle escalations."
+    ),
     # Coordinator should NOT do detailed work
     tools=["project_tracker", "quality_checker"]
 )
@@ -949,14 +965,16 @@ Create highly specialized workers.
 
 ```python
 # Good: Specialized workers
-research_worker = Agent(
+research_worker = AgentFactory.create_agent(
+    id="research_worker",
     role="Research Specialist",
     goal="Conduct thorough research",
     tools=["web_search", "academic_search", "document_reader"]
 )
 
 # Bad: Generic worker
-generic_worker = Agent(
+generic_worker = AgentFactory.create_agent(
+    id="generic_worker",
     role="General Worker",
     goal="Do whatever is needed",
     tools=["everything"]  # Too broad

@@ -40,8 +40,7 @@ async def build_subflow() -> Graph:
         id="sub_agent",
         role="Support Analyst",
         goal="Summarize the request",
-        temperature=0.0,
-        seed=42,
+        llm_temperature=0.0,
     )
 
     subgraph = Graph(name="support_subflow")
@@ -67,7 +66,7 @@ if __name__ == "__main__":
 ```
 
 **Notes**
-- Use `temperature=0.0` and `seed` for deterministic agent behavior.
+- Use `llm_temperature=0.0` for more deterministic agent behavior.
 - A `SubworkflowFlow` can be invoked by a global orchestrator flow or graph.
 
 ---
@@ -106,8 +105,7 @@ def build_global_graph() -> Graph:
         id="router_agent",
         role="Router",
         goal="Finalize routing decision",
-        temperature=0.0,
-        seed=42,
+        llm_temperature=0.0,
     )
     graph.add_node(ToolNode(id="read_file", tool_name="file_reader"))
     graph.add_node(ToolNode(id="fetch_url", tool_name="api_caller"))
@@ -531,7 +529,7 @@ dot -Tsvg workflow.dot -o workflow.svg
 ## Deterministic Components Checklist
 
 - **Routing logic**: `ConditionNode`, `RouterFlow`, `ConditionalFlow`, `SelectorFlow`.
-- **Deterministic agents**: `temperature=0.0`, set `seed`.
+- **Deterministic agents**: `llm_temperature=0.0`.
 - **Deterministic tools**: use `ToolNode` for fixed operations or validations.
 - **State-driven control**: set `state` keys to trigger route/branching deterministically.
 

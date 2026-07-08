@@ -1,6 +1,6 @@
 # Publishing GenXAI to PyPI
 
-This guide explains how to publish GenXAI to the Python Package Index (PyPI) so users can install it with `pip install genxai`.
+This guide explains how to publish GenXAI to the Python Package Index (PyPI) so users can install it with `pip install genxai-framework`.
 
 ## Prerequisites
 
@@ -53,8 +53,8 @@ password = pypi-YOUR_TESTPYPI_API_TOKEN_HERE
 ## Packaging Scope
 
 The packaging config in `pyproject.toml` includes only `genxai*` and explicitly
-excludes `tests*`, `docs*`, and `examples*`. That means a `pip install genxai`
-installs the framework package only.
+excludes `tests*`, `docs*`, `examples*`, and `studio*`. That means a
+`pip install genxai-framework` installs the framework package only.
 
 To verify locally:
 
@@ -70,8 +70,8 @@ Update version in `pyproject.toml`:
 
 ```toml
 [project]
-name = "genxai"
-version = "0.1.0"  # Update this for each release
+name = "genxai-framework"
+version = "1.0.0"  # Update this for each release
 ```
 
 Version format: `MAJOR.MINOR.PATCH`
@@ -94,8 +94,8 @@ python -m build
 ```
 
 This creates:
-- `dist/genxai-0.1.0.tar.gz` (source distribution)
-- `dist/genxai-0.1.0-py3-none-any.whl` (wheel)
+- `dist/genxai_framework-1.0.0.tar.gz` (source distribution)
+- `dist/genxai_framework-1.0.0-py3-none-any.whl` (wheel)
 
 ### Step 4: Test on TestPyPI (Recommended)
 
@@ -104,7 +104,7 @@ This creates:
 python -m twine upload --repository testpypi dist/*
 
 # Test installation from TestPyPI
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ genxai
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ genxai-framework
 ```
 
 **Note**: `--extra-index-url` allows installing dependencies from regular PyPI.
@@ -122,7 +122,7 @@ python -m twine upload dist/*
 
 ```bash
 # Install from PyPI
-pip install genxai
+pip install genxai-framework
 
 # Test the core install
 python -c "import genxai; print(genxai.__version__)"
@@ -185,11 +185,11 @@ Before publishing a new version:
 - [ ] Run tests: `pytest`
 - [ ] Build locally: `python -m build`
 - [ ] Test on TestPyPI
-- [ ] Create git tag: `git tag v0.1.0`
-- [ ] Push tag: `git push origin v0.1.0`
+- [ ] Create git tag: `git tag v1.0.0`
+- [ ] Push tag: `git push origin v1.0.0`
 - [ ] Publish to PyPI
 - [ ] Create GitHub release
-- [ ] Verify installation: `pip install genxai`
+- [ ] Verify installation: `pip install genxai-framework`
 
 ## Version Management
 
@@ -214,7 +214,7 @@ version = "0.1.0rc1" # Release candidate
 Install pre-releases:
 
 ```bash
-pip install --pre genxai
+pip install --pre genxai-framework
 ```
 
 ## Troubleshooting
@@ -297,11 +297,11 @@ python -m twine upload --repository testpypi dist/*
 python -m twine upload dist/*
 
 # Install from PyPI
-pip install genxai
+pip install genxai-framework
 
 # Install specific version
-pip install genxai==0.1.0
+pip install genxai-framework==1.0.0
 
 # Upgrade to latest
-pip install --upgrade genxai
+pip install --upgrade genxai-framework
 ```

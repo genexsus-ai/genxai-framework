@@ -171,7 +171,7 @@ The heart of GenXAI, enabling complex agent orchestration.
 ```python
 class Node(Protocol):
     id: str
-    type: NodeType  # Agent, Tool, Condition, Subgraph, Human
+    type: NodeType  # Agent, Tool, Condition, Subgraph, Human, Input, Output, Loop, Flow
     config: Dict[str, Any]
     
 class Edge(Protocol):
@@ -185,12 +185,18 @@ class Graph:
     edges: List[Edge]
     state_schema: StateSchema
     
-    def compile() -> CompiledGraph
-    def validate() -> ValidationResult
-    def visualize() -> GraphVisualization
-    def to_yaml() -> str
-    def from_yaml(yaml: str) -> Graph
+    async def run(...) -> Any
+    def validate() -> bool
+    def draw_ascii() -> str
+    def to_mermaid() -> str
+    def to_dot() -> str
+    def print_structure() -> None
 ```
+
+A `Flow` node runs a multi-agent flow pattern (from the `FLOW_TYPES` registry,
+e.g. critic review, ensemble voting, map-reduce, p2p) as a single node.
+YAML workflow I/O lives in `genxai/core/graph/workflow_io.py`
+(`load_workflow_yaml`).
 
 ### 2. Agent System
 
@@ -281,7 +287,7 @@ Multi-layered memory architecture inspired by human cognition.
 
 ### 4. Tool System
 
-Extensible tool architecture with 50+ built-in tools.
+Extensible tool architecture with 30+ built-in tools.
 
 **Tool Categories:**
 - Web (search, scraping, API calls)

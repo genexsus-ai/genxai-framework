@@ -512,5 +512,4 @@ with span("genxai.agent.execute", {"agent_id": "researcher"}):
 
 - `docs/FLOWS.md`
 - `docs/WORKFLOW_COMPOSITION.md`
-- `docs/WORKFLOW_EXECUTION.md`
 - `docs/API_REFERENCE.md`

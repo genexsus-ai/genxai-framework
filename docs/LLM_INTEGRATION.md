@@ -41,7 +41,7 @@ agent = AgentFactory.create_agent(
     role="Helpful Assistant",
     goal="Answer questions accurately",
     llm_model="gpt-3.5-turbo",
-    temperature=0.7,
+    llm_temperature=0.7,
 )
 
 # Create runtime (automatically connects to LLM)
@@ -70,7 +70,7 @@ agent = AgentFactory.create_agent(
     role="Assistant",
     goal="Help users",
     llm_model="gpt-4",  # Provider created automatically
-    temperature=0.8,
+    llm_temperature=0.8,
     llm_max_tokens=1000,
 )
 
@@ -154,7 +154,7 @@ agent = AgentFactory.create_agent(
     role="Data Analyst",
     goal="Analyze complex datasets",
     llm_model="claude-3-opus-20240229",  # Use Claude Opus
-    temperature=0.7,
+    llm_temperature=0.7,
 )
 
 # Set API key
@@ -177,7 +177,7 @@ agent = AgentFactory.create_agent(
     role="Image Analyzer",
     goal="Describe and analyze images",
     llm_model="gemini-pro-vision",  # Multi-modal model
-    temperature=0.5,
+    llm_temperature=0.5,
 )
 
 # Set API key
@@ -198,7 +198,7 @@ agent = AgentFactory.create_agent(
     role="Search Assistant",
     goal="Find and summarize information",
     llm_model="command-r-plus",  # Retrieval-optimized
-    temperature=0.6,
+    llm_temperature=0.6,
 )
 
 # Set API key
@@ -219,7 +219,7 @@ agent = AgentFactory.create_agent(
     role="Local Analyst",
     goal="Process requests locally",
     llm_model="llama3",  # Ollama model name
-    temperature=0.6,
+    llm_temperature=0.6,
 )
 
 # Optional: customize Ollama base URL
@@ -287,7 +287,7 @@ agent = AgentFactory.create_agent(
     role="Pirate Captain",
     goal="Speak like a pirate",
     backstory="You are Captain Blackbeard, a legendary pirate.",
-    temperature=0.9,  # Higher for more creative responses
+    llm_temperature=0.9,  # Higher for more creative responses
 )
 ```
 
@@ -753,7 +753,7 @@ results = await runtime.batch_execute(tasks)
 **Solution:** Install required packages:
 ```bash
 # Install all LLM providers
-pip install genxai[llm]
+pip install genxai-framework[llm]
 
 # Or install individually
 pip install anthropic
@@ -852,7 +852,7 @@ See `genxai/llm/providers/openai.py` for reference implementation.
 ### Quick Install (All Providers)
 
 ```bash
-pip install genxai[llm]
+pip install genxai-framework[llm]
 ```
 
 ### Individual Providers

@@ -90,5 +90,5 @@ calculator = ToolRegistry.get("calculator")
 
 - Full API reference: `docs/API_REFERENCE.md`
 - Workflow patterns: `docs/FLOWS.md`
-- Tool system design: `TOOLS_DESIGN.md`
+- Creating custom tools: `docs/TOOL_CREATION.md`
 

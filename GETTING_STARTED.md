@@ -110,7 +110,7 @@ config = AgentConfig(
     role="Data Analyst",
     goal="Analyze data and provide insights",
     llm_model="gpt-4",
-    temperature=0.7,
+    llm_temperature=0.7,
 )
 
 agent = Agent(id="analyst", config=config)
@@ -192,8 +192,6 @@ config = AgentConfig(
 
 - [Architecture](./ARCHITECTURE.md) - System architecture and design
 - [Requirements](./REQUIREMENTS.md) - Detailed requirements
-- [Implementation Plan](./IMPLEMENTATION_PLAN.md) - Development roadmap
-- [Tools Design](./TOOLS_DESIGN.md) - Tool system design
 - [Memory Design](./MEMORY_DESIGN.md) - Memory system design
 
 ## 🧪 Running Tests
@@ -251,7 +249,9 @@ MIT License - see [LICENSE](./LICENSE) for details.
 Everything ships in this repository under the MIT license — including the
 connectors, triggers, security, and observability modules under `genxai/`
 and the CLI under `genxai/cli`. There is no commercial edition. The Studio
-UI (visual workflow builder) is a planned feature and is not yet available.
+UI (visual workflow builder) lives at `applications/workflow_studio/` — see its
+README, and start it with `./restart_workflow_studio_backend.sh` and
+`./restart_workflow_studio_frontend.sh`.
 
 ## 🆘 Support
 

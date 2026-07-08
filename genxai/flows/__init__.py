@@ -5,6 +5,7 @@ from genxai.flows.base import FlowOrchestrator
 from genxai.flows.conditional import ConditionalFlow
 from genxai.flows.coordinator_worker import CoordinatorWorkerFlow
 from genxai.flows.critic_review import CriticReviewFlow
+from genxai.flows.delegator import DelegatorFlow
 from genxai.flows.ensemble_voting import EnsembleVotingFlow
 from genxai.flows.loop import LoopFlow
 from genxai.flows.map_reduce import MapReduceFlow
@@ -25,6 +26,7 @@ FLOW_TYPES: dict[str, type[FlowOrchestrator]] = {
     "auction": AuctionFlow,
     "coordinator_worker": CoordinatorWorkerFlow,
     "critic_review": CriticReviewFlow,
+    "delegator_worker": DelegatorFlow,
     "ensemble_voting": EnsembleVotingFlow,
     "map_reduce": MapReduceFlow,
     "p2p": P2PFlow,
@@ -43,6 +45,7 @@ __all__ = [
     "EnsembleVotingFlow",
     "CriticReviewFlow",
     "CoordinatorWorkerFlow",
+    "DelegatorFlow",
     "MapReduceFlow",
     "SubworkflowFlow",
     "AuctionFlow",

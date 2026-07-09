@@ -119,6 +119,18 @@ AGENT_LIBRARY: dict[str, dict[str, Any]] = {
         "agent_type": "deliberative",
         "tools": [],
     },
+    "delegator": {
+        "role": "Delegation Lead",
+        "goal": "Split the task into work packets and route each to the best-suited worker",
+        "backstory": (
+            "A dispatch lead who sizes up incoming work, breaks it into "
+            "clean assignments, and hands each to the specialist most "
+            "likely to finish it well."
+        ),
+        "llm_temperature": 0.2,
+        "agent_type": "deliberative",
+        "tools": [],
+    },
     "task_planner": {
         "role": "Task Planner",
         "goal": "Break the objective into ordered, unambiguous steps with clear dependencies",
@@ -202,6 +214,10 @@ def translator(id: str = "translator", **overrides: Any) -> Agent:
 
 def qa_reviewer(id: str = "qa_reviewer", **overrides: Any) -> Agent:
     return create_library_agent("qa_reviewer", id=id, **overrides)
+
+
+def delegator(id: str = "delegator", **overrides: Any) -> Agent:
+    return create_library_agent("delegator", id=id, **overrides)
 
 
 def task_planner(id: str = "task_planner", **overrides: Any) -> Agent:

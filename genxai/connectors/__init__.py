@@ -8,6 +8,7 @@ from .kafka import KafkaConnector
 from .notion import NotionConnector
 from .postgres_cdc import PostgresCDCConnector
 from .registry import ConnectorRegistry
+from .email_smtp import EmailConnector
 from .slack import SlackConnector
 from .sqs import SQSConnector
 from .webhook import WebhookConnector
@@ -21,6 +22,7 @@ __all__ = [
     "KafkaConnector",
     "SQSConnector",
     "PostgresCDCConnector",
+    "EmailConnector",
     "SlackConnector",
     "GitHubConnector",
     "NotionConnector",

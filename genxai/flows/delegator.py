@@ -124,9 +124,16 @@ class DelegatorFlow(FlowOrchestrator):
 
         delegator = self.agents[0]
         workers = self.agents[1:]
-        workers_by_tag = {_worker_tag(agent): agent for agent in workers}
-        if len(workers_by_tag) != len(workers):
-            raise ValueError("worker tags must be unique across worker agents")
+        # Duplicate tags (e.g. two workers with the same role) get numeric
+        # suffixes so every worker stays individually addressable.
+        workers_by_tag: dict[str, Any] = {}
+        for agent in workers:
+            tag = base_tag = _worker_tag(agent)
+            suffix = 2
+            while tag in workers_by_tag:
+                tag = f"{base_tag} #{suffix}"
+                suffix += 1
+            workers_by_tag[tag] = agent
 
         delegator_runtime = AgentRuntime(agent=delegator, llm_provider=self.llm_provider)
         worker_runtimes = {

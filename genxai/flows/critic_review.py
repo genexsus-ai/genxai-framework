@@ -2,6 +2,19 @@
 
 from typing import Any
 
+DEFAULT_CRITIC_TASK = (
+    "Critique the draft in context. Start your reply with the single word "
+    "ACCEPT if the draft is good enough to ship as-is, or REVISE followed "
+    "by concrete, actionable fixes."
+)
+
+
+def _critique_accepts(critique_text: str) -> bool:
+    """A critique accepts the draft when its verdict opens with ACCEPT."""
+    head = critique_text.strip().upper()
+    return head.startswith("ACCEPT")
+
+
 from genxai.core.agent.runtime import AgentRuntime
 from genxai.flows.base import FlowOrchestrator
 
@@ -50,12 +63,16 @@ class CriticReviewFlow(FlowOrchestrator):
 
             critique = await self._execute_with_retry(
                 critic_runtime,
-                task=state.get("critic_task", "Critique the draft"),
+                task=state.get("critic_task", DEFAULT_CRITIC_TASK),
                 context={**state, "draft": draft},
             )
             state["last_critique"] = critique
 
-            if state.get("accept", False):
+            critique_text = (
+                str(critique.get("output", "")) if isinstance(critique, dict) else str(critique)
+            )
+            state["accept"] = _critique_accepts(critique_text)
+            if state["accept"]:
                 break
 
         state["final"] = draft

@@ -39,11 +39,17 @@ class EnsembleVotingFlow(FlowOrchestrator):
             for agent in self.agents
         ]
         results = await self._gather_tasks(tasks)
+        originals: dict[str, str] = {}
         for result in results:
             output = str(getattr(result, "get", lambda *_: "")("output", "")).strip()
-            state["votes"].setdefault(output, 0)
-            state["votes"][output] += 1
+            # Vote on a normalized form so trivial case/whitespace differences
+            # between otherwise-identical answers still count together.
+            key = " ".join(output.split()).lower()
+            originals.setdefault(key, output)
+            state["votes"].setdefault(key, 0)
+            state["votes"][key] += 1
 
         if state["votes"]:
-            state["winner"] = max(state["votes"], key=state["votes"].get)
+            winning_key = max(state["votes"], key=state["votes"].get)
+            state["winner"] = originals[winning_key]
         return state

@@ -9,6 +9,7 @@ from .notion import NotionConnector
 from .postgres import PostgresConnector
 from .postgres_cdc import PostgresCDCConnector
 from .registry import ConnectorRegistry
+from .s3 import S3Connector
 from .email_smtp import EmailConnector
 from .slack import SlackConnector
 from .sqs import SQSConnector
@@ -24,6 +25,7 @@ __all__ = [
     "SQSConnector",
     "PostgresCDCConnector",
     "PostgresConnector",
+    "S3Connector",
     "EmailConnector",
     "SlackConnector",
     "GitHubConnector",

@@ -36,6 +36,53 @@ def _validate_name(name: str) -> str:
     return name
 
 
+def aggregate_rows(
+    raw_rows: list[dict[str, Any]],
+    metric: str = "count",
+    field: str | None = None,
+    group_by: str | None = None,
+) -> list[dict[str, Any]]:
+    """Aggregate in-memory rows: ``metric`` over ``field``, per ``group_by``.
+
+    Shared by the dataset store and file-based analytics sources. Rows are
+    schemaless dicts; non-numeric values are skipped for numeric metrics.
+    """
+    if metric not in ALLOWED_METRICS:
+        raise ValueError(f"metric must be one of {ALLOWED_METRICS}")
+    if metric != "count" and not field:
+        raise ValueError(f"metric '{metric}' requires a field")
+
+    groups: dict[str, list[float]] = {}
+    counts: dict[str, int] = {}
+    for row in raw_rows:
+        key = str(row.get(group_by, "—")) if group_by else "all"
+        counts[key] = counts.get(key, 0) + 1
+        if metric != "count":
+            value = row.get(field or "")
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+            groups.setdefault(key, []).append(float(value))
+
+    results = []
+    keys = counts.keys() if metric == "count" else groups.keys()
+    for key in keys:
+        if metric == "count":
+            value: float = counts[key]
+        else:
+            values = groups[key]
+            if metric == "sum":
+                value = sum(values)
+            elif metric == "avg":
+                value = sum(values) / len(values)
+            elif metric == "min":
+                value = min(values)
+            else:
+                value = max(values)
+        results.append({"group": key, "value": value, "rows": counts[key]})
+    results.sort(key=lambda r: r["value"], reverse=True)
+    return results
+
+
 class DatasetStore:
     """SQLite-backed store of named datasets of JSON rows."""
 
@@ -146,47 +193,13 @@ class DatasetStore:
         extensions. Non-numeric values are skipped for numeric metrics.
         """
         _validate_name(dataset)
-        if metric not in ALLOWED_METRICS:
-            raise ValueError(f"metric must be one of {ALLOWED_METRICS}")
-        if metric != "count" and not field:
-            raise ValueError(f"metric '{metric}' requires a field")
-
         with self._connect() as conn:
             cursor = conn.execute(
                 "SELECT data FROM rows WHERE dataset = ? ORDER BY id DESC LIMIT ?",
                 (dataset, MAX_SCAN_ROWS),
             )
             raw_rows = [json.loads(data) for (data,) in cursor.fetchall()]
-
-        groups: dict[str, list[float]] = {}
-        counts: dict[str, int] = {}
-        for row in raw_rows:
-            key = str(row.get(group_by, "—")) if group_by else "all"
-            counts[key] = counts.get(key, 0) + 1
-            if metric != "count":
-                value = row.get(field or "")
-                if isinstance(value, bool) or not isinstance(value, (int, float)):
-                    continue
-                groups.setdefault(key, []).append(float(value))
-
-        results = []
-        keys = counts.keys() if metric == "count" else groups.keys()
-        for key in keys:
-            if metric == "count":
-                value: float = counts[key]
-            else:
-                values = groups[key]
-                if metric == "sum":
-                    value = sum(values)
-                elif metric == "avg":
-                    value = sum(values) / len(values)
-                elif metric == "min":
-                    value = min(values)
-                else:
-                    value = max(values)
-            results.append({"group": key, "value": value, "rows": counts[key]})
-        results.sort(key=lambda r: r["value"], reverse=True)
-        return results
+        return aggregate_rows(raw_rows, metric=metric, field=field, group_by=group_by)
 
     def delete_dataset(self, dataset: str) -> bool:
         _validate_name(dataset)

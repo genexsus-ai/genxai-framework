@@ -1,6 +1,6 @@
 # Analytics Data Sources — Design
 
-Status: **P1 implemented** (registry, dataset + SQL adapters with pushdown, sources endpoints, grouped explorer + add-database dialog; P2 file upload pending)
+Status: **P1 + P2 implemented** (SQL + file sources live; P3 — custom SQL, materialization, DuckDB — pending)
 Scope: Analytics app reads from relational databases, Excel/CSV files, and
 internal datasets through one abstraction — not just the internal SQLite
 dataset store.

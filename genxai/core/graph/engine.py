@@ -30,6 +30,10 @@ from genxai.utils.runtime_services import (
 
 logger = logging.getLogger(__name__)
 
+# State entries that are live service objects, not workflow data: excluded
+# from OUTPUT-node snapshots so results stay JSON-serializable.
+_SERVICE_STATE_KEYS = frozenset({"llm_provider", "human_input_provider"})
+
 
 class GraphExecutionError(Exception):
     """Exception raised during graph execution."""
@@ -679,7 +683,9 @@ class Graph:
             return copy.deepcopy(state.get("input"))
 
         if node.type == NodeType.OUTPUT:
-            return copy.deepcopy(state)
+            # Service objects (providers) are not part of the workflow's data
+            snapshot = {k: v for k, v in state.items() if k not in _SERVICE_STATE_KEYS}
+            return copy.deepcopy(snapshot)
 
         if node.type == NodeType.AGENT:
             return await self._execute_agent_node(node, state)
@@ -696,8 +702,61 @@ class Graph:
         if node.type == NodeType.FLOW:
             return await self._execute_flow_node(node, state, max_iterations)
 
+        if node.type == NodeType.HUMAN:
+            return await self._execute_human_node(node, state)
+
         # Default fallback for unsupported nodes
         return {"node_id": node.id, "type": node.type.value}
+
+    async def _execute_human_node(self, node: Node, state: dict[str, Any]) -> Any:
+        """Pause for human input via the provider injected into state.
+
+        The provider lives in ``state["human_input_provider"]``: an async
+        callable ``(node_id, prompt) -> Any`` supplied by whoever started the
+        run (an API server, a CLI prompt, a test stub). Config keys in
+        ``node.config.data``:
+            prompt: shown to the human; supports {{ }} templates
+            timeout_seconds: how long to wait (None = forever)
+            default_response: returned on timeout or when no provider exists
+                (without it, timeout/missing-provider is an error)
+        """
+        data = node.config.data
+        prompt = data.get("prompt") or "Input required"
+        if isinstance(prompt, str):
+            try:
+                prompt = resolve_templates(prompt, state)
+            except TemplateResolutionError as exc:
+                raise GraphExecutionError(f"Human node '{node.id}': {exc}") from exc
+
+        provider = state.get("human_input_provider")
+        if provider is None:
+            if "default_response" in data:
+                return {"response": data["default_response"], "prompt": prompt}
+            raise GraphExecutionError(
+                f"Human node '{node.id}' needs a human_input_provider in state "
+                "(or a default_response in its config)"
+            )
+
+        timeout = data.get("timeout_seconds")
+        try:
+            if timeout:
+                response = await asyncio.wait_for(
+                    provider(node.id, prompt), timeout=float(timeout)
+                )
+            else:
+                response = await provider(node.id, prompt)
+        except TimeoutError:
+            if "default_response" in data:
+                logger.info(
+                    "Human node %s timed out after %ss; using default response",
+                    node.id,
+                    timeout,
+                )
+                return {"response": data["default_response"], "prompt": prompt}
+            raise GraphExecutionError(
+                f"Human node '{node.id}' timed out after {timeout}s with no default_response"
+            ) from None
+        return {"response": response, "prompt": prompt}
 
     async def _execute_agent_node(self, node: Node, state: dict[str, Any]) -> dict[str, Any]:
         """Execute an AgentNode using AgentRuntime.

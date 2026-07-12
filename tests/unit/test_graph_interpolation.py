@@ -104,3 +104,47 @@ class TestToolNodeInterpolation:
         with patch("genxai.core.graph.engine.ToolRegistry.get", return_value=fake_tool):
             with pytest.raises(GraphExecutionError, match="nope.value"):
                 await graph.run(input_data={})
+
+
+class TestExpressionFilters:
+    def test_string_filters(self):
+        assert resolve_templates("{{ input.topic | upper }}", STATE) == "AI"
+        assert resolve_templates("{{ input.topic | lower }}", STATE) == "ai"
+        assert resolve_templates("{{ items | first | upper }}", STATE) == "A"
+        assert resolve_templates("{{ items | last }}", STATE) == "c"
+
+    def test_numeric_and_length_filters(self):
+        assert resolve_templates("{{ items | length }}", STATE) == 3
+        assert resolve_templates("{{ input.count | float }}", STATE) == 3.0
+        assert resolve_templates("{{ calc1.data.result | round:1 }}", STATE) == 42.0
+
+    def test_json_and_join_filters(self):
+        assert resolve_templates("{{ items | json }}", STATE) == '["a", "b", "c"]'
+        assert resolve_templates("{{ items | join:'-' }}", STATE) == "a-b-c"
+        assert resolve_templates("{{ items | join }}", STATE) == "a, b, c"
+
+    def test_default_rescues_missing_path(self):
+        assert resolve_templates("{{ input.missing | default:10 }}", STATE) == 10
+        assert (
+            resolve_templates("{{ input.missing | default:'n/a' | upper }}", STATE)
+            == "N/A"
+        )
+
+    def test_default_replaces_none_and_empty(self):
+        state = {"input": {"empty": "", "set": "x"}}
+        assert resolve_templates("{{ input.empty | default:'fallback' }}", state) == "fallback"
+        assert resolve_templates("{{ input.set | default:'fallback' }}", state) == "x"
+
+    def test_missing_path_without_default_still_raises(self):
+        with pytest.raises(TemplateResolutionError):
+            resolve_templates("{{ input.missing | upper }}", STATE)
+
+    def test_unknown_filter_raises(self):
+        with pytest.raises(TemplateResolutionError, match="unknown filter"):
+            resolve_templates("{{ input.topic | frobnicate }}", STATE)
+
+    def test_embedded_filters_interpolate_as_text(self):
+        assert (
+            resolve_templates("Topic: {{ input.topic | lower }}!", STATE)
+            == "Topic: ai!"
+        )

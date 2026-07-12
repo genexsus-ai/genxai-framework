@@ -73,8 +73,13 @@ class EnhancedGraph(Graph):
             # node result back into `state[node_id]`, so returning `state` would
             # create a self-referential structure (circular reference) that can't
             # be JSON-serialized for persistence.
-            # Also deep-copy to avoid shared references (json can't encode those).
-            return copy.deepcopy(state)
+            # Also deep-copy to avoid shared references (json can't encode those),
+            # and drop live service objects (providers) that aren't workflow data.
+            from genxai.core.graph.engine import _SERVICE_STATE_KEYS
+
+            return copy.deepcopy(
+                {k: v for k, v in state.items() if k not in _SERVICE_STATE_KEYS}
+            )
 
         elif node.type == NodeType.AGENT:
             # Get agent from registry
@@ -337,6 +342,25 @@ class WorkflowExecutor:
                         )
                     )
                     logger.warning(f"Subgraph node '{node_id}' missing workflow_id")
+            elif node_type == "human":
+                graph.add_node(
+                    Node(
+                        id=node_id,
+                        type=NodeType.HUMAN,
+                        config=NodeConfig(
+                            type=NodeType.HUMAN,
+                            data={
+                                key: config[key]
+                                for key in (
+                                    "prompt",
+                                    "timeout_seconds",
+                                    "default_response",
+                                )
+                                if config.get(key) not in (None, "")
+                            },
+                        ),
+                    )
+                )
             elif node_type == "loop":
                 condition = config.get("condition", "")
                 max_iterations = int(config.get("max_iterations", 5))
@@ -424,6 +448,8 @@ class WorkflowExecutor:
         shared_memory: bool = False,
         llm_provider: Any | None = None,
         subgraphs: dict[str, dict[str, Any]] | None = None,
+        human_input_provider: Any | None = None,
+        extra_state: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Execute a workflow.
 
@@ -433,6 +459,10 @@ class WorkflowExecutor:
             input_data: Input data for execution
             subgraphs: Nested workflow definitions ({workflow_id: {nodes, edges}})
                 referenced by subgraph nodes
+            human_input_provider: Async ``(node_id, prompt) -> Any`` that human
+                nodes await for a person's response
+            extra_state: Additional entries seeded into workflow state before
+                execution (e.g. prior node results for single-node test runs)
 
         Returns:
             Execution result with status, result, and metadata
@@ -481,9 +511,16 @@ class WorkflowExecutor:
                         status="allowed",
                     )
                 )
+            seed_state: dict[str, Any] = {}
+            if subgraphs:
+                seed_state["subgraphs"] = dict(subgraphs)
+            if human_input_provider is not None:
+                seed_state["human_input_provider"] = human_input_provider
+            if extra_state:
+                seed_state.update(extra_state)
             result = await graph.run(
                 input_data=input_data,
-                state={"subgraphs": dict(subgraphs)} if subgraphs else None,
+                state=seed_state or None,
                 resume_from=checkpoint,
                 event_callback=event_callback,
             )
@@ -631,6 +668,8 @@ async def execute_workflow_async(
     event_callback: Callable[[dict[str, Any]], Any] | None = None,
     shared_memory: bool = False,
     subgraphs: dict[str, dict[str, Any]] | None = None,
+    human_input_provider: Any | None = None,
+    extra_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Async convenience function for workflow execution.
 
@@ -659,5 +698,7 @@ async def execute_workflow_async(
         event_callback=event_callback,
         shared_memory=shared_memory,
         subgraphs=subgraphs,
+        human_input_provider=human_input_provider,
+        extra_state=extra_state,
     )
 

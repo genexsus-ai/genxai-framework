@@ -30,9 +30,11 @@ from genxai.utils.runtime_services import (
 
 logger = logging.getLogger(__name__)
 
-# State entries that are live service objects, not workflow data: excluded
-# from OUTPUT-node snapshots so results stay JSON-serializable.
-_SERVICE_STATE_KEYS = frozenset({"llm_provider", "human_input_provider"})
+# State entries that are live service objects or engine bookkeeping, not
+# workflow data: excluded from OUTPUT-node snapshots.
+_SERVICE_STATE_KEYS = frozenset(
+    {"llm_provider", "human_input_provider", "_resume_results"}
+)
 
 
 class GraphExecutionError(Exception):
@@ -316,6 +318,9 @@ class Graph:
         except Exception as exc:
             status = "error"
             record_exception(exc)
+            # Callers (executor, run manager) persist partial progress from
+            # this — without it a failed run loses every node's result.
+            exc.workflow_state = state  # type: ignore[attr-defined]
             raise
         finally:
             duration = time.time() - start_time
@@ -398,12 +403,23 @@ class Graph:
                 await callback_result
 
         try:
-            # Execute node (placeholder - will be implemented with actual executors)
-            with span(
-                "genxai.workflow.node",
-                {"workflow_id": self.name, "node_id": node_id, "node_type": node.type.value},
-            ):
-                result = await self._run_with_policy(node, state, max_iterations)
+            # Replay cache (retry-from-failure): a node whose result is already
+            # known completes instantly with it — traversal, joins, and
+            # conditional edges still run normally so downstream work proceeds.
+            resume_cache = state.get("_resume_results") or {}
+            replayed = node_id in resume_cache
+            if replayed:
+                result = copy.deepcopy(resume_cache[node_id])
+                logger.debug(f"Node {node_id} replayed from resume cache")
+            else:
+                with span(
+                    "genxai.workflow.node",
+                    {"workflow_id": self.name, "node_id": node_id, "node_type": node.type.value},
+                ):
+                    if node.config.data.get("for_each"):
+                        result = await self._run_for_each(node, state, max_iterations)
+                    else:
+                        result = await self._run_with_policy(node, state, max_iterations)
             node.result = result
             node.status = NodeStatus.COMPLETED
             logger.debug(f"Node completed: {node_id}")
@@ -421,6 +437,8 @@ class Graph:
                 "timestamp": time.time(),
                 "duration_ms": node_duration_ms,
             }
+            if replayed:
+                completed_event["replayed"] = True
             state.setdefault("node_events", []).append(completed_event)
             if event_callback:
                 callback_result = event_callback(completed_event)
@@ -439,6 +457,11 @@ class Graph:
             await self._resolve_and_traverse(node_id, state, max_iterations, event_callback)
 
         except Exception as e:
+            if node.status == NodeStatus.COMPLETED:
+                # This node already completed — the failure came from a
+                # downstream node during traversal. Keep this node's completed
+                # record intact and let the failure propagate.
+                raise
             node.status = NodeStatus.FAILED
             node.error = str(e)
             logger.error(f"Node execution failed: {node_id} - {e}")
@@ -521,6 +544,54 @@ class Graph:
                 )
                 await asyncio.sleep(backoff)
                 backoff *= 2
+
+    async def _run_for_each(
+        self, node: Node, state: dict[str, Any], max_iterations: int
+    ) -> dict[str, Any]:
+        """Execute a node once per item of its ``for_each`` list (n8n-style).
+
+        ``node.config.data["for_each"]`` is a template expression resolving to
+        a list (e.g. ``{{ feed.data.items }}``). For each element the node's
+        logic runs with ``state["item"]`` / ``state["item_index"]`` set, so
+        its own templates can reference ``{{ item.title }}`` etc. Each item
+        execution runs under the node's execution policy (retry/timeout).
+
+        Returns ``{"items": [<per-item results>], "count": N}``; downstream
+        templates reach results via ``{{ node_id.items.0... }}``.
+        """
+        expression = node.config.data["for_each"]
+        try:
+            items = resolve_templates(expression, state)
+        except TemplateResolutionError as exc:
+            raise GraphExecutionError(f"Node '{node.id}' for_each: {exc}") from exc
+        if not isinstance(items, list):
+            raise GraphExecutionError(
+                f"Node '{node.id}' for_each must resolve to a list, "
+                f"got {type(items).__name__}"
+            )
+
+        # Save any outer loop's cursor so nested for_each nodes compose
+        had_item = "item" in state
+        previous_item = state.get("item")
+        previous_index = state.get("item_index")
+
+        results: list[Any] = []
+        try:
+            for index, item in enumerate(items):
+                state["item"] = item
+                state["item_index"] = index
+                results.append(
+                    await self._run_with_policy(node, state, max_iterations)
+                )
+        finally:
+            if had_item:
+                state["item"] = previous_item
+                state["item_index"] = previous_index
+            else:
+                state.pop("item", None)
+                state.pop("item_index", None)
+
+        return {"items": results, "count": len(results)}
 
     async def _resolve_and_traverse(
         self,

@@ -391,6 +391,9 @@ class WorkflowExecutor:
             execution_policy = config.get("execution")
             if execution_policy and node_id in graph.nodes:
                 graph.nodes[node_id].config.data["execution"] = execution_policy
+            # Per-item execution: run the node once per element of this list
+            if config.get("for_each") and node_id in graph.nodes:
+                graph.nodes[node_id].config.data["for_each"] = config["for_each"]
 
         # Add edges
         for edge in edges:
@@ -550,10 +553,17 @@ class WorkflowExecutor:
                 error=str(e),
                 completed=True,
             )
+            # Preserve partial progress (completed nodes' results) so callers
+            # can display it and retry-from-failure can replay it.
+            partial_state = getattr(e, "workflow_state", None) or {}
             return {
                 "status": "error",
                 "run_id": run_id,
                 "error": str(e),
+                "result": {
+                    "node_results": partial_state.get("node_results", {}),
+                    "node_events": partial_state.get("node_events", []),
+                },
                 "message": f"Workflow execution failed: {str(e)}"
             }
 

@@ -150,7 +150,8 @@ cython_debug/
 *.sqlite
 *.log
 .genxai/
-data/
+/data/
+/genxai/data/
 logs/
 temp/
 tmp/

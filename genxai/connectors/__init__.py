@@ -6,6 +6,7 @@ from .google_workspace import GoogleWorkspaceConnector
 from .jira import JiraConnector
 from .kafka import KafkaConnector
 from .notion import NotionConnector
+from .postgres import PostgresConnector
 from .postgres_cdc import PostgresCDCConnector
 from .registry import ConnectorRegistry
 from .email_smtp import EmailConnector
@@ -22,6 +23,7 @@ __all__ = [
     "KafkaConnector",
     "SQSConnector",
     "PostgresCDCConnector",
+    "PostgresConnector",
     "EmailConnector",
     "SlackConnector",
     "GitHubConnector",

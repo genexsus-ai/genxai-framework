@@ -1,6 +1,6 @@
 # Analytics Data Sources — Design
 
-Status: **P1-P3 implemented** (SQL tables + custom read-only SQL + Excel/CSV files; scheduled materialization into datasets. Deferred: DuckDB engine, Google Sheets kind)
+Status: **fully implemented** (SQL tables + custom SQL, Excel/CSV files, Google Sheets, DuckDB federation, scheduled materialization)
 Scope: Analytics app reads from relational databases, Excel/CSV files, and
 internal datasets through one abstraction — not just the internal SQLite
 dataset store.

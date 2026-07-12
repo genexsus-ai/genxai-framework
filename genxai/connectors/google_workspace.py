@@ -61,6 +61,15 @@ class GoogleWorkspaceConnector(Connector):
         """Fetch spreadsheet metadata."""
         return await self._get(f"/sheets/v4/spreadsheets/{spreadsheet_id}")
 
+    async def get_sheet_values(
+        self, spreadsheet_id: str, range_: str
+    ) -> dict[str, Any]:
+        """Read cell values from a Google Sheet (unformatted, typed)."""
+        return await self._get(
+            f"/sheets/v4/spreadsheets/{spreadsheet_id}/values/{range_}",
+            params={"valueRenderOption": "UNFORMATTED_VALUE"},
+        )
+
     async def append_sheet_values(
         self,
         spreadsheet_id: str,

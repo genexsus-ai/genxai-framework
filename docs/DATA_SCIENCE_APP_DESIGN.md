@@ -168,7 +168,7 @@ POST   /datascience/analyses/{id}/materialize/{cell_id}  {dataset}    # cell res
 
 # v2: Experiments — the multi-agent data science crew
 
-Status: **proposed**
+Status: **v2-P1 implemented** (experiment store + background runner; Planning, Exploration, Cleaning, Programming, Code Review agents through the materialized clean dataset; review-gate revision loops; Experiments UI). v2-P2/P3 pending.
 
 v1's analyses answer *questions* with a fixed two-agent pipeline (SQL
 Planner → Insight Narrator). v2 adds **Experiments**: the user states an

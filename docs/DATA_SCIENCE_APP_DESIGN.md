@@ -178,16 +178,43 @@ lifecycle, producing inspectable artifacts at every stage. Interactive
 analyses stay as they are — Experiments are the second mode, not a
 replacement.
 
-## The honesty principle: agents write artifacts, not arbitrary code
+## Artifact policy: declarative first, Python where it earns it
 
-Every "programming" act in an experiment produces a **declarative,
-validated, replayable artifact** — read-only DuckDB SQL, a train spec, an
-evaluation spec — never arbitrary Python. This keeps the no-sandbox
-security model intact (same `validate_readonly_sql` gate everywhere),
-makes every agent decision reviewable by humans *and* by the review
-agent, and means a finished experiment is a rerunnable pipeline, not a
-transcript. (A sandboxed Python executor can be bolted on later as an
-opt-in stage type; it is explicitly out of v2 scope.)
+Two artifact tiers, both reviewed before execution and both replayable:
+
+1. **Declarative artifacts** (default wherever they suffice): read-only
+   DuckDB SQL for exploration/cleaning/features, train/eval specs for the
+   built-in model primitives. Cheapest to validate, fastest to run.
+2. **Python code stages** — for what SQL and specs cannot do:
+   **visualization** (matplotlib figures), **custom model development**
+   (free-form sklearn pipelines, custom preprocessing), and advanced
+   statistics. The framework's subprocess executor (`code_executor`)
+   already exists; experiments use a hardened variant with a strict I/O
+   contract:
+
+   - **Inputs**: the platform materializes each bound source/stage
+     dataset as `./data/<alias>.parquet` in a temp workdir; the script
+     receives *data, never credentials* (environment scrubbed,
+     `MPLBACKEND=Agg`, wall-clock timeout, output-size caps).
+   - **Outputs**: the script writes to `./out/` — `figures/*.png` land in
+     the file store and render in the experiment timeline;
+     `datasets/*.parquet|csv` become datasets; `model.joblib` +
+     `metrics.json` register in the model registry; the stdout tail is
+     recorded on the stage.
+   - **Review**: the Code Review Agent gates every script (imports
+     against an allowlist — pandas/numpy/sklearn/matplotlib/scipy/stdlib
+     — plus intent and leakage checks), and the optional human gate can
+     require your approval before any code runs.
+   - **Scope**: enabled in the self-hosted studio by default (precedent:
+     n8n's Code node), disable with `GENXAI_DISABLE_CODE_STAGES=1`.
+     This is process isolation on your own machine, not a hostile-tenant
+     sandbox — the review gate, not the subprocess, is the primary
+     control. Studio adds pandas, matplotlib, and pyarrow to
+     requirements for these stages.
+
+Exported experiments bundle everything — SQL, specs, and code stages —
+as a runnable Python project, so the escape hatch to your own Jupyter is
+always one download away.
 
 ## The crew
 
@@ -200,11 +227,12 @@ the proven `builder.crew` architecture:
 | **Data Exploration Agent** | EDA over schema + profile: distributions, correlations (SQL), missingness map, target balance | Exploration cells (SQL + findings) feeding later stages |
 | **Data Cleaning Agent** | Dedupe, null strategy, type casts, outlier filters — expressed as one SQL transformation | `<exp>_clean` dataset (materialized SQL) |
 | **Feature Engineering Agent** | Ratios, buckets, date parts, joins/aggregations over cleaned data | `<exp>_features` dataset + feature dictionary |
-| **Model Algorithm Agent** | Chooses model family from task type + data shape (rows, cardinality, linearity hints from EDA) | Train spec: {model_type, target, features} |
+| **Model Algorithm Agent** | Chooses model family from task type + data shape; picks the fast path (train spec on built-in primitives) or a Python code stage for custom pipelines | Train spec **or** model-development code stage |
 | **Cross-Validation Agent** | k-fold CV over candidate specs (extends `ml.py` with `cross_validate`); flags overfitting via train/val gap | CV report per candidate |
 | **Test Agent** | Final holdout evaluation of the chosen model on untouched data | Test metrics + prediction sample dataset |
 | **Metric Performance Agent** | Interprets all metrics in business terms; compares candidates; recommends ship / iterate / abandon | The experiment report (markdown) |
-| **Programming Agent** | The shared "hands": turns every specialist's intent into concrete SQL / specs (specialists decide *what*, it writes *how*) | All SQL and spec artifacts |
+| **Visualization Agent** | Turns findings into matplotlib figures (distributions, model diagnostics, feature importance) via code stages | `figures/*.png` in the timeline |
+| **Programming Agent** | The shared "hands": turns every specialist's intent into concrete SQL / specs / Python code stages (specialists decide *what*, it writes *how*) | All SQL, spec, and code artifacts |
 | **Code Review Agent** | Critic gate on every artifact *before execution*: SQL correctness vs. intent, leakage checks (target in features, post-outcome columns), spec sanity | Approve / revise verdicts (max 2 revision rounds) |
 
 Two structural agents (Planning, Code Review) wrap the specialist chain;
@@ -271,5 +299,5 @@ produced dataset/model links into the catalog and Models rail.
 | Phase | Contents |
 |---|---|
 | v2-P1 | Experiment store + background runner; Planning, Exploration, Cleaning, Programming, Code Review agents (through materialized clean dataset) |
-| v2-P2 | Feature Engineering, Model Algorithm, Cross-Validation (ml.py extension), Test, Metric Performance agents — full pipeline to report |
-| v2-P3 | Human gates, rerun/compare experiments, scheduled re-evaluation workflows |
+| v2-P2 | Code-stage runtime (workdir contract, parquet in / figures+models+datasets out, allowlist review) + Visualization Agent; Feature Engineering, Model Algorithm (spec or code), Cross-Validation, Test, Metric Performance — full pipeline to report |
+| v2-P3 | Human gates, rerun/compare experiments, scheduled re-evaluation workflows, experiment → Python project export |

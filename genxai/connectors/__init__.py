@@ -14,6 +14,7 @@ from .email_smtp import EmailConnector
 from .slack import SlackConnector
 from .sqs import SQSConnector
 from .webhook import WebhookConnector
+from .whatsapp import WhatsAppConnector
 
 __all__ = [
     "Connector",
@@ -28,6 +29,7 @@ __all__ = [
     "S3Connector",
     "EmailConnector",
     "SlackConnector",
+    "WhatsAppConnector",
     "GitHubConnector",
     "NotionConnector",
     "JiraConnector",

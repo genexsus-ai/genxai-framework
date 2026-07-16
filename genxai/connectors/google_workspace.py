@@ -102,6 +102,46 @@ class GoogleWorkspaceConnector(Connector):
         params = {"maxResults": max_results, "singleEvents": True, "orderBy": "startTime"}
         return await self._get(f"/calendar/v3/calendars/{calendar_id}/events", params=params)
 
+    async def create_calendar_event(
+        self,
+        summary: str,
+        start: str,
+        end: str | None = None,
+        calendar_id: str = "primary",
+        description: str | None = None,
+        attendees: list[str] | str | None = None,
+        timezone: str = "UTC",
+    ) -> dict[str, Any]:
+        """Create a calendar event (e.g. schedule a follow-up).
+
+        ``start``/``end`` are RFC3339 datetimes ("2026-07-16T15:00:00");
+        ``end`` defaults to 30 minutes after ``start``. ``attendees`` takes a
+        list of emails or one comma-separated string. Needs the
+        calendar.events OAuth scope.
+        """
+        from datetime import datetime, timedelta
+
+        if end is None:
+            parsed = datetime.fromisoformat(start)
+            end = (parsed + timedelta(minutes=30)).isoformat()
+        payload: dict[str, Any] = {
+            "summary": summary,
+            "start": {"dateTime": start, "timeZone": timezone},
+            "end": {"dateTime": end, "timeZone": timezone},
+        }
+        if description:
+            payload["description"] = description
+        if attendees:
+            emails = (
+                [email.strip() for email in attendees.split(",") if email.strip()]
+                if isinstance(attendees, str)
+                else attendees
+            )
+            payload["attendees"] = [{"email": email} for email in emails]
+        return await self._post(
+            f"/calendar/v3/calendars/{calendar_id}/events", payload
+        )
+
     async def handle_event(self, payload: dict[str, Any], headers: dict[str, str] | None = None) -> None:
         """Handle an inbound event payload and emit it downstream."""
         await self.emit(payload=payload, metadata={"headers": headers or {}})

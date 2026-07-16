@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import Section from '../components/Section.astro';
+import FeatureGrid from '../components/FeatureGrid.astro';
+import CodeExample from '../components/CodeExample.astro';
+import CTA from '../components/CTA.astro';
+
+const featureBlocks = [
+  {
+    title: 'Graph-based orchestration',
+    description:
+      'Model workflows as graphs (not only linear chains). Route dynamically, run in parallel, loop, and compose subgraphs.',
+    bullets: [
+      'Conditional edges and routing',
+      'Parallel + sequential execution',
+      'Reusable patterns (router, critic, map-reduce, p2p)',
+    ],
+  },
+  {
+    title: 'Advanced memory systems',
+    description:
+      'Multi-layer memory inspired by human cognition so agents can retain context, learn, and retrieve knowledge efficiently.',
+    bullets: ['Short/Long-term', 'Episodic + semantic', 'Procedural + working memory'],
+  },
+  {
+    title: 'Tool ecosystem + MCP',
+    description:
+      'Built-in tools, custom tools, and Model Context Protocol integrations so agents can act in real systems.',
+    bullets: ['Tool registry + templates', 'Secure execution & guardrails', 'Connector SDK (enterprise)'],
+  },
+  {
+    title: 'Enterprise-grade path',
+    description:
+      'Start with the MIT core and scale to enterprise features like observability, security, and the no-code Studio.',
+    bullets: ['Audit logging & governance (enterprise)', 'Scalable worker queue (enterprise)', 'Studio visual workflow builder'],
+  },
+] as const;
+
+const exampleCode = `import os\nfrom genxai import Agent, AgentConfig, AgentRegistry, Graph\n\nos.environ["OPENAI_API_KEY"] = "sk-..."\n\nclassifier = Agent(\n    id="classifier",\n    config=AgentConfig(role="Classifier", goal="Categorize customer requests", llm_model="gpt-4"),\n)\n\nsupport = Agent(\n    id="support",\n    config=AgentConfig(role="Support Agent", goal="Resolve customer issues", llm_model="claude-3-opus", enable_memory=True),\n)\n\nAgentRegistry.register(classifier)\nAgentRegistry.register(support)\n\ngraph = Graph()\n# ... add nodes + edges ...\nresult = await graph.run(input_data="My app crashed")\n`;
+---
+
+<BaseLayout>
+  <Hero />
+
+  <Section
+    eyebrow="Why GenXAI"
+    title="Orchestrate complex agent systems with clarity"
+    description="GenXAI combines graph execution, memory, and tools into a framework you can grow from prototype to production."
+  >
+    <FeatureGrid features={featureBlocks} />
+  </Section>
+
+  <Section
+    eyebrow="How it works"
+    title="Define agents, connect them, run workflows"
+    description="Use graph primitives for routing and coordination patterns. Start simple, then add memory, tools, and enterprise controls when needed."
+  >
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-semibold text-white">1) Configure agents</div>
+        <p class="mt-2 text-sm text-slate-300">
+          Declare roles, goals, models, tools, and memory. Keep it explicit and versionable.
+        </p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-semibold text-white">2) Build a graph</div>
+        <p class="mt-2 text-sm text-slate-300">
+          Nodes represent agents/tools/conditions. Edges define control flow, routing, and parallelism.
+        </p>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <div class="text-sm font-semibold text-white">3) Run + observe</div>
+        <p class="mt-2 text-sm text-slate-300">
+          Execute with state, logs, and metrics. Add enterprise governance for production reliability.
+        </p>
+      </div>
+    </div>
+  </Section>
+
+  <Section eyebrow="Quick start" title="A small workflow in code">
+    <CodeExample code={exampleCode} />
+    <div class="mt-6 text-sm text-slate-300">
+      Want runnable samples? Visit <a class="text-white underline" href="/examples">Examples</a>.
+    </div>
+  </Section>
+
+  <CTA />
+</BaseLayout>

@@ -1,0 +1,71 @@
+---
+layout: ../../layouts/DocsLayout.astro
+title: Getting Started
+description: Install GenXAI and run your first graph workflow.
+---
+
+## Install
+
+GenXAI is a Python framework. Install from PyPI:
+
+```bash
+pip install genxai-framework
+```
+
+See the dedicated **[Installation](/install)** page for more options.
+
+Optional extras:
+
+```bash
+pip install "genxai-framework[llm,tools,api]"
+```
+
+## Set your API key
+
+```bash
+export OPENAI_API_KEY="sk-your-key"
+```
+
+## Create a minimal graph workflow
+
+This is a simplified version of the example shown in the repository README.
+
+```python
+import os
+from genxai import Agent, AgentConfig, AgentRegistry, Graph
+
+os.environ["OPENAI_API_KEY"] = "sk-..."
+
+classifier = Agent(
+    id="classifier",
+    config=AgentConfig(
+        role="Classifier",
+        goal="Categorize customer requests",
+        llm_model="gpt-4",
+    ),
+)
+
+support = Agent(
+    id="support",
+    config=AgentConfig(
+        role="Support Agent",
+        goal="Resolve customer issues",
+        llm_model="claude-3-opus",
+        enable_memory=True,
+    ),
+)
+
+AgentRegistry.register(classifier)
+AgentRegistry.register(support)
+
+graph = Graph()
+# Add nodes + edges, then run
+result = await graph.run(input_data="My app crashed")
+print(result)
+```
+
+## Next steps
+
+- Read about the system design in **[Architecture](/docs/concepts/architecture)**
+- Learn coordination patterns in **[Flows](/docs/concepts/flows)**
+- Explore runnable samples on the **[Examples](/examples)** page

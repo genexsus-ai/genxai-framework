@@ -1,0 +1,65 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import FeatureGrid from '../components/FeatureGrid.astro';
+
+const features = [
+  {
+    title: 'Graph Engine',
+    description:
+      'Execute workflows as directed graphs with dynamic routing, conditions, parallelism, cycles, and composition.',
+    bullets: ['Compile/validate graphs', 'Versioning-ready architecture', 'Visualize execution paths'],
+  },
+  {
+    title: 'Flows (coordination patterns)',
+    description:
+      'Drop-in orchestrators for common multi-agent patterns so teams can standardize on proven designs.',
+    bullets: ['Parallel', 'Router', 'Critic review', 'Map-reduce', 'P2P & auction'],
+  },
+  {
+    title: 'Agents',
+    description:
+      'Configurable roles, goals, models, tools, and memory settings. Keep behavior explicit and testable.',
+    bullets: ['Factory + registry', 'Guardrails and constraints', 'Multi-provider LLM routing'],
+  },
+  {
+    title: 'Memory System',
+    description:
+      'Layered memory architecture (short/long-term, episodic, semantic, procedural, working) to retain and retrieve context.',
+    bullets: ['Consolidation and retrieval', 'Vector DB integrations', 'Importance-based retention'],
+  },
+  {
+    title: 'Tooling + MCP',
+    description:
+      'A tool registry with templates and secure execution. Use MCP servers to connect external systems safely.',
+    bullets: ['Built-in tools + custom tools', 'Dynamic tool creation', 'Approval + audit hooks (enterprise)'],
+  },
+  {
+    title: 'Enterprise path',
+    description:
+      'Observability, governance, and the no-code Studio extend the core when you need production controls at scale.',
+    bullets: ['RBAC + encryption (enterprise)', 'Metrics/tracing (enterprise)', 'Studio workflow builder'],
+  },
+] as const;
+---
+
+<BaseLayout title="Product" description="Explore GenXAI’s core platform: graph engine, memory, tools, and enterprise path.">
+  <Section
+    eyebrow="Platform"
+    title="Everything you need to orchestrate agent systems"
+    description="GenXAI is designed for real-world workflows: explicit state, repeatable execution, and extensibility from day one."
+  >
+    <FeatureGrid features={features} />
+  </Section>
+
+  <section class="mx-auto max-w-6xl px-4 pb-16">
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-8">
+      <h2 class="text-xl font-semibold text-white">Recommended starting path</h2>
+      <ol class="mt-4 space-y-3 text-sm text-slate-300">
+        <li><span class="font-semibold text-white">1.</span> Follow <a class="underline" href="/docs/getting-started">Getting Started</a>.</li>
+        <li><span class="font-semibold text-white">2.</span> Run an example from <a class="underline" href="/examples">Examples</a>.</li>
+        <li><span class="font-semibold text-white">3.</span> Learn patterns in <a class="underline" href="/docs/concepts/flows">Flows</a>.</li>
+      </ol>
+    </div>
+  </section>
+</BaseLayout>

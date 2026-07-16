@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Search" description="Search the GenXAI docs on this site.">
+  <div class="mx-auto max-w-6xl px-4 py-10 md:py-14">
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-10">
+      <h1 class="text-3xl font-semibold tracking-tight text-white">Search</h1>
+      <p class="mt-3 text-sm leading-relaxed text-slate-300">
+        This uses <span class="text-white">Pagefind</span> and runs entirely client-side. Results are generated during <code>npm run build</code>.
+      </p>
+
+      <div id="pagefind-search" class="mt-8"></div>
+
+      <script type="module">
+        // Pagefind generates these assets at build-time into /dist/pagefind/
+        // and they should be uploaded alongside the site.
+        // eslint-disable-next-line no-new
+        // @ts-ignore
+        new window.PagefindUI({
+          element: '#pagefind-search',
+          showSubResults: true,
+        });
+      </script>
+
+      <script src="/pagefind/pagefind-ui.js" defer></script>
+      <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+
+      <style>
+        /* Light touch to better match the site */
+        #pagefind-search .pagefind-ui__form {
+          gap: 0.75rem;
+        }
+        #pagefind-search .pagefind-ui__search-input {
+          width: 100%;
+          border-radius: 0.75rem;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
+          padding: 0.75rem 0.9rem;
+        }
+        #pagefind-search .pagefind-ui__search-clear {
+          color: rgba(255, 255, 255, 0.75);
+        }
+        #pagefind-search .pagefind-ui__result {
+          border: 1px solid rgba(255, 255, 255, 0.10);
+          background: rgba(255, 255, 255, 0.04);
+          border-radius: 1rem;
+          padding: 1rem;
+        }
+        #pagefind-search .pagefind-ui__result-link {
+          color: white;
+        }
+        #pagefind-search mark {
+          background: rgba(255, 255, 255, 0.14);
+          color: white;
+          padding: 0 0.15rem;
+          border-radius: 0.25rem;
+        }
+      </style>
+    </div>
+  </div>
+</BaseLayout>

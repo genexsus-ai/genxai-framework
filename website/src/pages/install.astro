@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import CodeExample from '../components/CodeExample.astro';
+
+const installCmd = `pip install genxai-framework`;
+const extrasCmd = `pip install "genxai-framework[llm,tools,api]"`;
+---
+
+<BaseLayout title="Installation" description="Install GenXAI from PyPI.">
+  <Section
+    eyebrow="Install"
+    title="Installation"
+    description="GenXAI is a Python framework. Install from PyPI in one command."
+  >
+    <div class="grid gap-6">
+      <CodeExample title="Install from PyPI" code={installCmd} />
+
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <h3 class="text-base font-semibold text-white">Optional extras</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-300">
+          Enable common integrations (LLM providers, tools, and API helpers).
+        </p>
+        <div class="mt-4">
+          <CodeExample title="Install with extras" code={extrasCmd} />
+        </div>
+        <p class="mt-4 text-sm text-slate-300">
+          Next: follow the <a class="text-white underline" href="/docs/getting-started">Getting Started</a> guide.
+        </p>
+      </div>
+    </div>
+  </Section>
+</BaseLayout>

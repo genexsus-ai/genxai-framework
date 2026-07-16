@@ -1,0 +1,32 @@
+---
+type Feature = {
+  title: string;
+  description: string;
+  bullets?: string[];
+};
+
+type Props = {
+  features: Feature[];
+};
+
+const { features } = Astro.props;
+---
+
+<div class="grid gap-4 md:grid-cols-2">
+  {features.map((f) => (
+    <article class="rounded-2xl border border-white/10 bg-white/5 p-6">
+      <h3 class="text-base font-semibold text-white">{f.title}</h3>
+      <p class="mt-2 text-sm leading-relaxed text-slate-300">{f.description}</p>
+      {f.bullets ? (
+        <ul class="mt-4 space-y-2 text-sm text-slate-300">
+          {f.bullets.map((b) => (
+            <li class="flex gap-2">
+              <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-white/30"></span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </article>
+  ))}
+</div>

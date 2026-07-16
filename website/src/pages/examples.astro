@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+
+const examples = [
+  {
+    title: 'End-to-end workflow',
+    desc: 'A complete runnable example tying together agents, tools, and orchestration.',
+    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/end_to_end_example.py',
+    tags: ['workflow', 'demo'],
+  },
+  {
+    title: 'Parallel execution flow',
+    desc: 'Run multiple agents or tasks concurrently with a flow orchestrator.',
+    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_parallel_example.py',
+    tags: ['flow', 'parallel'],
+  },
+  {
+    title: 'Router flow',
+    desc: 'Route execution dynamically based on state and decisions.',
+    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_router_example.py',
+    tags: ['flow', 'routing'],
+  },
+  {
+    title: 'Critic review loop',
+    desc: 'Iterate with critique and revision using specialized roles.',
+    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_critic_review_example.py',
+    tags: ['flow', 'quality'],
+  },
+  {
+    title: 'Map-reduce flow',
+    desc: 'Fan-out work and aggregate results to scale analysis/processing.',
+    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_map_reduce_example.py',
+    tags: ['flow', 'scale'],
+  },
+  {
+    title: 'Tool registry',
+    desc: 'Register and execute tools safely, with a clean interface.',
+    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/tool_registry_example.py',
+    tags: ['tools'],
+  },
+] as const;
+---
+
+<BaseLayout title="Examples" description="Curated runnable GenXAI examples from the repository.">
+  <Section
+    eyebrow="Examples"
+    title="Start with runnable patterns"
+    description="These examples link to the repository so you can copy, run, and modify them locally."
+  >
+    <div class="grid gap-4 md:grid-cols-2">
+      {examples.map((ex) => (
+        <a
+          href={ex.href}
+          target="_blank"
+          rel="noreferrer"
+          class="block rounded-2xl border border-white/10 bg-white/5 p-6 hover:bg-white/10"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-base font-semibold text-white">{ex.title}</h3>
+              <p class="mt-2 text-sm leading-relaxed text-slate-300">{ex.desc}</p>
+            </div>
+            <span class="mt-1 text-xs text-slate-400">↗</span>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            {ex.tags.map((t) => (
+              <span class="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-300">{t}</span>
+            ))}
+          </div>
+        </a>
+      ))}
+    </div>
+
+    <div class="mt-10 text-sm text-slate-300">
+      See more in <a class="text-white underline" href="https://github.com/genexsus-ai/genxai/tree/main/examples" target="_blank" rel="noreferrer">/examples</a>.
+    </div>
+  </Section>
+</BaseLayout>

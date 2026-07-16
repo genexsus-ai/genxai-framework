@@ -1,0 +1,43 @@
+---
+layout: ../../../layouts/DocsLayout.astro
+title: Architecture
+description: A high-level overview of GenXAI’s layered architecture and core components.
+---
+
+GenXAI is organized around a layered architecture that keeps orchestration, agent execution, memory, and infrastructure concerns separated.
+
+## Layers
+
+- **Presentation**: CLI/SDK/API and (enterprise) no-code Studio
+- **Orchestration**: graph engine, flow control, state manager
+- **Agent layer**: agent runtime, memory system, tool registry
+- **Communication**: message bus, event stream, pub/sub patterns
+- **Infrastructure**: LLM providers, vector DBs, observability
+
+## Core components
+
+### Graph Engine
+
+The heart of GenXAI: execute workflows as directed graphs.
+
+- Conditional edges and dynamic routing
+- Parallel + sequential execution
+- Cycles/loops and subgraph composition
+
+### Memory System
+
+Layered memory inspired by cognition:
+
+- Short-term + long-term
+- Episodic + semantic
+- Procedural + working memory
+
+### Tool System
+
+An extensible registry for built-in and custom tools, plus integrations via MCP.
+
+## Read the full architecture document
+
+The complete architecture lives in the repository at:
+
+- `ARCHITECTURE.md`

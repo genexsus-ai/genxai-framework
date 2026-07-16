@@ -1,0 +1,63 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+type NavItem = { label: string; href: string };
+
+type Props = {
+  title: string;
+  description?: string;
+  nav?: NavItem[];
+};
+
+const {
+  title,
+  description,
+  nav = [
+    { label: 'Docs Home', href: '/docs' },
+    { label: 'Getting Started', href: '/docs/getting-started' },
+    { label: 'Architecture', href: '/docs/concepts/architecture' },
+    { label: 'Flows', href: '/docs/concepts/flows' },
+  ],
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="mx-auto max-w-6xl px-4 py-10 md:py-14">
+    <div class="grid gap-8 md:grid-cols-[220px,1fr]">
+      <aside class="md:sticky md:top-[76px] md:h-[calc(100vh-96px)] md:overflow-auto">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div class="text-sm font-semibold text-white">Docs</div>
+          <nav class="mt-3 space-y-1 text-sm">
+            {nav.map((item) => (
+              <a
+                href={item.href}
+                class="block rounded-lg px-2 py-2 text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <div class="mt-4 border-t border-white/10 pt-4">
+            <a
+              href="/docs/search"
+              class="block rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 hover:bg-white/10"
+            >
+              Search docs
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <article class="min-w-0">
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6 md:p-10">
+          <h1 class="text-3xl font-semibold tracking-tight text-white">{title}</h1>
+          {description ? <p class="mt-3 text-sm leading-relaxed text-slate-300">{description}</p> : null}
+          <div class="prose prose-invert mt-8 max-w-none prose-a:text-white prose-pre:bg-slate-950/50">
+            <slot />
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/Section.astro';
+import { site } from '../../config/site';
+
+const tiles = [
+  {
+    title: 'Getting Started',
+    desc: 'Install, configure, and run your first workflow.',
+    href: '/docs/getting-started',
+  },
+  {
+    title: 'Architecture',
+    desc: 'How GenXAI is structured: layers, components, extensibility.',
+    href: '/docs/concepts/architecture',
+  },
+  {
+    title: 'Flows',
+    desc: 'Coordination patterns like router, parallel, critic review, and more.',
+    href: '/docs/concepts/flows',
+  },
+  {
+    title: 'Search',
+    desc: 'Search the documentation pages on this site (Pagefind).',
+    href: '/docs/search',
+  },
+] as const;
+---
+
+<BaseLayout title="Docs" description="GenXAI documentation hub: quick links and core concepts.">
+  <Section
+    eyebrow="Documentation"
+    title="Learn GenXAI"
+    description="A curated entry point. Full docs live in-repo, and this site includes the most important starting pages."
+  >
+    <div class="grid gap-4 md:grid-cols-2">
+      {tiles.map((t) => (
+        <a
+          href={t.href}
+          class="block rounded-2xl border border-white/10 bg-white/5 p-6 hover:bg-white/10"
+        >
+          <h3 class="text-base font-semibold text-white">{t.title}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-300">{t.desc}</p>
+        </a>
+      ))}
+    </div>
+
+    <div class="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6">
+      <h3 class="text-base font-semibold text-white">Full in-repo docs</h3>
+      <p class="mt-2 text-sm text-slate-300">
+        For the complete set of docs, see the index in the repository.
+      </p>
+      <a
+        class="mt-4 inline-flex rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+        href={site.links.docsIndexInRepo}
+        target="_blank"
+        rel="noreferrer"
+      >
+        Open DOCS_INDEX.md ↗
+      </a>
+    </div>
+  </Section>
+</BaseLayout>

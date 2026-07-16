@@ -1,0 +1,16 @@
+---
+type Props = {
+  title?: string;
+  code: string;
+};
+
+const { title = 'Example: graph workflow', code } = Astro.props;
+---
+
+<div class="rounded-2xl border border-white/10 bg-slate-950/60">
+  <div class="flex items-center justify-between border-b border-white/10 px-5 py-3">
+    <div class="text-sm font-medium text-slate-200">{title}</div>
+    <div class="text-xs text-slate-400">Python</div>
+  </div>
+  <pre class="overflow-x-auto p-5 text-sm leading-relaxed text-slate-200"><code>{code}</code></pre>
+</div>

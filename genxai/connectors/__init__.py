@@ -3,6 +3,7 @@
 from .base import Connector, ConnectorEvent, ConnectorStatus
 from .github import GitHubConnector
 from .google_workspace import GoogleWorkspaceConnector
+from .hubspot import HubSpotConnector
 from .jira import JiraConnector
 from .kafka import KafkaConnector
 from .notion import NotionConnector
@@ -30,6 +31,7 @@ __all__ = [
     "EmailConnector",
     "SlackConnector",
     "WhatsAppConnector",
+    "HubSpotConnector",
     "GitHubConnector",
     "NotionConnector",
     "JiraConnector",

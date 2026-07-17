@@ -13,8 +13,13 @@ const features = [
   {
     title: 'Flows (coordination patterns)',
     description:
-      'Drop-in orchestrators for common multi-agent patterns so teams can standardize on proven designs.',
-    bullets: ['Parallel', 'Router', 'Critic review', 'Map-reduce', 'P2P & auction'],
+      '14 drop-in orchestrators for common multi-agent patterns so teams can standardize on proven designs.',
+    bullets: [
+      'Parallel · Router · Conditional · Loop',
+      'Critic review · Ensemble voting · Map-reduce',
+      'Coordinator-worker · Delegator · Subworkflow',
+      'Round-robin · Selector · P2P · Auction',
+    ],
   },
   {
     title: 'Agents',
@@ -26,24 +31,52 @@ const features = [
     title: 'Memory System',
     description:
       'Layered memory architecture (short/long-term, episodic, semantic, procedural, working) to retain and retrieve context.',
-    bullets: ['Consolidation and retrieval', 'Vector DB integrations', 'Importance-based retention'],
+    bullets: ['Consolidation and retrieval', 'Redis, SQLite, Neo4j backend plugins', 'Importance-based retention'],
   },
   {
     title: 'Tooling + MCP',
     description:
-      'A tool registry with templates and secure execution. Use MCP servers to connect external systems safely.',
-    bullets: ['Built-in tools + custom tools', 'Dynamic tool creation', 'Approval + audit hooks (enterprise)'],
+      'A tool registry with templates and secure execution. Connect external systems safely via MCP.',
+    bullets: ['30+ built-in tools + custom tools', 'Dynamic tool creation', 'MCP client and server', 'Approval + audit hooks'],
   },
   {
-    title: 'Enterprise path',
+    title: 'LLM Providers',
     description:
-      'Observability, governance, and the no-code Studio extend the core when you need production controls at scale.',
-    bullets: ['RBAC + encryption (enterprise)', 'Metrics/tracing (enterprise)', 'Studio workflow builder'],
+      'First-class support for the major model providers, with routing to mix models across agents in one workflow.',
+    bullets: ['OpenAI · Anthropic · Google · Cohere · Ollama', 'Multi-provider LLM routing', 'Opt-in LLM ranking for tool selection'],
+  },
+  {
+    title: 'Connectors',
+    description:
+      'Ready-made integrations so agents can read from and act on the systems your business already runs on.',
+    bullets: [
+      'Slack · GitHub · Jira · Notion',
+      'Google Workspace · HubSpot · WhatsApp',
+      'Kafka · SQS · Postgres CDC · S3 · SMTP · Webhooks',
+    ],
+  },
+  {
+    title: 'Triggers',
+    description:
+      'Start workflows automatically from external events instead of manual runs.',
+    bullets: ['Webhook triggers', 'Schedules (cron)', 'Queue + file-watcher triggers'],
+  },
+  {
+    title: 'No-Code Workflow Studio',
+    description:
+      'An n8n-style drag-and-drop visual builder: compose agent/tool pipelines on a canvas and run them with live per-node status.',
+    bullets: ['Drag agents, tools, decisions, loops', 'Live execution status', 'Included in the repository'],
+  },
+  {
+    title: 'Production runtime',
+    description:
+      'Observability, security, and deployment tooling ship with the framework — all MIT-licensed.',
+    bullets: ['Logging, metrics, tracing', 'RBAC, policy engine, audit, rate limits', 'CLI + REST API + Docker/K8s manifests'],
   },
 ] as const;
 ---
 
-<BaseLayout title="Product" description="Explore GenXAI’s core platform: graph engine, memory, tools, and enterprise path.">
+<BaseLayout title="Product" description="Explore GenXAI’s platform: graph engine, flows, memory, tools, LLM providers, connectors, triggers, and production runtime.">
   <Section
     eyebrow="Platform"
     title="Everything you need to orchestrate agent systems"

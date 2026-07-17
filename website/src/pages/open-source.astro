@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import { site } from '../config/site';
+
+const core = [
+  'Graph engine, flows, agents, memory, tools, LLM providers',
+  'Connectors (Slack, GitHub, Jira, Notion, Google Workspace, HubSpot, WhatsApp, Kafka, SQS, Postgres CDC, S3, SMTP, webhooks)',
+  'Triggers (webhook, schedule, queue, file watcher)',
+  'Examples, documentation, and tests',
+];
+
+const runtime = [
+  'Observability: logging, metrics, tracing',
+  'Security: RBAC, policy engine, audit logging, rate limits',
+  'CLI commands: tool, workflow, connector, metrics, approval, audit',
+  'No-code Workflow Studio (visual drag-and-drop builder)',
+  'REST API, Docker image, and Kubernetes manifests',
+];
+---
+
+<BaseLayout title="Open Source" description="Everything in GenXAI — the core framework and all production runtime features — is MIT-licensed. There is no commercial edition.">
+  <Section
+    eyebrow="Licensing"
+    title="Fully open source. All of it."
+    description="Everything in the GenXAI repository — the core framework and all production-grade runtime features — is MIT-licensed. There is no commercial edition and nothing behind a paywall."
+  >
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <h3 class="text-base font-semibold text-white">Core framework</h3>
+        <p class="mt-2 text-sm text-slate-300">Build and orchestrate multi-agent workflows.</p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-300">
+          {core.map((i) => (
+            <li class="flex gap-2">
+              <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-emerald-400/80"></span>
+              <span>{i}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+        <h3 class="text-base font-semibold text-white">Production runtime</h3>
+        <p class="mt-2 text-sm text-slate-300">
+          Operate agent systems in production — included, not sold separately.
+        </p>
+        <ul class="mt-4 space-y-2 text-sm text-slate-300">
+          {runtime.map((i) => (
+            <li class="flex gap-2">
+              <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-emerald-400/80"></span>
+              <span>{i}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </Section>
+
+  <section class="mx-auto max-w-6xl px-4 pb-16">
+    <div class="rounded-2xl border border-white/10 bg-white/5 p-8">
+      <h2 class="text-xl font-semibold text-white">Get the source</h2>
+      <p class="mt-3 text-sm leading-relaxed text-slate-300">
+        The entire framework lives in one repository under the MIT license. Star it, fork it, and use it in commercial
+        projects without restriction.
+      </p>
+      <a
+        class="mt-5 inline-flex rounded-md border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+        href={site.links.github}
+        target="_blank"
+        rel="noreferrer"
+      >
+        View on GitHub ↗
+      </a>
+    </div>
+  </section>
+</BaseLayout>

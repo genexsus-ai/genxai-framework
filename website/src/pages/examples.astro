@@ -6,38 +6,68 @@ const examples = [
   {
     title: 'End-to-end workflow',
     desc: 'A complete runnable example tying together agents, tools, and orchestration.',
-    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/end_to_end_example.py',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/end_to_end_example.py',
     tags: ['workflow', 'demo'],
   },
   {
     title: 'Parallel execution flow',
     desc: 'Run multiple agents or tasks concurrently with a flow orchestrator.',
-    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_parallel_example.py',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/flow_parallel_example.py',
     tags: ['flow', 'parallel'],
   },
   {
     title: 'Router flow',
     desc: 'Route execution dynamically based on state and decisions.',
-    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_router_example.py',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/flow_router_example.py',
     tags: ['flow', 'routing'],
   },
   {
     title: 'Critic review loop',
     desc: 'Iterate with critique and revision using specialized roles.',
-    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_critic_review_example.py',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/flow_critic_review_example.py',
     tags: ['flow', 'quality'],
   },
   {
     title: 'Map-reduce flow',
     desc: 'Fan-out work and aggregate results to scale analysis/processing.',
-    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/flow_map_reduce_example.py',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/flow_map_reduce_example.py',
     tags: ['flow', 'scale'],
   },
   {
     title: 'Tool registry',
     desc: 'Register and execute tools safely, with a clean interface.',
-    href: 'https://github.com/genexsus-ai/genxai/blob/main/examples/code/tool_registry_example.py',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/tool_registry_example.py',
     tags: ['tools'],
+  },
+  {
+    title: 'Memory system',
+    desc: 'Store and retrieve across the layered memory types (short/long-term, episodic, semantic).',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/memory_system_example.py',
+    tags: ['memory'],
+  },
+  {
+    title: 'Agent with tools',
+    desc: 'Give an agent tools and let it decide when to call them.',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/agent_with_tools_example.py',
+    tags: ['agents', 'tools'],
+  },
+  {
+    title: 'Multi-provider LLM routing',
+    desc: 'Route requests across LLM providers (OpenAI, Anthropic, Google, Cohere, Ollama) from one workflow.',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/routed_llm_provider_example.py',
+    tags: ['llm', 'routing'],
+  },
+  {
+    title: 'Natural-language workflow generation',
+    desc: 'Generate a runnable workflow from a plain-English description.',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/nl_workflow_generation_example.py',
+    tags: ['workflow', 'nl'],
+  },
+  {
+    title: 'Workflow composition',
+    desc: 'Compose a global workflow from subflows with deterministic routing, and visualize it.',
+    href: 'https://github.com/genexsus-ai/genxai-framework/blob/main/examples/code/workflow_composition_visualize.py',
+    tags: ['workflow', 'composition'],
   },
 ] as const;
 ---
@@ -73,7 +103,7 @@ const examples = [
     </div>
 
     <div class="mt-10 text-sm text-slate-300">
-      See more in <a class="text-white underline" href="https://github.com/genexsus-ai/genxai/tree/main/examples" target="_blank" rel="noreferrer">/examples</a>.
+      See more in <a class="text-white underline" href="https://github.com/genexsus-ai/genxai-framework/tree/main/examples" target="_blank" rel="noreferrer">/examples</a>.
     </div>
   </Section>
 </BaseLayout>

@@ -2,11 +2,11 @@ export const site = {
   name: 'GenXAI',
   tagline: 'Graph-native agentic AI framework',
   description:
-    'GenXAI is an advanced agentic AI framework with graph-based orchestration, multi-layer memory, extensible tools, and an enterprise-grade path to production.',
+    'GenXAI is an advanced agentic AI framework with graph-based orchestration, multi-layer memory, extensible tools, and production-grade runtime features — fully open source under the MIT license.',
   links: {
-    github: 'https://github.com/genexsus-ai/genxai',
+    github: 'https://github.com/genexsus-ai/genxai-framework',
     docsIndexInRepo:
-      'https://github.com/genexsus-ai/genxai/blob/main/docs/DOCS_INDEX.md',
+      'https://github.com/genexsus-ai/genxai-framework/blob/main/docs/DOCS_INDEX.md',
   },
 } as const;
 

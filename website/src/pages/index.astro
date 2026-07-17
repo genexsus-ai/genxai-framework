@@ -27,13 +27,13 @@ const featureBlocks = [
     title: 'Tool ecosystem + MCP',
     description:
       'Built-in tools, custom tools, and Model Context Protocol integrations so agents can act in real systems.',
-    bullets: ['Tool registry + templates', 'Secure execution & guardrails', 'Connector SDK (enterprise)'],
+    bullets: ['30+ built-in tools + custom tools', 'Secure execution & guardrails', 'MCP client and server'],
   },
   {
-    title: 'Enterprise-grade path',
+    title: 'Production-ready runtime',
     description:
-      'Start with the MIT core and scale to enterprise features like observability, security, and the no-code Studio.',
-    bullets: ['Audit logging & governance (enterprise)', 'Scalable worker queue (enterprise)', 'Studio visual workflow builder'],
+      'Everything ships MIT-licensed: connectors, triggers, observability, security, and the no-code Workflow Studio.',
+    bullets: ['Connectors + triggers (Slack, GitHub, Kafka, …)', 'RBAC, audit logging & rate limits', 'Studio visual workflow builder'],
   },
 ] as const;
 
@@ -54,7 +54,7 @@ const exampleCode = `import os\nfrom genxai import Agent, AgentConfig, AgentRegi
   <Section
     eyebrow="How it works"
     title="Define agents, connect them, run workflows"
-    description="Use graph primitives for routing and coordination patterns. Start simple, then add memory, tools, and enterprise controls when needed."
+    description="Use graph primitives for routing and coordination patterns. Start simple, then add memory, tools, and production controls when needed."
   >
     <div class="grid gap-4 md:grid-cols-3">
       <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -72,7 +72,7 @@ const exampleCode = `import os\nfrom genxai import Agent, AgentConfig, AgentRegi
       <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
         <div class="text-sm font-semibold text-white">3) Run + observe</div>
         <p class="mt-2 text-sm text-slate-300">
-          Execute with state, logs, and metrics. Add enterprise governance for production reliability.
+          Execute with state, logs, and metrics. Built-in observability and governance keep production runs reliable.
         </p>
       </div>
     </div>

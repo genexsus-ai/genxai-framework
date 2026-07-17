@@ -19,7 +19,9 @@ const extrasCmd = `pip install "genxai-framework[llm,tools,api]"`;
       <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h3 class="text-base font-semibold text-white">Optional extras</h3>
         <p class="mt-2 text-sm leading-relaxed text-slate-300">
-          Enable common integrations (LLM providers, tools, and API helpers).
+          Enable common integrations (LLM providers, tools, and API helpers). Available extras:
+          <code>llm</code>, <code>tools</code>, <code>api</code>, <code>storage</code>, <code>observability</code>,
+          <code>connectors</code>, or <code>all</code> for everything.
         </p>
         <div class="mt-4">
           <CodeExample title="Install with extras" code={extrasCmd} />

@@ -12,14 +12,24 @@ Flows are lightweight orchestrators that package common coordination patterns.
 - Reduce “glue code”
 - Provide sensible defaults for reliability
 
-## Examples of patterns
+## Available patterns
+
+GenXAI ships 14 flow orchestrators:
 
 - **Parallel**: run agents/tasks concurrently
 - **Router**: choose the next hop dynamically
+- **Conditional**: branch on state and decisions
+- **Loop**: repeat a step until a condition is met
 - **Round-robin / Selector**: iterate across a set of agents
 - **Critic review**: draft → critique → revise loops
+- **Ensemble voting**: multiple agents answer, the group votes
 - **Map-reduce**: fan-out work, aggregate results
+- **Coordinator-worker**: a lead agent plans and delegates to workers
+- **Delegator**: hand tasks off to the best-suited agent
+- **Subworkflow**: embed a whole workflow as a single step
 - **P2P / Auction**: negotiation and allocation patterns
+
+Flow patterns can also be embedded as single agent-team (FLOW) nodes inside a graph via `FLOW_TYPES`.
 
 ## Learn more
 

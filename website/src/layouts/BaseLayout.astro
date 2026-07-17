@@ -16,7 +16,7 @@ const { title, description, noIndex, schema } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.tagline}`;
 const pageDescription = description ?? site.description;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin).toString();
-const ogImage = new URL('/hero.jpg', Astro.site ?? Astro.url.origin).toString();
+const ogImage = new URL('/og-card.png', Astro.site ?? Astro.url.origin).toString();
 ---
 
 <!doctype html>

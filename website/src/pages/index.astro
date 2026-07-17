@@ -39,19 +39,58 @@ const featureBlocks = [
 
 const exampleCode = `import os\nfrom genxai import Agent, AgentConfig, AgentRegistry, Graph\n\nos.environ["OPENAI_API_KEY"] = "sk-..."\n\nclassifier = Agent(\n    id="classifier",\n    config=AgentConfig(role="Classifier", goal="Categorize customer requests", llm_model="gpt-4"),\n)\n\nsupport = Agent(\n    id="support",\n    config=AgentConfig(role="Support Agent", goal="Resolve customer issues", llm_model="claude-3-opus", enable_memory=True),\n)\n\nAgentRegistry.register(classifier)\nAgentRegistry.register(support)\n\ngraph = Graph()\n# ... add nodes + edges ...\nresult = await graph.run(input_data="My app crashed")\n`;
 
+const faqs = [
+  {
+    q: 'Is GenXAI free for commercial use?',
+    a: 'Yes. The entire framework — including production features like connectors, triggers, observability, and security — is MIT-licensed. There is no commercial edition and nothing behind a paywall.',
+  },
+  {
+    q: 'How do I install GenXAI?',
+    a: 'GenXAI is a Python framework: pip install genxai-framework. Optional extras enable integrations, e.g. pip install "genxai-framework[llm,tools,api]" — available extras are llm, tools, api, storage, observability, connectors, and all.',
+  },
+  {
+    q: 'Which LLM providers does GenXAI support?',
+    a: 'OpenAI, Anthropic, Google, Cohere, and Ollama. Multi-provider routing lets different agents in the same workflow use different models.',
+  },
+  {
+    q: 'Does GenXAI support MCP (Model Context Protocol)?',
+    a: 'Yes, as both client and server: agents can call tools from any registered MCP server, and GenXAI can expose its own tools over MCP.',
+  },
+  {
+    q: 'Do I need to write code to use GenXAI?',
+    a: 'GenXAI is Python-first, but it ships with Workflow Studio — a no-code drag-and-drop visual builder where you compose agent/tool pipelines on a canvas and run them with live per-node status.',
+  },
+  {
+    q: 'What makes GenXAI different from linear chain frameworks?',
+    a: 'Workflows are directed graphs: conditional edges and dynamic routing, parallel execution with real join semantics, loops, and nested subgraphs — plus 14 reusable multi-agent coordination patterns like critic review, ensemble voting, and map-reduce.',
+  },
+] as const;
+
 const schema = {
   '@context': 'https://schema.org',
-  '@type': ['SoftwareApplication', 'SoftwareSourceCode'],
-  name: 'GenXAI',
-  description:
-    'Open-source (MIT) agentic AI framework for Python: graph-based multi-agent orchestration, 14 coordination flow patterns, multi-layer memory, 45 built-in tools, MCP client/server, connectors, triggers, and production runtime features.',
-  url: 'https://genxai-framework.com',
-  codeRepository: 'https://github.com/genexsus-ai/genxai-framework',
-  programmingLanguage: 'Python',
-  applicationCategory: 'DeveloperApplication',
-  operatingSystem: 'Cross-platform',
-  license: 'https://opensource.org/licenses/MIT',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  '@graph': [
+    {
+      '@type': ['SoftwareApplication', 'SoftwareSourceCode'],
+      name: 'GenXAI',
+      description:
+        'Open-source (MIT) agentic AI framework for Python: graph-based multi-agent orchestration, 14 coordination flow patterns, multi-layer memory, 45 built-in tools, MCP client/server, connectors, triggers, and production runtime features.',
+      url: 'https://genxai-framework.com',
+      codeRepository: 'https://github.com/genexsus-ai/genxai-framework',
+      programmingLanguage: 'Python',
+      applicationCategory: 'DeveloperApplication',
+      operatingSystem: 'Cross-platform',
+      license: 'https://opensource.org/licenses/MIT',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
+  ],
 };
 ---
 
@@ -97,6 +136,17 @@ const schema = {
     <CodeExample code={exampleCode} />
     <div class="mt-6 text-sm text-slate-300">
       Want runnable samples? Visit <a class="text-white underline" href="/examples">Examples</a>.
+    </div>
+  </Section>
+
+  <Section eyebrow="FAQ" title="Frequently asked questions">
+    <div class="grid gap-4 md:grid-cols-2">
+      {faqs.map((f) => (
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <h3 class="text-base font-semibold text-white">{f.q}</h3>
+          <p class="mt-2 text-sm leading-relaxed text-slate-300">{f.a}</p>
+        </div>
+      ))}
     </div>
   </Section>
 

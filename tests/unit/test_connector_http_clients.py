@@ -229,6 +229,40 @@ async def test_google_workspace_sheet_upsert(monkeypatch: pytest.MonkeyPatch) ->
 
 
 @pytest.mark.asyncio
+async def test_google_workspace_send_gmail(monkeypatch: pytest.MonkeyPatch) -> None:
+    import base64
+
+    responses = {
+        ("POST", "/gmail/v1/users/me/messages/send"): {"id": "msg_1", "labelIds": ["SENT"]},
+    }
+    fake_client = FakeClient(responses)
+    _patch_async_client(monkeypatch, "genxai.connectors.google_workspace", fake_client)
+
+    connector = GoogleWorkspaceConnector(connector_id="gws", access_token="token")
+    await connector.start()
+    result = await connector.send_gmail(
+        to="jane@example.com",
+        subject="Hello",
+        body="<b>Hi Jane</b>",
+        cc="team@example.com",
+        html=True,
+    )
+    assert result["id"] == "msg_1"
+
+    request = next(r for r in fake_client.requests if r["path"].startswith("/gmail/"))
+    mime = base64.urlsafe_b64decode(request["json"]["raw"]).decode()
+    assert "To: jane@example.com" in mime
+    assert "Subject: Hello" in mime
+    assert "Cc: team@example.com" in mime
+    assert "text/html" in mime
+
+    from email import message_from_string
+
+    parsed = message_from_string(mime)
+    assert parsed.get_payload(decode=True).decode() == "<b>Hi Jane</b>"
+
+
+@pytest.mark.asyncio
 async def test_connector_validate_config_errors() -> None:
     with pytest.raises(ValueError):
         await SlackConnector(connector_id="slack", bot_token="").validate_config()

@@ -215,6 +215,37 @@ class GoogleWorkspaceConnector(Connector):
             f"/calendar/v3/calendars/{calendar_id}/events", payload
         )
 
+    async def send_gmail(
+        self,
+        to: str,
+        subject: str,
+        body: str,
+        cc: str | None = None,
+        bcc: str | None = None,
+        html: bool = False,
+        from_email: str | None = None,
+    ) -> dict[str, Any]:
+        """Send an email through the Gmail API (needs the gmail.send scope).
+
+        ``to``/``cc``/``bcc`` accept comma-separated addresses; ``html=True``
+        sends the body as text/html. The sender defaults to the connected
+        account.
+        """
+        import base64
+        from email.mime.text import MIMEText
+
+        message = MIMEText(body, "html" if html else "plain", "utf-8")
+        message["To"] = to
+        message["Subject"] = subject
+        if cc:
+            message["Cc"] = cc
+        if bcc:
+            message["Bcc"] = bcc
+        if from_email:
+            message["From"] = from_email
+        raw = base64.urlsafe_b64encode(message.as_bytes()).decode("ascii")
+        return await self._post("/gmail/v1/users/me/messages/send", {"raw": raw})
+
     async def handle_event(self, payload: dict[str, Any], headers: dict[str, str] | None = None) -> None:
         """Handle an inbound event payload and emit it downstream."""
         await self.emit(payload=payload, metadata={"headers": headers or {}})

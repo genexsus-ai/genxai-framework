@@ -16,6 +16,7 @@ from genxai.tools.builtin.computation.data_validator import DataValidatorTool
 from genxai.tools.builtin.computation.hash_generator import HashGeneratorTool
 from genxai.tools.builtin.computation.regex_matcher import RegexMatcherTool
 from genxai.tools.builtin.data.csv_processor import CSVProcessorTool
+from genxai.tools.builtin.data.data_filter import DataFilterTool
 from genxai.tools.builtin.data.data_transformer import DataTransformerTool
 
 # Data tools
@@ -83,6 +84,7 @@ _tools_to_register = [
     # Data
     JSONProcessorTool(),
     CSVProcessorTool(),
+    DataFilterTool(),
     XMLProcessorTool(),
     TextAnalyzerTool(),
     DataTransformerTool(),
@@ -127,6 +129,7 @@ __all__ = [
     "NotificationManagerTool",
     "JSONProcessorTool",
     "CSVProcessorTool",
+    "DataFilterTool",
     "XMLProcessorTool",
     "TextAnalyzerTool",
     "DataTransformerTool",

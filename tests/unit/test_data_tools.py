@@ -335,3 +335,64 @@ def test_all_data_tools_have_descriptions():
     for tool in tools:
         assert len(tool.metadata.description) > 0
         assert len(tool.metadata.tags) > 0
+
+
+# ==================== Data Filter Tool Tests ====================
+
+from genxai.tools.builtin.data.data_filter import DataFilterTool
+
+
+@pytest.mark.asyncio
+async def test_data_filter_equals_on_field():
+    tool = DataFilterTool()
+    items = [
+        {"name": "Ana", "status": "active"},
+        {"name": "Bo", "status": "inactive"},
+        {"name": "Cy", "status": "active"},
+    ]
+    result = await tool.execute(items=items, field="status", operator="equals", value="active")
+    assert result.success is True
+    assert result.data["kept"] == 2
+    assert [i["name"] for i in result.data["filtered"]] == ["Ana", "Cy"]
+
+
+@pytest.mark.asyncio
+async def test_data_filter_numeric_and_keep_false():
+    tool = DataFilterTool()
+    items = [{"age": 15}, {"age": 20}, {"age": 42}]
+    # keep=False drops matches -> keeps the ones NOT greater than 18
+    result = await tool.execute(
+        items=items, field="age", operator="greater_than", value=18, keep=False
+    )
+    assert result.data["filtered"] == [{"age": 15}]
+
+
+@pytest.mark.asyncio
+async def test_data_filter_string_ops_and_dotpath():
+    tool = DataFilterTool()
+    items = [
+        {"user": {"email": "a@work.com"}},
+        {"user": {"email": "b@home.net"}},
+    ]
+    result = await tool.execute(
+        items=items, field="user.email", operator="ends_with", value="work.com"
+    )
+    assert result.data["kept"] == 1
+
+
+@pytest.mark.asyncio
+async def test_data_filter_numeric_coercion_of_strings():
+    tool = DataFilterTool()
+    # values arriving as strings (e.g. from form input) still compare numerically
+    items = [{"n": "3"}, {"n": "10"}]
+    result = await tool.execute(items=items, field="n", operator="greater_than", value="5")
+    assert [i["n"] for i in result.data["filtered"]] == ["10"]
+
+
+@pytest.mark.asyncio
+async def test_data_filter_single_object_and_bad_input():
+    tool = DataFilterTool()
+    one = await tool.execute(items={"x": 1}, field="x", operator="equals", value=1)
+    assert one.data["kept"] == 1
+    bad = await tool.execute(items="not a list", operator="is_not_empty")
+    assert bad.data["success"] is False

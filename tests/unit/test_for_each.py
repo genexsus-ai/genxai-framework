@@ -140,3 +140,48 @@ async def test_for_each_cursor_removed_after_loop():
     snapshot = result["result"]["node_results"]["end"]["output"]
     assert "item" not in snapshot
     assert "item_index" not in snapshot
+
+
+async def test_for_each_concurrent_preserves_order_and_results():
+    """Concurrency > 1 runs items in parallel but keeps input order."""
+    nodes = [
+        {
+            "id": "double",
+            "type": "tool",
+            "config": {
+                "tool_name": "calculator",
+                "tool_params": {"expression": "{{ item }} * 2"},
+                "for_each": "{{ input.numbers }}",
+                "for_each_concurrency": 4,
+            },
+        },
+    ]
+
+    result = await _run(nodes, [], {"numbers": [1, 2, 3, 4, 5]})
+
+    assert result["status"] == "success"
+    output = result["result"]["node_results"]["double"]["output"]
+    assert output["count"] == 5
+    # order preserved despite concurrent execution
+    assert [entry["data"]["result"] for entry in output["items"]] == [2.0, 4.0, 6.0, 8.0, 10.0]
+
+
+async def test_for_each_concurrent_isolates_item_cursor():
+    """Concurrent items each see their own item/item_index (no clobbering)."""
+    nodes = [
+        {
+            "id": "indexed",
+            "type": "tool",
+            "config": {
+                "tool_name": "calculator",
+                "tool_params": {"expression": "{{ item }} + {{ item_index }}"},
+                "for_each": "{{ input.numbers }}",
+                "for_each_concurrency": 5,
+            },
+        },
+    ]
+
+    result = await _run(nodes, [], {"numbers": [10, 20, 30]})
+
+    output = result["result"]["node_results"]["indexed"]["output"]
+    assert [entry["data"]["result"] for entry in output["items"]] == [10.0, 21.0, 32.0]

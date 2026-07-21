@@ -570,6 +570,21 @@ class Graph:
                 f"got {type(items).__name__}"
             )
 
+        # Concurrency: run up to N items at once (n8n-style batches). Default 1
+        # keeps the simple sequential path (and shared-state semantics that
+        # nested for_each relies on).
+        try:
+            concurrency = int(node.config.data.get("for_each_concurrency") or 1)
+        except (TypeError, ValueError):
+            concurrency = 1
+        concurrency = max(1, min(concurrency, 20))
+
+        if concurrency > 1:
+            results = await self._run_for_each_concurrent(
+                node, state, items, max_iterations, concurrency
+            )
+            return {"items": results, "count": len(results)}
+
         # Save any outer loop's cursor so nested for_each nodes compose
         had_item = "item" in state
         previous_item = state.get("item")
@@ -592,6 +607,35 @@ class Graph:
                 state.pop("item_index", None)
 
         return {"items": results, "count": len(results)}
+
+    async def _run_for_each_concurrent(
+        self,
+        node: Node,
+        state: dict[str, Any],
+        items: list[Any],
+        max_iterations: int,
+        concurrency: int,
+    ) -> list[Any]:
+        """Run for_each items ``concurrency`` at a time, preserving order.
+
+        Each item runs against its own shallow-copied state with item /
+        item_index set, so concurrent iterations don't clobber each other's
+        cursor. Results are returned in the original item order.
+        """
+        import asyncio
+
+        semaphore = asyncio.Semaphore(concurrency)
+
+        async def run_one(index: int, item: Any) -> Any:
+            async with semaphore:
+                item_state = dict(state)
+                item_state["item"] = item
+                item_state["item_index"] = index
+                return await self._run_with_policy(node, item_state, max_iterations)
+
+        return await asyncio.gather(
+            *(run_one(index, item) for index, item in enumerate(items))
+        )
 
     async def _resolve_and_traverse(
         self,

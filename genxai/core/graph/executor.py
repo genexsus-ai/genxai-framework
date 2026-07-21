@@ -406,6 +406,10 @@ class WorkflowExecutor:
             # Per-item execution: run the node once per element of this list
             if config.get("for_each") and node_id in graph.nodes:
                 graph.nodes[node_id].config.data["for_each"] = config["for_each"]
+                if config.get("for_each_concurrency"):
+                    graph.nodes[node_id].config.data["for_each_concurrency"] = config[
+                        "for_each_concurrency"
+                    ]
 
         # Add edges
         for edge in edges:

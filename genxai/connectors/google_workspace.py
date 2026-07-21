@@ -59,14 +59,14 @@ class GoogleWorkspaceConnector(Connector):
 
     async def get_sheet(self, spreadsheet_id: str) -> dict[str, Any]:
         """Fetch spreadsheet metadata."""
-        return await self._get(f"/sheets/v4/spreadsheets/{spreadsheet_id}")
+        return await self._get(f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}")
 
     async def get_sheet_values(
         self, spreadsheet_id: str, range_: str
     ) -> dict[str, Any]:
         """Read cell values from a Google Sheet (unformatted, typed)."""
         return await self._get(
-            f"/sheets/v4/spreadsheets/{spreadsheet_id}/values/{range_}",
+            f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_}",
             params={"valueRenderOption": "UNFORMATTED_VALUE"},
         )
 
@@ -81,7 +81,7 @@ class GoogleWorkspaceConnector(Connector):
         params = {"valueInputOption": value_input_option}
         payload = {"values": values}
         return await self._post(
-            f"/sheets/v4/spreadsheets/{spreadsheet_id}/values/{range_}:append",
+            f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_}:append",
             payload,
             params=params,
         )
@@ -97,7 +97,7 @@ class GoogleWorkspaceConnector(Connector):
         params = {"valueInputOption": value_input_option}
         payload = {"values": values}
         return await self._put(
-            f"/sheets/v4/spreadsheets/{spreadsheet_id}/values/{range_}",
+            f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_}",
             payload,
             params=params,
         )

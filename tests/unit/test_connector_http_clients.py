@@ -158,8 +158,8 @@ async def test_jira_connector_issue_flow(monkeypatch: pytest.MonkeyPatch) -> Non
 @pytest.mark.asyncio
 async def test_google_workspace_connector(monkeypatch: pytest.MonkeyPatch) -> None:
     responses = {
-        ("GET", "/sheets/v4/spreadsheets/sheet_1"): {"spreadsheetId": "sheet_1"},
-        ("POST", "/sheets/v4/spreadsheets/sheet_1/values/A1:append"): {"updates": {}},
+        ("GET", "https://sheets.googleapis.com/v4/spreadsheets/sheet_1"): {"spreadsheetId": "sheet_1"},
+        ("POST", "https://sheets.googleapis.com/v4/spreadsheets/sheet_1/values/A1:append"): {"updates": {}},
         ("GET", "/drive/v3/files"): {"files": []},
         ("GET", "/calendar/v3/calendars/primary/events"): {"items": []},
     }
@@ -188,10 +188,10 @@ async def test_google_workspace_sheet_upsert(monkeypatch: pytest.MonkeyPatch) ->
         ]
     }
     responses = {
-        ("GET", "/sheets/v4/spreadsheets/s1/values/Sheet1"): sheet_rows,
-        ("PUT", "/sheets/v4/spreadsheets/s1/values/Sheet1!A3"): {"updatedRows": 1},
-        ("POST", "/sheets/v4/spreadsheets/s1/values/Sheet1!A1:append"): {"updates": {}},
-        ("PUT", "/sheets/v4/spreadsheets/s1/values/Sheet1!A2:B2"): {"updatedRows": 1},
+        ("GET", "https://sheets.googleapis.com/v4/spreadsheets/s1/values/Sheet1"): sheet_rows,
+        ("PUT", "https://sheets.googleapis.com/v4/spreadsheets/s1/values/Sheet1!A3"): {"updatedRows": 1},
+        ("POST", "https://sheets.googleapis.com/v4/spreadsheets/s1/values/Sheet1!A1:append"): {"updates": {}},
+        ("PUT", "https://sheets.googleapis.com/v4/spreadsheets/s1/values/Sheet1!A2:B2"): {"updatedRows": 1},
     }
     fake_client = FakeClient(responses)
     _patch_async_client(monkeypatch, "genxai.connectors.google_workspace", fake_client)

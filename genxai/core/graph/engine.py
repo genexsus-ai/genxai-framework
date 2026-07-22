@@ -915,7 +915,10 @@ class Graph:
                     tools[tool_name] = tool
             runtime.set_tools(tools)
 
-        context = dict(state)
+        # Exclude live service objects (llm/human-input providers, resume
+        # bookkeeping) so they never end up in the agent's echoed context —
+        # a function there breaks JSON serialization of the run record.
+        context = {k: v for k, v in state.items() if k not in _SERVICE_STATE_KEYS}
         if self.shared_memory is not None:
             context["shared_memory"] = self.shared_memory
         return await self._execute_with_config(runtime, task=task, context=context, state=state)

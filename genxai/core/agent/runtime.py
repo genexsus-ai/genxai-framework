@@ -271,8 +271,10 @@ class AgentRuntime:
             safe_context = copy.deepcopy(context)
         except Exception:
             safe_context = dict(context)
-        safe_context.pop("llm_provider", None)
-        safe_context.pop("shared_memory", None)
+        # Drop live service objects — a function/provider here can't be
+        # JSON-serialized into the run record.
+        for service_key in ("llm_provider", "shared_memory", "human_input_provider", "_resume_results"):
+            safe_context.pop(service_key, None)
         result = {
             "agent_id": self.agent.id,
             "task": task,
